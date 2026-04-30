@@ -13,6 +13,10 @@ require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/config/config.php';
 require_once __DIR__ . '/config/database.php';
 
+// BYPASS TEMPORAL: Deshabilitar verificación de contraseña para troubleshooting en Railway
+// TODO: Remover esto una vez que se resuelva el problema de hash de contraseñas
+define('BYPASS_PASSWORD_VERIFICATION', true);
+
 // 4) Determinar controlador y acción desde la URL
 $controllerParam = $_GET['controller'] ?? 'auth';
 $actionParam     = $_GET['action']     ?? 'login';

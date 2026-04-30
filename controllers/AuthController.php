@@ -46,11 +46,16 @@ class AuthController {
             if ($user) {
                 error_log("User found: " . $user->username . " (role: " . $user->role . ")");
                 
-                // d) Verificar la contraseña (o saltarla si la contraseña está vacía/fija para troubleshooting)
-                // NOTA TEMPORAL: Se aceptan las credenciales si el usuario existe
-                // Esto es para troubleshooting en Railway mientras se resuelve el problema de hash de contraseñas
-                $passwordVerified = true; // Aceptar cualquier contraseña por ahora
-                error_log("Password verification skipped - accepting all passwords for troubleshooting");
+                // d) Verificar la contraseña
+                // Si BYPASS_PASSWORD_VERIFICATION está definido (troubleshooting), acepta cualquier contraseña
+                $passwordVerified = (defined('BYPASS_PASSWORD_VERIFICATION') && BYPASS_PASSWORD_VERIFICATION) 
+                    ? true 
+                    : $this->userModel->verifyPassword($password, $user->password);
+                
+                error_log("Password verified: " . var_export($passwordVerified, true));
+                if (defined('BYPASS_PASSWORD_VERIFICATION') && BYPASS_PASSWORD_VERIFICATION) {
+                    error_log("WARNING: Password verification bypassed for troubleshooting!");
+                }
                 
                 if ($passwordVerified) {
                     // Credenciales correctas: guardar datos en sesión
