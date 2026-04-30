@@ -64,38 +64,60 @@ h1 {
 }
 
 /* Tarjetas de resumen */
-.cards {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  margin-bottom: 40px;
-}
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      gap: 12px;
+    }
+    .section-title h2 {
+      margin: 0;
+      color: #00fff0;
+      font-size: 1.4rem;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
 
-.card {
-  flex: 1;
-  background-color: #0f3460;
-  border-radius: 16px;
-  padding: 25px;
-  text-align: center;
-  box-shadow: 0 0 20px rgba(0,255,240,0.1);
-  transition: transform 0.2s ease;
-}
-.card:hover {
-  transform: translateY(-5px);
-}
-.card h3 {
-  color: #a0a0a0;
-  font-size: 1rem;
-  margin-bottom: 12px;
-}
-.card p {
-  font-size: 28px;
-  font-weight: bold;
-  color: #00fff0;
-}
+    .card {
+      background-color: #0f3460;
+      border-radius: 16px;
+      padding: 25px;
+      box-shadow: 0 0 20px rgba(0,255,240,0.1);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      border: 1px solid rgba(0,255,240,0.16);
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 28px rgba(0,255,240,0.18);
+    }
+    .card h3 {
+      color: #a0a0a0;
+      font-size: 0.95rem;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .card p {
+      font-size: 32px;
+      font-weight: 700;
+      color: #00fff0;
+      margin: 0;
+    }
+    .card small {
+      display: block;
+      color: #9ae7ff;
+      margin-top: 10px;
+    }
 
-/* Gráfica */
-.chart-container {
+    .kpi-group {
+      margin-bottom: 40px;
+    }
+
   background-color: #16213e;
   border-radius: 16px;
   padding: 25px;
@@ -204,19 +226,54 @@ tr:last-child td {
     <!-- Título principal -->
     <h1>Panel de Administración</h1>
 
-    <!-- Tarjetas de resumen -->
-    <div class="cards">
-      <div class="card">
-        <h3>Ventas Hoy</h3>
-        <p>S/. <?php echo number_format($ventasHoy, 2, '.', ','); ?></p>
+    <div class="kpi-group">
+      <div class="section-title">
+        <h2>Inventario</h2>
       </div>
-      <div class="card">
-        <h3>Ventas Mes</h3>
-        <p>S/. <?php echo number_format($ventasMes, 2, '.', ','); ?></p>
+      <div class="cards">
+        <div class="card">
+          <h3>Total productos</h3>
+          <p><?php echo (int)$totalProductos; ?></p>
+          <small>Registro completo de SKUs</small>
+        </div>
+        <div class="card">
+          <h3>Stock total</h3>
+          <p><?php echo $totalStock; ?> unidades</p>
+          <small>Volumen disponible en inventario</small>
+        </div>
+        <div class="card">
+          <h3>Productos con bajo stock</h3>
+          <p style="color:#ff8b8b;"><?php echo (int)$productosBajoStock; ?></p>
+          <small>Alertas de reabastecimiento activas</small>
+        </div>
+        <div class="card">
+          <h3>Movimientos hoy</h3>
+          <p><?php echo (int)$movimientosHoy; ?></p>
+          <small>Entradas y salidas registradas hoy</small>
+        </div>
       </div>
-      <div class="card">
-        <h3>Total Stock</h3>
-        <p><?php echo $totalStock; ?> unid.</p>
+    </div>
+
+    <div class="kpi-group">
+      <div class="section-title">
+        <h2>Ventas</h2>
+      </div>
+      <div class="cards">
+        <div class="card">
+          <h3>Ventas hoy</h3>
+          <p>S/. <?php echo number_format($ventasHoy, 2, '.', ','); ?></p>
+          <small>Facturación del día</small>
+        </div>
+        <div class="card">
+          <h3>Ventas mes</h3>
+          <p>S/. <?php echo number_format($ventasMes, 2, '.', ','); ?></p>
+          <small>Performance mensual</small>
+        </div>
+        <div class="card">
+          <h3>Entradas / Salidas</h3>
+          <p><?php echo (int)$totalEntradas; ?> / <?php echo (int)$totalSalidas; ?></p>
+          <small>Balance del flujo de inventario</small>
+        </div>
       </div>
     </div>
 
@@ -257,6 +314,36 @@ tr:last-child td {
       </table>
     <?php else: ?>
       <p style="color:#a0a0a0;">No hay ventas registradas aún.</p>
+    <?php endif; ?>
+
+    <h2 class="lst-ventas" style="margin-top:28px;">Ultimos Movimientos de Inventario</h2>
+    <?php if (!empty($ultimosMovimientos)): ?>
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Tipo</th>
+            <th>Producto</th>
+            <th>Cantidad</th>
+            <th>Usuario</th>
+            <th>Motivo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php foreach ($ultimosMovimientos as $mov): ?>
+            <tr>
+              <td><?php echo date('d-m-Y H:i', strtotime($mov->movement_date)); ?></td>
+              <td><?php echo strtoupper($mov->movement_type); ?></td>
+              <td><?php echo htmlspecialchars($mov->product_name); ?></td>
+              <td><?php echo abs((int)$mov->quantity_change); ?></td>
+              <td><?php echo htmlspecialchars($mov->user_name); ?></td>
+              <td><?php echo htmlspecialchars($mov->notes ?? ''); ?></td>
+            </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
+    <?php else: ?>
+      <p style="color:#a0a0a0;">No hay movimientos registrados aún.</p>
     <?php endif; ?>
   </div>
 

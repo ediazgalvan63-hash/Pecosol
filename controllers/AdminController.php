@@ -5,6 +5,7 @@ class AdminController {
     private $productModel;
     private $userModel;
     private $saleModel;
+    private $inventoryMovementModel;
 
     public function __construct() {
         // 1) Arrancar sesión si no existe
@@ -29,10 +30,12 @@ class AdminController {
         require_once __DIR__ . '/../models/Product.php';
         require_once __DIR__ . '/../models/User.php';
         require_once __DIR__ . '/../models/Sale.php';
+        require_once __DIR__ . '/../models/InventoryMovement.php';
 
         $this->productModel = new Product();
         $this->userModel    = new User();
         $this->saleModel    = new Sale();
+        $this->inventoryMovementModel = new InventoryMovement();
     }
 
     /**************************************************************************
@@ -41,6 +44,7 @@ class AdminController {
 
     public function listProducts() {
         $productos = $this->productModel->getAll();
+        $lowStockCount = $this->productModel->countLowStockProducts();
         require_once __DIR__ . '/../views/admin/productos/list_products.php';
     }
 
@@ -53,10 +57,11 @@ class AdminController {
         $description = trim($_POST['description'] ?? '');
         $price       = isset($_POST['price']) ? (float)$_POST['price'] : 0;
         $stock       = isset($_POST['stock']) ? (int)$_POST['stock'] : 0;
+        $stockMinimum = isset($_POST['stock_minimum']) ? (int)$_POST['stock_minimum'] : 0;
 
         $error = '';
-        if ($name === '' || $price <= 0 || $stock < 0) {
-            $error = 'Debes completar el nombre, un precio mayor a 0 y un stock válido (>= 0).';
+        if ($name === '' || $price <= 0 || $stock < 0 || $stockMinimum < 1) {
+            $error = 'Completa nombre, precio, stock y stock mínimo con valores válidos. El stock mínimo debe ser mayor que cero.';
         }
 
         if (!empty($error)) {
@@ -64,7 +69,7 @@ class AdminController {
             return;
         }
 
-        $creado = $this->productModel->create($name, $description, $price, $stock);
+        $creado = $this->productModel->create($name, $description, $price, $stock, $stockMinimum);
         if (!$creado) {
             $error = 'No se pudo agregar el producto. Intenta nuevamente.';
             require_once __DIR__ . '/../views/admin/productos/add_product.php';
@@ -97,10 +102,11 @@ class AdminController {
         $description = trim($_POST['description'] ?? '');
         $price       = isset($_POST['price']) ? (float)$_POST['price'] : 0;
         $stock       = isset($_POST['stock']) ? (int)$_POST['stock'] : 0;
+        $stockMinimum = isset($_POST['stock_minimum']) ? (int)$_POST['stock_minimum'] : 0;
 
         $error = '';
-        if ($id <= 0 || $name === '' || $price <= 0 || $stock < 0) {
-            $error = 'ID inválido, nombre vacío, precio menor o igual a 0 o stock inválido.';
+        if ($id <= 0 || $name === '' || $price <= 0 || $stock < 0 || $stockMinimum < 1) {
+            $error = 'ID inválido o valores de producto incorrectos. El stock mínimo debe ser mayor que cero.';
         } else {
             $productoExistente = $this->productModel->findById($id);
             if (!$productoExistente) {
@@ -114,13 +120,14 @@ class AdminController {
                 'name'        => $name,
                 'description' => $description,
                 'price'       => $price,
-                'stock'       => $stock
+                'stock'       => $stock,
+                'stock_minimum' => $stockMinimum
             ];
             require_once __DIR__ . '/../views/admin/productos/edit_product.php';
             return;
         }
 
-        $actualizado = $this->productModel->update($id, $name, $description, $price, $stock);
+        $actualizado = $this->productModel->update($id, $name, $description, $price, $stock, $stockMinimum);
         if (!$actualizado) {
             $error = 'No se pudo actualizar el producto. Intenta nuevamente.';
             $producto = (object)[
@@ -128,7 +135,8 @@ class AdminController {
                 'name'        => $name,
                 'description' => $description,
                 'price'       => $price,
-                'stock'       => $stock
+                'stock'       => $stock,
+                'stock_minimum' => $stockMinimum
             ];
             require_once __DIR__ . '/../views/admin/productos/edit_product.php';
             return;
@@ -357,34 +365,50 @@ class AdminController {
         $unitPrice  = (float)$producto->price;
         $totalPrice = $unitPrice * $quantity;
 
-        $newSaleId = $this->saleModel->createSale(
-            $userId,
-            $productId,
-            $quantity,
-            $unitPrice,
-            $totalPrice,
-            $description
-        );
-        if (!$newSaleId) {
-            $error = 'Error al registrar la venta. Intenta nuevamente.';
+        $conn = $this->saleModel->getConnection();
+        try {
+            $conn->beginTransaction();
+
+            $discounted = $this->productModel->decreaseStockIfAvailable($productId, $quantity);
+            if (!$discounted) {
+                throw new RuntimeException('Stock insuficiente al confirmar la venta.');
+            }
+
+            $newSaleId = $this->saleModel->createSale(
+                $userId,
+                $productId,
+                $quantity,
+                $unitPrice,
+                $totalPrice,
+                $description
+            );
+            if (!$newSaleId) {
+                throw new RuntimeException('No se pudo crear la venta.');
+            }
+
+            $movementNote = $description !== '' ? $description : "Venta ID: {$newSaleId}";
+            $okMovement = $this->saleModel->registerStockMovement(
+                $productId,
+                $userId,
+                -$quantity,
+                'salida',
+                $movementNote
+            );
+            if (!$okMovement) {
+                throw new RuntimeException('No se pudo registrar el movimiento de salida.');
+            }
+
+            $conn->commit();
+        } catch (Throwable $e) {
+            if ($conn->inTransaction()) {
+                $conn->rollBack();
+            }
+            $error = 'Error al registrar venta: ' . $e->getMessage();
             $empleados = $this->userModel->getAllEmployees();
             $productos = $this->productModel->getAll();
             require_once __DIR__ . '/../views/admin/ventas/add_sale_admin.php';
             return;
         }
-
-        // Actualizar stock del producto
-        $nuevoStock = $producto->stock - $quantity;
-        $this->productModel->updateStock($productId, $nuevoStock);
-
-        // Registrar movimiento de stock
-        $this->saleModel->registerStockMovement(
-            $productId,
-            $userId,
-            -$quantity,
-            'salida',
-            "Venta ID: {$newSaleId}"
-        );
 
         header('Location: index.php?controller=admin&action=listSalesAdmin');
         exit;
@@ -462,55 +486,117 @@ class AdminController {
             return;
         }
 
-        // 1) Restaurar stock de la venta anterior
-        $prevQuantity  = $venta->quantity;
-        $prevProductId = $venta->product_id;
-        $prodPrev      = $this->productModel->findById($prevProductId);
-        $this->productModel->updateStock($prevProductId, $prodPrev->stock + $prevQuantity);
+        $conn = $this->saleModel->getConnection();
+        try {
+            $conn->beginTransaction();
 
-        // 2) Ajustar stock para el nuevo producto
-        $prodNew = $this->productModel->findById($productId);
-        if ($quantity > $prodNew->stock) {
-            $error = 'La nueva cantidad supera el stock disponible.';
+            $sameProduct = ((int)$venta->product_id === $productId);
+            $quantityDiff = $quantity - (int)$venta->quantity;
+            $movementNote = $description !== '' ? $description : "Edición Venta ID: {$id}";
+
+            if (!$sameProduct || $quantityDiff !== 0) {
+                if ($sameProduct) {
+                    if ($quantityDiff > 0) {
+                        $discounted = $this->productModel->decreaseStockIfAvailable($productId, $quantityDiff);
+                        if (!$discounted) {
+                            throw new RuntimeException('La nueva cantidad supera el stock disponible.');
+                        }
+
+                        $okMovement = $this->saleModel->registerStockMovement(
+                            $productId,
+                            $userId,
+                            -$quantityDiff,
+                            'salida',
+                            $movementNote
+                        );
+                        if (!$okMovement) {
+                            throw new RuntimeException('No se pudo registrar el movimiento de edición.');
+                        }
+                    } else {
+                        $restored = $this->productModel->increaseStock($productId, abs($quantityDiff));
+                        if (!$restored) {
+                            throw new RuntimeException('No se pudo restaurar stock de la venta anterior.');
+                        }
+
+                        $okMovement = $this->saleModel->registerStockMovement(
+                            $productId,
+                            $userId,
+                            abs($quantityDiff),
+                            'ingreso',
+                            $movementNote
+                        );
+                        if (!$okMovement) {
+                            throw new RuntimeException('No se pudo registrar el movimiento de edición.');
+                        }
+                    }
+                } else {
+                    $restored = $this->productModel->increaseStock((int)$venta->product_id, (int)$venta->quantity);
+                    if (!$restored) {
+                        throw new RuntimeException('No se pudo restaurar stock de la venta anterior.');
+                    }
+
+                    $discounted = $this->productModel->decreaseStockIfAvailable($productId, $quantity);
+                    if (!$discounted) {
+                        throw new RuntimeException('La nueva cantidad supera el stock disponible.');
+                    }
+
+                    $okRestore = $this->saleModel->registerStockMovement(
+                        (int)$venta->product_id,
+                        $userId,
+                        (int)$venta->quantity,
+                        'ingreso',
+                        $movementNote
+                    );
+                    if (!$okRestore) {
+                        throw new RuntimeException('No se pudo registrar el movimiento de restauración durante la edición.');
+                    }
+
+                    $okMovement = $this->saleModel->registerStockMovement(
+                        $productId,
+                        $userId,
+                        -$quantity,
+                        'salida',
+                        $movementNote
+                    );
+                    if (!$okMovement) {
+                        throw new RuntimeException('No se pudo registrar el movimiento de edición.');
+                    }
+                }
+            }
+
+            $prodNew = $this->productModel->findById($productId);
+            $unitPrice  = (float)$prodNew->price;
+            $totalPrice = $unitPrice * $quantity;
+
+            $actualizado = $this->saleModel->updateSale(
+                $id,
+                $userId,
+                $productId,
+                $quantity,
+                $unitPrice,
+                $totalPrice,
+                $description
+            );
+            if (!$actualizado) {
+                throw new RuntimeException('No se pudo actualizar la venta.');
+            }
+
+            if ($description !== '') {
+                $this->saleModel->updateSaleMovementNoteBySaleId($id, $description);
+            }
+
+            $conn->commit();
+        } catch (Throwable $e) {
+            if ($conn->inTransaction()) {
+                $conn->rollBack();
+            }
+            $error = 'No se pudo actualizar la venta: ' . $e->getMessage();
             $empleados = $this->userModel->getAllEmployees();
             $productos = $this->productModel->getAll();
             $venta = $this->saleModel->findByIdWithDetails($id);
             require_once __DIR__ . '/../views/admin/ventas/edit_sale_admin.php';
             return;
         }
-        $this->productModel->updateStock($productId, $prodNew->stock - $quantity);
-
-        // 3) Calcular nuevos precios
-        $unitPrice  = (float)$prodNew->price;
-        $totalPrice = $unitPrice * $quantity;
-
-        // 4) Actualizar la venta en BD
-        $actualizado = $this->saleModel->updateSale(
-            $id,
-            $userId,
-            $productId,
-            $quantity,
-            $unitPrice,
-            $totalPrice,
-            $description
-        );
-        if (!$actualizado) {
-            $error = 'No se pudo actualizar la venta. Intenta nuevamente.';
-            $empleados = $this->userModel->getAllEmployees();
-            $productos = $this->productModel->getAll();
-            $venta = $this->saleModel->findByIdWithDetails($id);
-            require_once __DIR__ . '/../views/admin/ventas/edit_sale_admin.php';
-            return;
-        }
-
-        // 5) Registrar movimiento de stock por la edición
-        $this->saleModel->registerStockMovement(
-            $productId,
-            $userId,
-            -$quantity,
-            'salida',
-            "Edición Venta ID: {$id}"
-        );
 
         header('Location: index.php?controller=admin&action=listSalesAdmin');
         exit;
@@ -529,26 +615,421 @@ class AdminController {
             exit;
         }
 
-        // Restaurar stock del producto
-        $prod = $this->productModel->findById($venta->product_id);
-        $this->productModel->updateStock(
-            $venta->product_id,
-            $prod->stock + $venta->quantity
-        );
+        $conn = $this->saleModel->getConnection();
+        try {
+            $conn->beginTransaction();
 
-        // Eliminar la venta
-        $this->saleModel->deleteSale($id);
+            $restored = $this->productModel->increaseStock((int)$venta->product_id, (int)$venta->quantity);
+            if (!$restored) {
+                throw new RuntimeException('No se pudo restaurar stock al eliminar la venta.');
+            }
 
-        // Registrar movimiento de stock por eliminación
-        $this->saleModel->registerStockMovement(
-            $venta->product_id,
-            $venta->user_id,
-            $venta->quantity,
-            'ingreso',
-            "Eliminación Venta ID: {$id}"
-        );
+            $deleted = $this->saleModel->deleteSale($id);
+            if (!$deleted) {
+                throw new RuntimeException('No se pudo eliminar la venta.');
+            }
+
+            $okMovement = $this->saleModel->registerStockMovement(
+                $venta->product_id,
+                $venta->user_id,
+                $venta->quantity,
+                'ingreso',
+                "Eliminación Venta ID: {$id}"
+            );
+            if (!$okMovement) {
+                throw new RuntimeException('No se pudo registrar movimiento de eliminación.');
+            }
+
+            $conn->commit();
+        } catch (Throwable $e) {
+            if ($conn->inTransaction()) {
+                $conn->rollBack();
+            }
+            $_SESSION['error_sale_delete'] = 'No se pudo eliminar la venta: ' . $e->getMessage();
+        }
 
         header('Location: index.php?controller=admin&action=listSalesAdmin');
+        exit;
+    }
+
+    /**************************************************************************
+     * INVENTARIO: Movimientos, Kardex y Reportes
+     **************************************************************************/
+    public function listInventoryMovements() {
+        $startDate    = trim($_GET['start_date'] ?? '');
+        $endDate      = trim($_GET['end_date'] ?? '');
+        $productId    = isset($_GET['product_id']) ? (int)$_GET['product_id'] : null;
+        $movementType = trim($_GET['movement_type'] ?? '');
+
+        $productos    = $this->productModel->getAll();
+        $movimientos  = $this->inventoryMovementModel->getFiltered(
+            $startDate !== '' ? $startDate : null,
+            $endDate !== '' ? $endDate : null,
+            $productId > 0 ? $productId : null,
+            $movementType !== '' ? $movementType : null,
+            500
+        );
+
+        require_once __DIR__ . '/../views/admin/inventario/list_movements.php';
+    }
+
+    public function addInventoryMovementForm() {
+        $productos = $this->productModel->getAll();
+        $productId = isset($_GET['product_id']) ? (int)$_GET['product_id'] : 0;
+        require_once __DIR__ . '/../views/admin/inventario/add_movement.php';
+    }
+
+    public function lowStockAlerts() {
+        $productosConBajoStock = $this->productModel->getLowStockProducts();
+        require_once __DIR__ . '/../views/admin/inventario/low_stock_alerts.php';
+    }
+
+    public function storeInventoryMovement() {
+        $productId = isset($_POST['product_id']) ? (int)$_POST['product_id'] : 0;
+        $movementType = trim($_POST['movement_type'] ?? '');
+        $quantity = isset($_POST['quantity']) ? (int)$_POST['quantity'] : 0;
+        $reason = trim($_POST['reason'] ?? '');
+        $userId = (int)$_SESSION['user_id'];
+
+        $error = '';
+        if ($productId <= 0 || !in_array($movementType, ['ingreso', 'salida'], true) || $quantity <= 0) {
+            $error = 'Producto, tipo y cantidad validos son obligatorios.';
+        }
+
+        $producto = $this->productModel->findById($productId);
+        if (!$producto) {
+            $error = 'El producto seleccionado no existe.';
+        } elseif ($movementType === 'salida' && $quantity > (int)$producto->stock) {
+            $error = 'No hay stock suficiente para registrar esta salida.';
+        }
+
+        if (!empty($error)) {
+            $productos = $this->productModel->getAll();
+            require_once __DIR__ . '/../views/admin/inventario/add_movement.php';
+            return;
+        }
+
+        $conn = $this->saleModel->getConnection();
+        try {
+            $conn->beginTransaction();
+
+            if ($movementType === 'ingreso') {
+                $adjusted = $this->productModel->increaseStock($productId, $quantity);
+            } else {
+                $adjusted = $this->productModel->decreaseStockIfAvailable($productId, $quantity);
+            }
+            if (!$adjusted) {
+                throw new RuntimeException('No fue posible ajustar stock para este movimiento.');
+            }
+
+            $okMovement = $this->inventoryMovementModel->create(
+                $productId,
+                $userId,
+                $quantity,
+                $movementType,
+                $reason !== '' ? $reason : 'Movimiento manual'
+            );
+            if (!$okMovement) {
+                throw new RuntimeException('No se pudo registrar el movimiento.');
+            }
+
+            $conn->commit();
+        } catch (Throwable $e) {
+            if ($conn->inTransaction()) {
+                $conn->rollBack();
+            }
+            $error = 'No se pudo registrar el movimiento: ' . $e->getMessage();
+            $productos = $this->productModel->getAll();
+            require_once __DIR__ . '/../views/admin/inventario/add_movement.php';
+            return;
+        }
+
+        header('Location: index.php?controller=admin&action=listInventoryMovements');
+        exit;
+    }
+
+    public function reports() {
+        $productos = $this->productModel->getAll();
+        require_once __DIR__ . '/../views/admin/reportes/index.php';
+    }
+
+    public function exportCurrentInventoryCsv() {
+        $productos = $this->productModel->getAll();
+        $filename = 'reporte_inventario_' . date('Ymd_His') . '.xlsx';
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Inventario Actual');
+
+        $headers = ['ID', 'Producto', 'Descripción', 'Precio', 'Stock', 'Stock mínimo', 'Estado'];
+        $sheet->fromArray($headers, null, 'A1');
+
+        $row = 2;
+        foreach ($productos as $prod) {
+            $estado = ((int)$prod->stock <= (int)$prod->stock_minimum) ? 'Bajo Stock' : 'OK';
+            $sheet->setCellValue('A' . $row, (int)$prod->id);
+            $sheet->setCellValue('B' . $row, $prod->name);
+            $sheet->setCellValue('C' . $row, $prod->description);
+            $sheet->setCellValue('D' . $row, (float)$prod->price);
+            $sheet->setCellValue('E' . $row, (int)$prod->stock);
+            $sheet->setCellValue('F' . $row, (int)$prod->stock_minimum);
+            $sheet->setCellValue('G' . $row, $estado);
+            $row++;
+        }
+
+        $lastRow = $row - 1;
+        $tableRange = 'A1:G' . $lastRow;
+
+        $table = new \PhpOffice\PhpSpreadsheet\Worksheet\Table($tableRange, 'Inventario');
+        $table->setShowHeaderRow(true);
+        $table->setAllowFilter(true);
+        $tableStyle = new \PhpOffice\PhpSpreadsheet\Worksheet\Table\TableStyle(
+            \PhpOffice\PhpSpreadsheet\Worksheet\Table\TableStyle::TABLE_STYLE_MEDIUM2
+        );
+        $table->setStyle($tableStyle);
+        $sheet->addTable($table);
+
+        $sheet->getStyle('A1:G1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:G1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+            ->getStartColor()->setRGB('0F3460');
+        $sheet->getStyle('A1:G1')->getFont()->getColor()->setRGB('FFFFFF');
+
+        $sheet->getStyle('D2:D' . $lastRow)->getNumberFormat()
+            ->setFormatCode('$#,##0.00');
+
+        $sheet->getStyle('A2:A' . $lastRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('E2:F' . $lastRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('G2:G' . $lastRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+        foreach (range('A', 'G') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $conditional = new \PhpOffice\PhpSpreadsheet\Style\Conditional();
+        $conditional->setConditionType(\PhpOffice\PhpSpreadsheet\Style\Conditional::CONDITION_CONTAINSTEXT)
+            ->setOperatorType(\PhpOffice\PhpSpreadsheet\Style\Conditional::OPERATOR_EQUAL)
+            ->setText('Bajo Stock');
+        $conditional->getStyle()->getFont()->getColor()->setRGB('9C0006');
+        $conditional->getStyle()->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+            ->getStartColor()->setRGB('FFC7CE');
+        $conditional->getStyle()->getFont()->setBold(true);
+
+        $conditionalStyles = $sheet->getStyle('G2:G' . $lastRow)->getConditionalStyles();
+        $conditionalStyles[] = $conditional;
+        $sheet->getStyle('G2:G' . $lastRow)->setConditionalStyles($conditionalStyles);
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename=' . $filename);
+        header('Cache-Control: max-age=0');
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
+    }
+
+    public function exportMovementsCsv() {
+        $startDate    = trim($_GET['start_date'] ?? '');
+        $endDate      = trim($_GET['end_date'] ?? '');
+        $productId    = isset($_GET['product_id']) ? (int)$_GET['product_id'] : null;
+        $movementType = trim($_GET['movement_type'] ?? '');
+
+        $movimientos = $this->inventoryMovementModel->getFiltered(
+            $startDate !== '' ? $startDate : null,
+            $endDate !== '' ? $endDate : null,
+            $productId > 0 ? $productId : null,
+            $movementType !== '' ? $movementType : null,
+            1000
+        );
+
+        $filename = 'reporte_movimientos_' . date('Ymd_His') . '.xlsx';
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Movimientos de Inventario');
+
+        $headers = ['ID', 'Fecha', 'Tipo', 'Producto', 'Cantidad', 'Usuario', 'Motivo'];
+        $sheet->fromArray($headers, null, 'A1');
+
+        $row = 2;
+        foreach ($movimientos as $mov) {
+            $sheet->setCellValue('A' . $row, (int)$mov->id);
+            $sheet->setCellValue('B' . $row, $mov->movement_date);
+            $sheet->setCellValue('C' . $row, strtoupper($mov->movement_type));
+            $sheet->setCellValue('D' . $row, $mov->product_name);
+            $sheet->setCellValue('E' . $row, abs((int)$mov->quantity_change));
+            $sheet->setCellValue('F' . $row, $mov->user_name);
+            $sheet->setCellValue('G' . $row, $mov->notes);
+            $row++;
+        }
+
+        $lastRow = $row - 1;
+        $tableRange = 'A1:G' . $lastRow;
+
+        $table = new \PhpOffice\PhpSpreadsheet\Worksheet\Table($tableRange, 'Movimientos');
+        $table->setShowHeaderRow(true);
+        $table->setAllowFilter(true);
+        $tableStyle = new \PhpOffice\PhpSpreadsheet\Worksheet\Table\TableStyle(
+            \PhpOffice\PhpSpreadsheet\Worksheet\Table\TableStyle::TABLE_STYLE_MEDIUM2
+        );
+        $table->setStyle($tableStyle);
+        $sheet->addTable($table);
+
+        $sheet->getStyle('A1:G1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:G1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+            ->getStartColor()->setRGB('0F3460');
+        $sheet->getStyle('A1:G1')->getFont()->getColor()->setRGB('FFFFFF');
+
+        $sheet->getStyle('B2:B' . $lastRow)->getNumberFormat()
+            ->setFormatCode('yyyy-mm-dd');
+
+        $sheet->getStyle('A2:A' . $lastRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('C2:C' . $lastRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('E2:E' . $lastRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+        foreach (range('A', 'G') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename=' . $filename);
+        header('Cache-Control: max-age=0');
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
+    }
+
+    public function exportSalesCsv() {
+        $startDate = trim($_GET['start_date'] ?? '');
+        $endDate   = trim($_GET['end_date'] ?? '');
+        $ventas = $this->saleModel->getAllSales(
+            $startDate !== '' ? $startDate : null,
+            $endDate   !== '' ? $endDate   : null
+        );
+
+        $filename = 'reporte_ventas_' . date('Ymd_His') . '.xlsx';
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Ventas');
+
+        $headers = ['ID', 'Fecha', 'Empleado', 'Producto', 'Cantidad', 'Precio Unitario', 'Total', 'Descripción'];
+        $sheet->fromArray($headers, null, 'A1');
+
+        $row = 2;
+        foreach ($ventas as $venta) {
+            $sheet->setCellValue('A' . $row, (int)$venta->id);
+            $sheet->setCellValue('B' . $row, $venta->sale_date);
+            $sheet->setCellValue('C' . $row, $venta->user_name);
+            $sheet->setCellValue('D' . $row, $venta->product_name);
+            $sheet->setCellValue('E' . $row, (int)$venta->quantity);
+            $sheet->setCellValue('F' . $row, (float)$venta->unit_price);
+            $sheet->setCellValue('G' . $row, (float)$venta->total_price);
+            $sheet->setCellValue('H' . $row, $venta->description);
+            $row++;
+        }
+
+        $lastRow = $row - 1;
+        $tableRange = 'A1:H' . $lastRow;
+
+        $table = new \PhpOffice\PhpSpreadsheet\Worksheet\Table($tableRange, 'Ventas');
+        $table->setShowHeaderRow(true);
+        $table->setAllowFilter(true);
+        $tableStyle = new \PhpOffice\PhpSpreadsheet\Worksheet\Table\TableStyle(
+            \PhpOffice\PhpSpreadsheet\Worksheet\Table\TableStyle::TABLE_STYLE_MEDIUM2
+        );
+        $table->setStyle($tableStyle);
+        $sheet->addTable($table);
+
+        $sheet->getStyle('A1:H1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:H1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+            ->getStartColor()->setRGB('0F3460');
+        $sheet->getStyle('A1:H1')->getFont()->getColor()->setRGB('FFFFFF');
+
+        $sheet->getStyle('B2:B' . $lastRow)->getNumberFormat()
+            ->setFormatCode('yyyy-mm-dd');
+
+        $sheet->getStyle('F2:G' . $lastRow)->getNumberFormat()
+            ->setFormatCode('$#,##0.00');
+
+        $sheet->getStyle('A2:A' . $lastRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('E2:E' . $lastRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+        foreach (range('A', 'H') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename=' . $filename);
+        header('Cache-Control: max-age=0');
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
+    }
+
+    /**************************************************************************
+     * PERFIL DE USUARIO
+     **************************************************************************/
+
+    public function profile() {
+        $userId = $_SESSION['user_id'];
+        $user = $this->userModel->findById($userId);
+        require_once __DIR__ . '/../views/admin/profile.php';
+    }
+
+    public function updateProfile() {
+        $userId = $_SESSION['user_id'];
+        
+        $username = trim($_POST['username'] ?? '');
+        $fullName = trim($_POST['full_name'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $currentPassword = $_POST['current_password'] ?? '';
+        $newPassword = $_POST['new_password'] ?? '';
+        $confirmPassword = $_POST['confirm_password'] ?? '';
+
+        // Validaciones básicas
+        if (empty($username) || empty($fullName) || empty($email)) {
+            $_SESSION['error'] = 'Todos los campos son obligatorios (excepto contraseña).';
+            header('Location: index.php?controller=admin&action=profile');
+            exit;
+        }
+
+        // Actualizar información básica
+        $updated = $this->userModel->updateProfile($userId, $username, $fullName, $email);
+        
+        if (!$updated) {
+            $_SESSION['error'] = 'No se pudo actualizar el perfil.';
+            header('Location: index.php?controller=admin&action=profile');
+            exit;
+        }
+
+        // Actualizar sesión con nuevo username
+        $_SESSION['username'] = $username;
+        $_SESSION['full_name'] = $fullName;
+
+        // Si desea cambiar contraseña
+        if (!empty($newPassword)) {
+            if ($newPassword !== $confirmPassword) {
+                $_SESSION['error'] = 'Las contraseñas nuevas no coinciden.';
+                header('Location: index.php?controller=admin&action=profile');
+                exit;
+            }
+
+            // Verificar contraseña actual
+            $user = $this->userModel->findById($userId);
+            if (!$this->userModel->verifyPassword($currentPassword, $user->password)) {
+                $_SESSION['error'] = 'La contraseña actual es incorrecta.';
+                header('Location: index.php?controller=admin&action=profile');
+                exit;
+            }
+
+            // Actualizar contraseña
+            $this->userModel->updatePassword($userId, $newPassword);
+        }
+
+        $_SESSION['success'] = 'Perfil actualizado exitosamente.';
+        header('Location: index.php?controller=admin&action=profile');
         exit;
     }
 }

@@ -73,32 +73,49 @@ class EmployeeController {
         $totalPrice = $unitPrice * $quantity;
         $userId     = $_SESSION['user_id'];
 
-        $newSaleId = $this->saleModel->createSale(
-            $userId,
-            $productId,
-            $quantity,
-            $unitPrice,
-            $totalPrice,
-            $description
-        );
+        $conn = $this->saleModel->getConnection();
+        try {
+            $conn->beginTransaction();
 
-        if (!$newSaleId) {
-            $error = 'Ocurrió un error al registrar la venta. Intenta nuevamente.';
+            $discounted = $this->productModel->decreaseStockIfAvailable($productId, $quantity);
+            if (!$discounted) {
+                throw new RuntimeException('Stock insuficiente al confirmar la venta.');
+            }
+
+            $newSaleId = $this->saleModel->createSale(
+                $userId,
+                $productId,
+                $quantity,
+                $unitPrice,
+                $totalPrice,
+                $description
+            );
+            if (!$newSaleId) {
+                throw new RuntimeException('No se pudo registrar la venta.');
+            }
+
+            $movementNote = $description !== '' ? $description : "Venta ID: {$newSaleId}";
+            $okMovement = $this->saleModel->registerStockMovement(
+                $productId,
+                $userId,
+                -$quantity,
+                'salida',
+                $movementNote
+            );
+            if (!$okMovement) {
+                throw new RuntimeException('No se pudo registrar el movimiento de stock.');
+            }
+
+            $conn->commit();
+        } catch (Throwable $e) {
+            if ($conn->inTransaction()) {
+                $conn->rollBack();
+            }
+            $error = 'No se pudo completar la venta: ' . $e->getMessage();
             $productos = $this->productModel->getAll();
             require_once __DIR__ . '/../views/employee/ventas/add_sale.php';
             return;
         }
-
-        // Actualizar stock y registrar movimiento
-        $nuevoStock = $producto->stock - $quantity;
-        $this->productModel->updateStock($productId, $nuevoStock);
-        $this->saleModel->registerStockMovement(
-            $productId,
-            $userId,
-            -$quantity,
-            'salida',
-            "Venta ID: {$newSaleId}"
-        );
 
         header('Location: index.php?controller=dashboard&action=employeeHome');
         exit;
@@ -141,6 +158,77 @@ class EmployeeController {
 
         // 3) Cargar la vista
         require_once __DIR__ . '/../views/employee/productos/list_products.php';
+    }
+
+    /**************************************************************************
+     * PERFIL DE USUARIO
+     **************************************************************************/
+
+    public function profile() {
+        require_once __DIR__ . '/../models/User.php';
+        $userModel = new User();
+        
+        $userId = $_SESSION['user_id'];
+        $user = $userModel->findById($userId);
+        require_once __DIR__ . '/../views/employee/profile.php';
+    }
+
+    public function updateProfile() {
+        require_once __DIR__ . '/../models/User.php';
+        $userModel = new User();
+        
+        $userId = $_SESSION['user_id'];
+        
+        $username = trim($_POST['username'] ?? '');
+        $fullName = trim($_POST['full_name'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $currentPassword = $_POST['current_password'] ?? '';
+        $newPassword = $_POST['new_password'] ?? '';
+        $confirmPassword = $_POST['confirm_password'] ?? '';
+
+        // Validaciones básicas
+        if (empty($username) || empty($fullName) || empty($email)) {
+            $_SESSION['error'] = 'Todos los campos son obligatorios (excepto contraseña).';
+            header('Location: index.php?controller=employee&action=profile');
+            exit;
+        }
+
+        // Actualizar información básica
+        $updated = $userModel->updateProfile($userId, $username, $fullName, $email);
+        
+        if (!$updated) {
+            $_SESSION['error'] = 'No se pudo actualizar el perfil.';
+            header('Location: index.php?controller=employee&action=profile');
+            exit;
+        }
+
+        // Actualizar sesión con nuevo username
+        $_SESSION['username'] = $username;
+        $_SESSION['full_name'] = $fullName;
+
+        // Si desea cambiar contraseña
+        if (!empty($newPassword)) {
+            if ($newPassword !== $confirmPassword) {
+                $_SESSION['error'] = 'Las contraseñas nuevas no coinciden.';
+                header('Location: index.php?controller=employee&action=profile');
+                exit;
+            }
+
+            // Verificar contraseña actual
+            $user = $userModel->findById($userId);
+            if (!$userModel->verifyPassword($currentPassword, $user->password)) {
+                $_SESSION['error'] = 'La contraseña actual es incorrecta.';
+                header('Location: index.php?controller=employee&action=profile');
+                exit;
+            }
+
+            // Actualizar contraseña
+            $userModel->updatePassword($userId, $newPassword);
+        }
+
+        $_SESSION['success'] = 'Perfil actualizado exitosamente.';
+        header('Location: index.php?controller=employee&action=profile');
+        exit;
     }
 }
 

@@ -175,6 +175,12 @@ ALTER TABLE `products`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Ajuste para control de stock minimo
+--
+ALTER TABLE `products`
+  ADD COLUMN `stock_minimum` int(11) NOT NULL DEFAULT 0 AFTER `stock`;
+
+--
 -- Indices de la tabla `sales`
 --
 ALTER TABLE `sales`

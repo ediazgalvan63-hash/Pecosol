@@ -8,8 +8,6 @@ $baseDir = dirname($vendorDir);
 return array(
     'AdminController' => $baseDir . '/controllers/AdminController.php',
     'AuthController' => $baseDir . '/controllers/AuthController.php',
-    'ChatbotController' => $baseDir . '/controllers/ChatbotController.php',
-    'ChatbotService' => $baseDir . '/models/ChatbotService.php',
     'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
     'DashboardController' => $baseDir . '/controllers/DashboardController.php',
     'DateError' => $vendorDir . '/symfony/polyfill-php83/Resources/stubs/DateError.php',
@@ -22,6 +20,7 @@ return array(
     'DateObjectError' => $vendorDir . '/symfony/polyfill-php83/Resources/stubs/DateObjectError.php',
     'DateRangeError' => $vendorDir . '/symfony/polyfill-php83/Resources/stubs/DateRangeError.php',
     'EmployeeController' => $baseDir . '/controllers/EmployeeController.php',
+    'InventoryMovement' => $baseDir . '/models/InventoryMovement.php',
     'Override' => $vendorDir . '/symfony/polyfill-php83/Resources/stubs/Override.php',
     'Product' => $baseDir . '/models/Product.php',
     'SQLite3Exception' => $vendorDir . '/symfony/polyfill-php83/Resources/stubs/SQLite3Exception.php',

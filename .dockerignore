@@ -1,0 +1,10 @@
+.git
+.gitignore
+.venv
+python_api/.venv
+node_modules
+python_api/__pycache__
+python_api/.env
+*.log
+vendor/bin
+agent-transcripts

@@ -148,6 +148,7 @@ $username = $_SESSION['username'] ?? 'Empleado';
   <a href="<?php echo BASE_URL; ?>index.php?controller=employee&action=addSaleForm">Registrar Venta</a>
   <a href="<?php echo BASE_URL; ?>index.php?controller=employee&action=listSalesEmployee">Mis Ventas</a>
   <a href="<?php echo BASE_URL; ?>index.php?controller=employee&action=listProductsEmployee">Productos</a>
+  <a href="<?php echo BASE_URL; ?>index.php?controller=employee&action=profile">👤 Mi Perfil</a>
   
 </div>
 <div class="user">

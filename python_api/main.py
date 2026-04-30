@@ -23,9 +23,11 @@ app = FastAPI(
 )
 
 # Configurar CORS para permitir peticiones desde el frontend PHP
+allowed_origins = os.getenv("CHATBOT_ALLOWED_ORIGINS", "http://localhost,http://localhost:80,http://localhost:3000")
+allowed_origins = [origin.strip() for origin in allowed_origins.split(",") if origin.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost", "http://localhost:80", "http://localhost:3000"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -111,10 +113,14 @@ async def get_stats():
 
 if __name__ == "__main__":
     import uvicorn
+    host = os.getenv("API_HOST", "127.0.0.1")
+    # Railway inyecta PORT automáticamente
+    port = int(os.getenv("PORT", os.getenv("API_PORT", "8000")))
+    reload_enabled = os.getenv("API_RELOAD", "true").lower() == "true"
     uvicorn.run(
         "main:app",
-        host="127.0.0.1",
-        port=8000,
-        reload=True,
+        host=host,
+        port=port,
+        reload=reload_enabled,
         log_level="info"
     )

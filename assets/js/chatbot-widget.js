@@ -5,7 +5,10 @@
 
 class ChatbotWidget {
     constructor() {
-        this.apiUrl = 'http://127.0.0.1:8000/api/chat';
+        const configuredUrl = (typeof window !== 'undefined' && window.CHATBOT_API_URL)
+            ? String(window.CHATBOT_API_URL).trim()
+            : '';
+        this.apiUrl = configuredUrl || 'http://127.0.0.1:8000/api/chat';
         this.isOpen = false;
         this.sessionId = this.generateSessionId();
         this.init();
@@ -186,15 +189,38 @@ class ChatbotWidget {
             console.error('Error:', error);
             this.hideTyping();
             
-            let errorMessage = 'Error de conexión. ';
+            let errorMessage = '';
+            
             if (error.message.includes('Failed to fetch')) {
-                errorMessage += 'Verifica que el servidor Python esté ejecutándose en http://127.0.0.1:8000';
+                errorMessage = `
+                    <strong>⚠️ Servicio de chatbot no disponible</strong><br><br>
+                    El asistente IA requiere que el servidor Python esté ejecutándose.<br><br>
+                    <strong>Para iniciar el servidor:</strong><br>
+                    1. Abre: <code>python_api/INICIAR_CHATBOT.bat</code><br>
+                    2. Espera a que muestre "Uvicorn running on http://127.0.0.1:8000"<br>
+                    3. Vuelve a intentar<br><br>
+                    <strong>Endpoint configurado:</strong> <code>${this.apiUrl}</code><br><br>
+                    <strong>Si necesitas ayuda:</strong><br>
+                    • Lee: <code>python_api/INICIO_RAPIDO.md</code><br>
+                    • URL esperada: <code>http://127.0.0.1:8000</code>
+                `;
+            } else if (error.message.includes('404')) {
+                errorMessage = `
+                    <strong>❌ Servidor encontrado pero endpoint no disponible</strong><br><br>
+                    El servidor Python está corriendo pero el endpoint /api/chat no se encontró.<br>
+                    Verifica que main.py esté actualizado.
+                `;
             } else {
-                errorMessage += error.message;
+                errorMessage = `
+                    <strong>❌ Error inesperado</strong><br><br>
+                    ${error.message}<br><br>
+                    Revisa la consola del navegador (F12) para más detalles.
+                `;
             }
             
             this.addMessage(errorMessage, 'error');
         }
+
     }
 
     addMessage(text, type = 'bot') {

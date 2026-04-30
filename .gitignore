@@ -1,0 +1,12 @@
+.venv/
+vendor/
+node_modules/
+desktop-app/node_modules/
+desktop-app/dist/
+desktop-app/dist-new/
+python_api/.venv/
+python_api/__pycache__/
+python_api/.env
+*.log
+composer.phar
+python_api/python_installer.exe

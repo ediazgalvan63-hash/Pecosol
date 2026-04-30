@@ -11,6 +11,10 @@ class Sale {
         $this->conn = Database::connect();
     }
 
+    public function getConnection(): PDO {
+        return $this->conn;
+    }
+
     /**
      * createSale(...)
      * - Inserta una nueva venta en la tabla `sales`.
@@ -74,7 +78,7 @@ class Sale {
      *   incluyendo nombre de usuario y nombre de producto, ordenadas por fecha descendente.
      * - Devuelve un arreglo de objetos.
      */
-    public function getAllSales(): array {
+    public function getAllSales(?string $startDate = null, ?string $endDate = null): array {
         $sql = "
             SELECT 
               s.id,
@@ -90,9 +94,23 @@ class Sale {
             FROM {$this->table} AS s
             JOIN users    AS u ON s.user_id    = u.id
             JOIN products AS p ON s.product_id = p.id
-            ORDER BY s.sale_date DESC
+            WHERE 1=1
         ";
-        $stmt = $this->conn->query($sql);
+        $params = [];
+        if (!empty($startDate)) {
+            $sql .= " AND DATE(s.sale_date) >= :start_date";
+            $params[':start_date'] = $startDate;
+        }
+        if (!empty($endDate)) {
+            $sql .= " AND DATE(s.sale_date) <= :end_date";
+            $params[':end_date'] = $endDate;
+        }
+        $sql .= " ORDER BY s.sale_date DESC";
+        $stmt = $this->conn->prepare($sql);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_OBJ);
     }
 
@@ -166,6 +184,23 @@ class Sale {
         $stmt->bindParam(':quantity_change',$quantityChange, PDO::PARAM_INT);
         $stmt->bindParam(':movement_type',  $movementType);
         $stmt->bindParam(':notes',          $notes);
+        return $stmt->execute();
+    }
+
+    public function updateSaleMovementNoteBySaleId(int $saleId, string $newNotes): bool {
+        $defaultNote = "Venta ID: {$saleId}";
+        $editionNote = "Edición Venta ID: {$saleId}";
+
+        $sql = "
+            UPDATE stock_movements
+            SET notes = :notes
+            WHERE movement_type = 'salida'
+              AND notes IN (:default_note, :edition_note)
+        ";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindParam(':notes', $newNotes);
+        $stmt->bindParam(':default_note', $defaultNote);
+        $stmt->bindParam(':edition_note', $editionNote);
         return $stmt->execute();
     }
 

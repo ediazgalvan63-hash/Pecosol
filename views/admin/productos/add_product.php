@@ -182,6 +182,18 @@
         required
       >
 
+      <label for="stock_minimum">Stock mínimo:</label>
+      <input
+        type="number"
+        id="stock_minimum"
+        name="stock_minimum"
+        min="1"
+        step="1"
+        placeholder="Ej: 10"
+        required
+      >
+      <small style="color:#a0fdfd; display:block; margin-bottom:16px;">Define un stock mínimo real mayor a cero para alertas de reabastecimiento.</small>
+
       <button type="submit">Guardar Producto</button>
     </form>
   </div>

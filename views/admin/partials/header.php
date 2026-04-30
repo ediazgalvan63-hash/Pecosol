@@ -188,28 +188,45 @@ $currentAction     = $_GET['action'] ?? '';
 
     <!-- Enlaces navegación -->
     <div class="nav-links" id="mainNavLinks">
-      <a href="<?php echo BASE_URL; ?>?controller=dashboard&action=adminHome"
-         class="<?php echo ($currentController === 'dashboard' && $currentAction === 'adminHome') ? 'active' : ''; ?>">
-        Dashboard
+      <a href="<?php echo BASE_URL; ?>?controller=admin&action=listInventoryMovements"
+         class="<?php echo ($currentController === 'admin' && in_array($currentAction, ['listInventoryMovements', 'addInventoryMovementForm'], true)) ? 'active' : ''; ?>">
+        Inventario
+      </a>
+      <a href="<?php echo BASE_URL; ?>?controller=admin&action=lowStockAlerts"
+         class="<?php echo ($currentController === 'admin' && $currentAction === 'lowStockAlerts') ? 'active' : ''; ?>">
+        ⚠️ Alertas
       </a>
       <a href="<?php echo BASE_URL; ?>?controller=admin&action=listProducts"
          class="<?php echo ($currentController === 'admin' && $currentAction === 'listProducts') ? 'active' : ''; ?>">
         Productos
       </a>
+      <a href="<?php echo BASE_URL; ?>?controller=admin&action=listSalesAdmin"
+         class="<?php echo ($currentController === 'admin' && $currentAction === 'listSalesAdmin') ? 'active' : ''; ?>">
+        Ventas
+      </a>
       <a href="<?php echo BASE_URL; ?>?controller=admin&action=listEmployees"
          class="<?php echo ($currentController === 'admin' && $currentAction === 'listEmployees') ? 'active' : ''; ?>">
         Empleados
       </a>
-      <a href="<?php echo BASE_URL; ?>?controller=admin&action=listSalesAdmin"
-         class="<?php echo ($currentController === 'admin' && $currentAction === 'listSalesAdmin') ? 'active' : ''; ?>">
-        Ventas
+      <a href="<?php echo BASE_URL; ?>?controller=admin&action=reports"
+         class="<?php echo ($currentController === 'admin' && $currentAction === 'reports') ? 'active' : ''; ?>">
+        Reportes
+      </a>
+      <a href="<?php echo BASE_URL; ?>?controller=dashboard&action=adminHome"
+         class="<?php echo ($currentController === 'dashboard' && $currentAction === 'adminHome') ? 'active' : ''; ?>">
+        Dashboard
       </a>
     </div>
 
     <!-- Usuario -->
     <div class="user">
       <span>Bienvenido, <strong><?php echo htmlspecialchars($username); ?></strong></span>
+      <a href="<?php echo BASE_URL; ?>?controller=admin&action=profile" style="margin-right: 10px; color: #00fff0; text-decoration: none;">👤 Mi Perfil</a>
       <a class="logout" href="<?php echo BASE_URL; ?>?controller=auth&action=logout">Cerrar sesión</a>
     </div>
   </nav>
 </header>
+
+<script>
+  window.CHATBOT_API_URL = <?php echo json_encode(CHATBOT_API_URL, JSON_UNESCAPED_SLASHES); ?>;
+</script>

@@ -50,21 +50,44 @@ class Product {
         return $stmt->execute();
     }
 
+    public function increaseStock(int $productId, int $quantity): bool {
+        $sql = "UPDATE {$this->table} SET stock = stock + :quantity WHERE id = :id";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindParam(':quantity', $quantity, PDO::PARAM_INT);
+        $stmt->bindParam(':id', $productId, PDO::PARAM_INT);
+        return $stmt->execute();
+    }
+
+    public function decreaseStockIfAvailable(int $productId, int $quantity): bool {
+        $sql = "
+            UPDATE {$this->table}
+            SET stock = stock - :quantity
+            WHERE id = :id
+              AND stock >= :quantity
+        ";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindParam(':quantity', $quantity, PDO::PARAM_INT);
+        $stmt->bindParam(':id', $productId, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->rowCount() > 0;
+    }
+
     /**
      * create($name, $description, $price, $stock)
      * - Inserta un nuevo producto en la BD.
      * - Devuelve true si la inserción fue exitosa, false en caso contrario.
      */
-    public function create(string $name, string $description, float $price, int $stock): bool {
+    public function create(string $name, string $description, float $price, int $stock, int $stockMinimum = 0): bool {
         $sql = "
-            INSERT INTO {$this->table} (name, description, price, stock)
-            VALUES (:name, :description, :price, :stock)
+            INSERT INTO {$this->table} (name, description, price, stock, stock_minimum)
+            VALUES (:name, :description, :price, :stock, :stock_minimum)
         ";
         $stmt = $this->conn->prepare($sql);
         $stmt->bindParam(':name',        $name);
         $stmt->bindParam(':description', $description);
         $stmt->bindParam(':price',       $price);
         $stmt->bindParam(':stock',       $stock);
+        $stmt->bindParam(':stock_minimum', $stockMinimum, PDO::PARAM_INT);
         return $stmt->execute();
     }
 
@@ -73,13 +96,21 @@ class Product {
      * - Actualiza un producto existente (nombre, descripción, precio, stock).
      * - Devuelve true si la actualización fue exitosa, false en caso contrario.
      */
-    public function update(int $id, string $name, string $description, float $price, int $stock): bool {
+    public function update(
+        int $id,
+        string $name,
+        string $description,
+        float $price,
+        int $stock,
+        int $stockMinimum = 0
+    ): bool {
         $sql = "
             UPDATE {$this->table}
             SET name        = :name,
                 description = :description,
                 price       = :price,
-                stock       = :stock
+                stock       = :stock,
+                stock_minimum = :stock_minimum
             WHERE id = :id
         ";
         $stmt = $this->conn->prepare($sql);
@@ -87,6 +118,7 @@ class Product {
         $stmt->bindParam(':description', $description);
         $stmt->bindParam(':price',       $price);
         $stmt->bindParam(':stock',       $stock);
+        $stmt->bindParam(':stock_minimum', $stockMinimum, PDO::PARAM_INT);
         $stmt->bindParam(':id',          $id, PDO::PARAM_INT);
         return $stmt->execute();
     }
@@ -112,5 +144,30 @@ class Product {
         $stmt = $this->conn->query($sql);
         $row = $stmt->fetch(PDO::FETCH_OBJ);
         return (int)$row->total_stock;
+    }
+
+    public function countProducts(): int {
+        $sql = "SELECT COUNT(*) AS total FROM {$this->table}";
+        $stmt = $this->conn->query($sql);
+        $row = $stmt->fetch(PDO::FETCH_OBJ);
+        return (int)$row->total;
+    }
+
+    public function countLowStockProducts(): int {
+        $sql = "SELECT COUNT(*) AS total FROM {$this->table} WHERE stock <= stock_minimum";
+        $stmt = $this->conn->query($sql);
+        $row = $stmt->fetch(PDO::FETCH_OBJ);
+        return (int)$row->total;
+    }
+
+    public function getLowStockProducts(): array {
+        $sql = "
+            SELECT *
+            FROM {$this->table}
+            WHERE stock <= stock_minimum
+            ORDER BY stock ASC, name ASC
+        ";
+        $stmt = $this->conn->query($sql);
+        return $stmt->fetchAll(PDO::FETCH_OBJ);
     }
 }

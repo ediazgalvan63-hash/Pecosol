@@ -239,6 +239,18 @@
         required
       >
 
+      <label for="stock_minimum">Stock mínimo:</label>
+      <input
+        type="number"
+        id="stock_minimum"
+        name="stock_minimum"
+        min="1"
+        step="1"
+        value="<?php echo (int)($producto->stock_minimum ?? 1); ?>"
+        required
+      >
+      <small style="color:#a0fdfd; display:block; margin-bottom:16px;">Este valor debe ser mayor a cero para controlar inventarios críticos.</small>
+
       <button type="submit">Actualizar Producto</button>
     </form>
   </div>

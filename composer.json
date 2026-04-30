@@ -4,8 +4,9 @@
   "version": "1.0.0",
   "require": {
     "openai-php/client": "^0.10.0",
-    "symfony/http-client": "^7.3",
-    "nyholm/psr7": "^1.8"
+    "symfony/http-client": "^6.4",
+    "nyholm/psr7": "^1.8",
+    "phpoffice/phpspreadsheet": "^3.3"
   },
   "autoload": {
     "classmap": [

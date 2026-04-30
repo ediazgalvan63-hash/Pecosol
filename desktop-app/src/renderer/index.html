@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pecosol Desktop</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; background: #0f172a; color: #e2e8f0; }
+    .card { background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+    input, button { padding: 8px; margin: 4px 0; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { border-bottom: 1px solid #334155; text-align: left; padding: 8px; }
+    button { cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>Pecosol Desktop (Offline)</h1>
+
+  <section class="card">
+    <h2>Nuevo producto</h2>
+    <input id="name" placeholder="Nombre" />
+    <input id="description" placeholder="Descripcion" />
+    <input id="price" type="number" step="0.01" placeholder="Precio" />
+    <input id="stock" type="number" placeholder="Stock" />
+    <input id="stockMin" type="number" placeholder="Stock minimo" />
+    <button id="saveBtn">Guardar</button>
+  </section>
+
+  <section class="card">
+    <h2>Productos</h2>
+    <table>
+      <thead>
+        <tr><th>ID</th><th>Nombre</th><th>Precio</th><th>Stock</th></tr>
+      </thead>
+      <tbody id="productsBody"></tbody>
+    </table>
+  </section>
+
+  <section class="card">
+    <h2>Resumen</h2>
+    <pre id="summary"></pre>
+  </section>
+
+  <section class="card">
+    <h2>Chatbot Offline (SQLite)</h2>
+    <input id="chatInput" placeholder="Ej: dame ventas o inventario" />
+    <button id="chatBtn">Preguntar</button>
+    <pre id="chatOutput"></pre>
+  </section>
+
+  <script src="./renderer.js"></script>
+</body>
+</html>

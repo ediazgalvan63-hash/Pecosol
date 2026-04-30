@@ -121,6 +121,7 @@
 
 <div class="container">
   <h1>Listado de Ventas</h1>
+  <p style="color:#a0cfe8; margin-bottom:18px;">Las ventas se consideran como salidas de inventario y se registran en el kardex para mantener trazabilidad.</p>
 
   <a href="<?php echo BASE_URL; ?>index.php?controller=admin&action=addSaleAdminForm" class="button">
      Registrar Venta
@@ -172,12 +173,11 @@
           </tr>
         <?php endforeach; ?>
       </tbody>
-      <div class="summary">
+    </table>
+    <div class="summary" style="margin-top:18px; color:#a0fdfd;">
       <strong>Ganancia del día (<?php echo date('d-m-Y'); ?>):</strong>
       S/. <?php echo number_format($totalHoy, 2, '.', ','); ?>
-        </div>
-        <br>
-    </table>
+    </div>
   <?php else: ?>
     <div class="no-data">
       <p>No hay ventas registradas aún.</p>

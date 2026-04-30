@@ -123,6 +123,15 @@ unset($_SESSION['error_product_delete']);
         .actions .delete {
             color: #ff6b6b;
         }
+        .badge-alert {
+            background: #ff6b6b;
+            color: #1a1a2e;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 8px;
+        }
     </style>
 </head>
 <body>
@@ -132,6 +141,9 @@ unset($_SESSION['error_product_delete']);
 
     <div class="container">
         <h1>Listado de Productos</h1>
+        <p style="color:#ffcccb; margin-top:-10px; margin-bottom:15px;">
+            Productos con bajo stock: <?php echo (int)($lowStockCount ?? 0); ?>
+        </p>
 
         <!-- Mensaje de error al eliminar -->
         <?php if ($error): ?>
@@ -165,6 +177,8 @@ unset($_SESSION['error_product_delete']);
                         <th>Descripción</th>
                         <th>Precio (S/.)</th>
                         <th>Stock</th>
+                        <th>Stock minimo</th>
+                        <th>Estado</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -175,7 +189,15 @@ unset($_SESSION['error_product_delete']);
                             <td class="prod-name"><?php echo htmlspecialchars($prod->name); ?></td>
                             <td class="prod-desc"><?php echo htmlspecialchars($prod->description); ?></td>
                             <td><?php echo number_format($prod->price, 2, '.', ','); ?></td>
-                            <td><?php echo $prod->stock; ?></td>
+                            <td><?php echo (int)$prod->stock; ?></td>
+                            <td><?php echo (int)($prod->stock_minimum ?? 0); ?></td>
+                            <td>
+                                <?php if ((int)$prod->stock <= (int)($prod->stock_minimum ?? 0)): ?>
+                                    <span class="badge-alert">Bajo stock</span>
+                                <?php else: ?>
+                                    <span style="color:#7dff7d;">Normal</span>
+                                <?php endif; ?>
+                            </td>
                             <td class="actions">
                                 <a
                                     href="<?php echo BASE_URL; ?>/index.php?controller=admin&action=editProductForm&id=<?php echo $prod->id; ?>"

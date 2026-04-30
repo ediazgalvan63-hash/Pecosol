@@ -27,10 +27,16 @@ class AuthController {
             $username = trim($_POST['username'] ?? '');
             $password = trim($_POST['password'] ?? '');
 
+            // Agregar logging para debug
+            error_log("=== LOGIN ATTEMPT ===");
+            error_log("Username: '" . $username . "' (length: " . strlen($username) . ")");
+            error_log("Password length: " . strlen($password));
+
             // b) Validar que ambos campos no estén vacíos
             $error = '';
             if ($username === '' || $password === '') {
                 $error = 'Usuario y contraseña son obligatorios.';
+                error_log("ERROR: Empty username or password");
                 require __DIR__ . '/../views/auth/login.php';
                 return;
             }
@@ -38,13 +44,20 @@ class AuthController {
             // c) Buscar usuario en BD por username
             $user = $this->userModel->findByUsername($username);
             if ($user) {
+                error_log("User found: " . $user->username . " (role: " . $user->role . ")");
+                
                 // d) Verificar la contraseña
-                if ($this->userModel->verifyPassword($password, $user->password)) {
+                $passwordVerified = $this->userModel->verifyPassword($password, $user->password);
+                error_log("Password verified: " . var_export($passwordVerified, true));
+                
+                if ($passwordVerified) {
                     // Credenciales correctas: guardar datos en sesión
                     $_SESSION['user_id']   = $user->id;
                     $_SESSION['username']  = $user->username;
                     $_SESSION['full_name'] = $user->full_name;
                     $_SESSION['role']      = $user->role;
+                    
+                    error_log("Login successful! Session established. Redirecting to " . ($user->role === 'admin' ? 'adminHome' : 'employeeHome'));
 
                     // Redirigir según rol
                     if ($user->role === 'admin') {
@@ -57,12 +70,14 @@ class AuthController {
                 } else {
                     // Contraseña incorrecta
                     $error = 'Contraseña incorrecta.';
+                    error_log("ERROR: Password verification failed");
                     require __DIR__ . '/../views/auth/login.php';
                     return;
                 }
             } else {
                 // El usuario no existe
                 $error = 'Usuario no existe.';
+                error_log("ERROR: User not found");
                 require __DIR__ . '/../views/auth/login.php';
                 return;
             }

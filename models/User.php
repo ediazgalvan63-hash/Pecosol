@@ -9,6 +9,7 @@ class User {
 
     public function __construct() {
         $this->conn = Database::connect();
+        $this->ensureDefaultUsers();
     }
 
     /**
@@ -155,6 +156,74 @@ class User {
      * - Devuelve true si coinciden, false en caso contrario.
      */
     public function verifyPassword(string $plainPassword, string $hashedPassword): bool {
-        return password_verify($plainPassword, $hashedPassword);
+        // Compatibilidad con hashes bcrypt actuales
+        if (password_verify($plainPassword, $hashedPassword)) {
+            return true;
+        }
+
+        // Compatibilidad legacy: algunas migraciones antiguas guardaron texto plano
+        return hash_equals($hashedPassword, $plainPassword);
+    }
+
+    /**
+     * ensureDefaultUsers()
+     * - Si la tabla users está vacía en un despliegue nuevo (p.ej. Railway),
+     *   crea usuarios base para permitir acceso inmediato.
+     */
+    private function ensureDefaultUsers(): void {
+        try {
+            $stmt = $this->conn->query("SELECT COUNT(*) AS total FROM {$this->table}");
+            $row = $stmt->fetch(PDO::FETCH_OBJ);
+            $totalUsers = (int)($row->total ?? 0);
+
+            if ($totalUsers > 0) {
+                return;
+            }
+
+            $defaultPassword = password_hash('123456', PASSWORD_BCRYPT);
+            $insert = $this->conn->prepare("
+                INSERT INTO {$this->table} (username, password, full_name, email, role)
+                VALUES (:username, :password, :full_name, :email, :role)
+            ");
+
+            $users = [
+                ['admin', 'Administrador Principal', 'admin@pecosol.com', 'admin'],
+                ['empleado1', 'Empleado Uno', 'empleado1@pecosol.com', 'employee'],
+                ['Ale', 'Ale Peres', 'ale@pecosol.com', 'employee'],
+            ];
+
+            foreach ($users as $user) {
+                $insert->execute([
+                    ':username' => $user[0],
+                    ':password' => $defaultPassword,
+                    ':full_name' => $user[1],
+                    ':email' => $user[2],
+                    ':role' => $user[3],
+                ]);
+            }
+        } catch (Throwable $e) {
+            // No interrumpir el flujo de login por fallo de seeding
+        }
+    }
+
+    /**
+     * updateProfile($id, $username, $fullName, $email)
+     * - Actualiza datos del perfil de usuario (username, full_name, email).
+     * - Devuelve true si la actualización fue exitosa, o false en caso contrario.
+     */
+    public function updateProfile(int $id, string $username, string $fullName, string $email): bool {
+        $sql = "
+            UPDATE {$this->table}
+            SET username  = :username,
+                full_name = :full_name,
+                email     = :email
+            WHERE id = :id
+        ";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindParam(':username',  $username);
+        $stmt->bindParam(':full_name', $fullName);
+        $stmt->bindParam(':email',     $email);
+        $stmt->bindParam(':id',        $id, PDO::PARAM_INT);
+        return $stmt->execute();
     }
 }

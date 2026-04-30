@@ -4,6 +4,7 @@
 class DashboardController {
     private $saleModel;
     private $productModel;
+    private $inventoryMovementModel;
 
     public function __construct() {
         // 1) Asegurar que la sesión esté iniciada
@@ -20,8 +21,10 @@ class DashboardController {
         // 3) Instanciar modelos que usaremos en el dashboard
         require_once __DIR__ . '/../models/Sale.php';
         require_once __DIR__ . '/../models/Product.php';
+        require_once __DIR__ . '/../models/InventoryMovement.php';
         $this->saleModel    = new Sale();
         $this->productModel = new Product();
+        $this->inventoryMovementModel = new InventoryMovement();
     }
 
     /**
@@ -54,9 +57,16 @@ class DashboardController {
 
         // 4) Obtener total de stock de todos los productos
         $totalStock = $this->productModel->getTotalStock();
+        $totalProductos = $this->productModel->countProducts();
+        $productosBajoStock = $this->productModel->countLowStockProducts();
 
         // 5) Traer últimas 5 ventas recientes (con JOIN para nombre de usuario y producto)
         $ultimasVentas = $this->saleModel->getLastSales(5);
+        $ultimosMovimientos = $this->inventoryMovementModel->getLastMovements(6);
+        $resumenMovimientos = $this->inventoryMovementModel->getSummaryInOut();
+        $totalEntradas = $resumenMovimientos['entradas'];
+        $totalSalidas = $resumenMovimientos['salidas'];
+        $movimientosHoy = $this->inventoryMovementModel->countMovementsByDateRange($hoy, $hoy);
 
         // 6) Generar arreglo con ventas de cada uno de los últimos 7 días
         $datosSemana = [];

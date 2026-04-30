@@ -1,0 +1,10 @@
+.git
+.venv
+python_api/.venv
+desktop-app/node_modules
+desktop-app/dist
+node_modules
+vendor
+composer.phar
+python_api/python_installer.exe
+agent-transcripts
