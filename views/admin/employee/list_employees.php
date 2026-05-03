@@ -159,6 +159,7 @@ if (session_status() === PHP_SESSION_NONE) {
             <th>Usuario</th>
             <th>Nombre Completo</th>
             <th>Email</th>
+            <th>Fecha y Hora Creación</th>
             <th>Acciones</th>
           </tr>
         </thead>
@@ -169,6 +170,7 @@ if (session_status() === PHP_SESSION_NONE) {
               <td class="emp-username"><?php echo htmlspecialchars($emp->username); ?></td>
               <td class="emp-fullname"><?php echo htmlspecialchars($emp->full_name); ?></td>
               <td class="emp-email"><?php echo htmlspecialchars($emp->email); ?></td>
+              <td><?php echo (isset($emp->created_at) && $emp->created_at) ? date('d/m/Y H:i', strtotime($emp->created_at)) : '-'; ?></td>
               <td class="actions">
                 <a 
                   href="index.php?controller=admin&action=editEmployeeForm&id=<?php echo $emp->id; ?>" 

@@ -41,9 +41,10 @@ class User {
     /**
      * getAllEmployees()
      * - Devuelve todos los usuarios con rol = 'employee' como arreglo de objetos.
+     * - Ordenados por ID de forma ascendente.
      */
     public function getAllEmployees(): array {
-        $sql  = "SELECT * FROM {$this->table} WHERE role = 'employee' ORDER BY full_name";
+        $sql  = "SELECT * FROM {$this->table} WHERE role = 'employee' ORDER BY id ASC";
         $stmt = $this->conn->query($sql);
         return $stmt->fetchAll(PDO::FETCH_OBJ);
     }

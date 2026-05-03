@@ -178,6 +178,7 @@ unset($_SESSION['error_product_delete']);
                         <th>Precio (S/.)</th>
                         <th>Stock</th>
                         <th>Stock minimo</th>
+                        <th>Fecha y Hora</th>
                         <th>Estado</th>
                         <th>Acciones</th>
                     </tr>
@@ -191,6 +192,7 @@ unset($_SESSION['error_product_delete']);
                             <td><?php echo number_format($prod->price, 2, '.', ','); ?></td>
                             <td><?php echo (int)$prod->stock; ?></td>
                             <td><?php echo (int)($prod->stock_minimum ?? 0); ?></td>
+                            <td><?php echo (isset($prod->created_at) && $prod->created_at) ? date('d/m/Y H:i', strtotime($prod->created_at)) : '-'; ?></td>
                             <td>
                                 <?php if ((int)$prod->stock <= (int)($prod->stock_minimum ?? 0)): ?>
                                     <span class="badge-alert">Bajo stock</span>

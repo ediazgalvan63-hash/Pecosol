@@ -14,9 +14,10 @@ class Product {
     /**
      * getAll()
      * - Devuelve todos los productos como arreglo de objetos.
+     * - Ordenados por ID de forma ascendente.
      */
     public function getAll(): array {
-        $stmt = $this->conn->query("SELECT * FROM {$this->table} ORDER BY name");
+        $stmt = $this->conn->query("SELECT * FROM {$this->table} ORDER BY id ASC");
         return $stmt->fetchAll(PDO::FETCH_OBJ);
     }
 
