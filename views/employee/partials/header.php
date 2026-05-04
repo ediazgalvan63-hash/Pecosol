@@ -157,3 +157,7 @@ $username = $_SESSION['username'] ?? 'Empleado';
 </div>
   </nav>
 </header>
+<script>
+  window.CHATBOT_API_URL = <?php echo json_encode(CHATBOT_API_URL, JSON_UNESCAPED_SLASHES); ?>;
+  window.CHATBOT_USER_ID = <?php echo json_encode($_SESSION['user_id'] ?? null, JSON_UNESCAPED_SLASHES); ?>;
+</script>

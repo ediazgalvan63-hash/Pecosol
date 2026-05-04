@@ -8,19 +8,89 @@ class ChatbotWidget {
         const configuredUrl = (typeof window !== 'undefined' && window.CHATBOT_API_URL)
             ? String(window.CHATBOT_API_URL).trim()
             : '';
-        this.apiUrl = configuredUrl || 'http://127.0.0.1:8000/api/chat';
+        const localDefault = 'http://127.0.0.1:8000/api/chat';
+        if (!configuredUrl) {
+            this.apiUrl = localDefault;
+        } else if (configuredUrl === localDefault && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            this.apiUrl = `${window.location.origin}/api/chat`;
+        } else {
+            this.apiUrl = configuredUrl;
+        }
         this.isOpen = false;
+        this.apiUrlResolved = false;
         this.sessionId = this.generateSessionId();
         this.init();
+    }
+
+    async resolveApiUrl(retries = 5, delayMs = 1500) {
+        const candidates = [];
+        if (typeof window !== 'undefined' && window.CHATBOT_API_URL) {
+            candidates.push(String(window.CHATBOT_API_URL).trim());
+        }
+        if (window.location && window.location.origin) {
+            candidates.push(`${window.location.origin}/api/chat`);
+        }
+        candidates.push('http://localhost:8000/api/chat');
+        candidates.push('http://127.0.0.1:8000/api/chat');
+
+        const uniqueCandidates = [...new Set(candidates.filter(Boolean))];
+
+        for (let attempt = 1; attempt <= retries; attempt++) {
+            for (const url of uniqueCandidates) {
+                const healthUrl = url.replace(/\/api\/chat\/?$/, '/health');
+                try {
+                    const controller = new AbortController();
+                    const timeout = setTimeout(() => controller.abort(), 1500);
+                    const response = await fetch(healthUrl, {
+                        method: 'GET',
+                        signal: controller.signal,
+                    });
+                    clearTimeout(timeout);
+                    if (!response.ok) {
+                        continue;
+                    }
+                    const json = await response.json().catch(() => null);
+                    // Validar que sea el backend real.
+                    // Aceptar tanto el FastAPI con `database` como el servidor simple con `service`.
+                    const hasDatabaseHealth = json && typeof json.database === 'string';
+                    const hasServiceHealth = json && typeof json.service === 'string' && json.service !== 'Pecosol Chatbot API Test';
+                    const isTestServer = json && json.service === 'Pecosol Chatbot API Test';
+                    if ((!hasDatabaseHealth && !hasServiceHealth) || isTestServer) {
+                        console.warn(`⚠️ Endpoint no válido o de prueba detectado en ${url}, ignorando.`);
+                        continue;
+                    }
+                    this.apiUrl = url;
+                    this.apiUrlResolved = true;
+                    console.log(`✅ Chatbot endpoint activo detectado: ${url}`);
+                    return true;
+                } catch (error) {
+                    // Intentar siguiente candidato
+                }
+            }
+
+            if (attempt < retries) {
+                console.log(`⏳ Intento ${attempt} fallido. Reintentando en ${delayMs}ms...`);
+                await this.sleep(delayMs);
+            }
+        }
+
+        this.apiUrlResolved = false;
+        console.warn(`⚠️ No se encontró un endpoint de chatbot activo. Usando: ${this.apiUrl}`);
+        return false;
     }
 
     generateSessionId() {
         return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     }
 
+    sleep(ms) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
     init() {
         this.createWidget();
         this.attachEventListeners();
+        this.resolveApiUrl();
         console.log('✅ Chatbot Widget inicializado');
     }
 
@@ -157,6 +227,16 @@ class ChatbotWidget {
         // Mostrar indicador de escritura
         this.showTyping();
 
+        if (!this.apiUrlResolved) {
+            await this.resolveApiUrl(10, 2000);
+        }
+
+        if (!this.apiUrlResolved) {
+            this.hideTyping();
+            this.addMessage('⚠️ El servidor de chatbot aún no está disponible. Espera unos segundos y vuelve a intentarlo. Si el servidor local no está iniciado, ejecuta python_api/INICIAR_CHATBOT.bat o python_api/start.bat y asegúrate de usar Python 3.12 o 3.13.', 'error');
+            return;
+        }
+
         try {
             // Llamar a la API Python
             const response = await fetch(this.apiUrl, {
@@ -166,12 +246,18 @@ class ChatbotWidget {
                 },
                 body: JSON.stringify({
                     message: message,
+                    user_id: typeof window.CHATBOT_USER_ID !== 'undefined' ? window.CHATBOT_USER_ID : null,
                     session_id: this.sessionId
                 })
             });
 
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                const status = response.status;
+                let extra = '';
+                if (status === 404) {
+                    extra = ' El endpoint /api/chat no existe. Asegúrate de iniciar el servidor Python correcto con python_api/start.bat o python_api/iniciar-chatbot-background.bat.';
+                }
+                throw new Error(`HTTP error! status: ${status}.${extra}`);
             }
 
             const data = await response.json();
@@ -197,7 +283,7 @@ class ChatbotWidget {
                     El asistente IA requiere que el servidor Python esté ejecutándose.<br><br>
                     <strong>Para iniciar el servidor:</strong><br>
                     1. Abre: <code>python_api/INICIAR_CHATBOT.bat</code><br>
-                    2. Espera a que muestre "Uvicorn running on http://127.0.0.1:8000"<br>
+                    2. Espera a que el servidor responda en <code>http://127.0.0.1:8000</code><br>
                     3. Vuelve a intentar<br><br>
                     <strong>Endpoint configurado:</strong> <code>${this.apiUrl}</code><br><br>
                     <strong>Si necesitas ayuda:</strong><br>

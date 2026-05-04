@@ -7,6 +7,7 @@ import os
 from typing import Dict, List, Optional, Any
 import logging
 import re
+from datetime import date, timedelta
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -23,6 +24,12 @@ class DatabaseService:
             'port': int(os.getenv('DB_PORT', '3306'))
         }
         self.connection = None
+        # Offset horario local para reportes diarios (ej: -05:00).
+        # En Railway/MySQL UTC evita que "ventas de hoy" quede desfasado.
+        self.app_tz_offset = os.getenv('APP_TIMEZONE_OFFSET', '-05:00')
+        # true: sale_date está en UTC y se convierte a horario local para reportes diarios.
+        # false: sale_date ya está en horario local y se compara sin convertir.
+        self.sales_datetime_is_utc = os.getenv('SALES_DATETIME_IS_UTC', 'true').lower() in ('1', 'true', 'yes')
     
     def get_connection(self):
         """Obtener conexión a la base de datos"""
@@ -104,14 +111,16 @@ class DatabaseService:
         total_data = self.execute_query(total_query)[0]
         
         # Ventas recientes (últimos 30 días)
+        today = date.today()
+        thirty_days_ago = (today - timedelta(days=30)).strftime('%Y-%m-%d')
         recent_query = """
             SELECT 
                 COUNT(*) as recent_sales,
                 COALESCE(SUM(total_price), 0) as recent_revenue
             FROM sales
-            WHERE sale_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+            WHERE DATE(sale_date) >= %s
         """
-        recent_data = self.execute_query(recent_query)[0]
+        recent_data = self.execute_query(recent_query, (thirty_days_ago,))[0]
         
         # Top productos vendidos
         top_products_query = """
@@ -138,18 +147,52 @@ class DatabaseService:
     
     async def get_today_sales(self) -> Dict:
         """Obtener ventas del día actual"""
-        query = """
+        current_date_result = self.execute_query(
+            "SELECT DATE(CONVERT_TZ(UTC_TIMESTAMP(), '+00:00', %s)) as report_date",
+            (self.app_tz_offset,)
+        )
+        current_date = current_date_result[0].get('report_date') if current_date_result else None
+
+        # Estrategia robusta para Railway:
+        # - utc_result: asume sale_date guardado en UTC y lo convierte a horario local.
+        # - local_result: asume sale_date ya está en horario local.
+        # Elegimos el resultado más confiable para evitar "ventas de hoy = 0" por desfase.
+        utc_query = """
             SELECT 
                 COUNT(*) as total_sales,
                 COALESCE(SUM(total_price), 0) as total_revenue,
                 COALESCE(AVG(total_price), 0) as average_sale
             FROM sales
-            WHERE DATE(sale_date) = CURDATE()
+            WHERE DATE(CONVERT_TZ(sale_date, '+00:00', %s)) = DATE(CONVERT_TZ(UTC_TIMESTAMP(), '+00:00', %s))
         """
-        result = self.execute_query(query)[0]
+        local_query = """
+            SELECT 
+                COUNT(*) as total_sales,
+                COALESCE(SUM(total_price), 0) as total_revenue,
+                COALESCE(AVG(total_price), 0) as average_sale
+            FROM sales
+            WHERE DATE(sale_date) = DATE(CONVERT_TZ(UTC_TIMESTAMP(), '+00:00', %s))
+        """
+        utc_result = self.execute_query(utc_query, (self.app_tz_offset, self.app_tz_offset))[0]
+        local_result = self.execute_query(local_query, (self.app_tz_offset,))[0]
+        utc_count = int(utc_result.get('total_sales', 0) or 0)
+        local_count = int(local_result.get('total_sales', 0) or 0)
+
+        if self.sales_datetime_is_utc:
+            preferred_result = utc_result
+            fallback_result = local_result
+        else:
+            preferred_result = local_result
+            fallback_result = utc_result
+
+        result = preferred_result
+        if int(result.get('total_sales', 0) or 0) == 0 and int(fallback_result.get('total_sales', 0) or 0) > 0:
+            result = fallback_result
+        elif max(utc_count, local_count) > int(result.get('total_sales', 0) or 0):
+            result = utc_result if utc_count >= local_count else local_result
         
         # Obtener detalles de ventas de hoy
-        details_query = """
+        details_utc_query = """
             SELECT 
                 s.id,
                 s.sale_date as date,
@@ -160,12 +203,32 @@ class DatabaseService:
             FROM sales s
             INNER JOIN users u ON s.user_id = u.id
             INNER JOIN products p ON s.product_id = p.id
-            WHERE DATE(s.sale_date) = CURDATE()
+            WHERE DATE(CONVERT_TZ(s.sale_date, '+00:00', %s)) = DATE(CONVERT_TZ(UTC_TIMESTAMP(), '+00:00', %s))
             ORDER BY s.sale_date DESC
         """
-        sales_details = self.execute_query(details_query)
+        details_local_query = """
+            SELECT 
+                s.id,
+                s.sale_date as date,
+                s.total_price as total,
+                u.full_name as employee_name,
+                p.name as product_name,
+                s.quantity
+            FROM sales s
+            INNER JOIN users u ON s.user_id = u.id
+            INNER JOIN products p ON s.product_id = p.id
+            WHERE DATE(s.sale_date) = DATE(CONVERT_TZ(UTC_TIMESTAMP(), '+00:00', %s))
+            ORDER BY s.sale_date DESC
+        """
+        sales_details_utc = self.execute_query(details_utc_query, (self.app_tz_offset, self.app_tz_offset))
+        sales_details_local = self.execute_query(details_local_query, (self.app_tz_offset,))
+        if self.sales_datetime_is_utc:
+            sales_details = sales_details_utc if sales_details_utc else sales_details_local
+        else:
+            sales_details = sales_details_local if sales_details_local else sales_details_utc
         
         return {
+            "current_date": current_date,
             "total_sales": result.get('total_sales', 0) or 0,
             "total_revenue": float(result.get('total_revenue', 0) or 0),
             "average_sale": float(result.get('average_sale', 0) or 0),
@@ -210,19 +273,48 @@ class DatabaseService:
     
     async def get_employees_today_sales(self) -> List[Dict]:
         """Obtener ventas de empleados del día actual"""
-        query = """
+        utc_query = """
             SELECT 
                 u.id,
                 u.full_name,
                 COUNT(s.id) as sales_today,
                 COALESCE(SUM(s.total_price), 0) as revenue_today
             FROM users u
-            LEFT JOIN sales s ON u.id = s.user_id AND DATE(s.sale_date) = CURDATE()
+            LEFT JOIN sales s ON u.id = s.user_id
+                AND DATE(CONVERT_TZ(s.sale_date, '+00:00', %s)) = DATE(CONVERT_TZ(UTC_TIMESTAMP(), '+00:00', %s))
             WHERE u.role = 'employee'
             GROUP BY u.id, u.full_name
             ORDER BY revenue_today DESC
         """
-        return self.execute_query(query)
+        local_query = """
+            SELECT 
+                u.id,
+                u.full_name,
+                COUNT(s.id) as sales_today,
+                COALESCE(SUM(s.total_price), 0) as revenue_today
+            FROM users u
+            LEFT JOIN sales s ON u.id = s.user_id
+                AND DATE(s.sale_date) = DATE(CONVERT_TZ(UTC_TIMESTAMP(), '+00:00', %s))
+            WHERE u.role = 'employee'
+            GROUP BY u.id, u.full_name
+            ORDER BY revenue_today DESC
+        """
+        utc_data = self.execute_query(utc_query, (self.app_tz_offset, self.app_tz_offset))
+        local_data = self.execute_query(local_query, (self.app_tz_offset,))
+
+        def _total_sales(rows: List[Dict]) -> int:
+            return sum(int((row.get('sales_today', 0) or 0)) for row in rows)
+
+        if self.sales_datetime_is_utc:
+            preferred = utc_data
+            fallback = local_data
+        else:
+            preferred = local_data
+            fallback = utc_data
+
+        if _total_sales(preferred) == 0 and _total_sales(fallback) > 0:
+            return fallback
+        return preferred
     
     async def search_products(self, search_term: str) -> List[Dict]:
         """Buscar productos por nombre o descripción"""

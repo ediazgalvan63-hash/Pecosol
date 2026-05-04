@@ -23,8 +23,21 @@ app = FastAPI(
 )
 
 # Configurar CORS para permitir peticiones desde el frontend PHP
-allowed_origins = os.getenv("CHATBOT_ALLOWED_ORIGINS", "http://localhost,http://localhost:80,http://localhost:3000")
-allowed_origins = [origin.strip() for origin in allowed_origins.split(",") if origin.strip()]
+allowed_origins_raw = os.getenv("CHATBOT_ALLOWED_ORIGINS", "")
+if allowed_origins_raw:
+    allowed_origins = [origin.strip() for origin in allowed_origins_raw.split(",") if origin.strip()]
+else:
+    app_base_url = os.getenv("APP_BASE_URL", "")
+    if app_base_url:
+        allowed_origins = [origin.strip() for origin in app_base_url.split(",") if origin.strip()]
+    else:
+        allowed_origins = [
+            "http://localhost",
+            "http://localhost:80",
+            "http://localhost:3000",
+            "http://127.0.0.1",
+            "http://127.0.0.1:80",
+        ]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,

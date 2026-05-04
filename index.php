@@ -13,19 +13,41 @@ require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/config/config.php';
 require_once __DIR__ . '/config/database.php';
 
-// BYPASS TEMPORAL: Deshabilitar verificación de contraseña para troubleshooting en Railway
-// TODO: Remover esto una vez que se resuelva el problema de hash de contraseñas
-define('BYPASS_PASSWORD_VERIFICATION', true);
+// BYPASS: Lee desde variable de entorno BYPASS_PASSWORD_VERIFICATION
+// Puedes establecerla en Railway sin necesidad de redeployar:
+// BYPASS_PASSWORD_VERIFICATION=true
+if (!defined('BYPASS_PASSWORD_VERIFICATION')) {
+    $bypass = getenv('BYPASS_PASSWORD_VERIFICATION');
+    define('BYPASS_PASSWORD_VERIFICATION', $bypass === 'true' || $bypass === '1');
+}
 
 // 4) Determinar controlador y acción desde la URL
 $controllerParam = $_GET['controller'] ?? 'auth';
 $actionParam     = $_GET['action']     ?? 'login';
 
+// Sanitizar valores para evitar rutas no válidas o manipuladas
+$controllerParam = preg_replace('/[^a-zA-Z0-9_]/', '', $controllerParam) ?: 'auth';
+$actionParam     = preg_replace('/[^a-zA-Z0-9_]/', '', $actionParam)     ?: 'login';
+
 // Normalizar nombres de controlador y acción
 $controllerName = ucfirst(strtolower($controllerParam)) . 'Controller';
 $actionName     = $actionParam;
 
-// 5) Ruta al archivo del controlador
+// 5) Validar controlador conocido antes de incluirlo
+$validControllers = [
+    'AuthController',
+    'DashboardController',
+    'AdminController',
+    'EmployeeController',
+];
+
+if (!in_array($controllerName, $validControllers, true)) {
+    header('HTTP/1.0 404 Not Found');
+    echo "El controlador \"$controllerName\" no existe.";
+    exit;
+}
+
+// 6) Ruta al archivo del controlador
 $controllerFile = __DIR__ . '/controllers/' . $controllerName . '.php';
 
 // 6) Verificar existencia del archivo y clase

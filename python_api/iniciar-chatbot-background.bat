@@ -13,9 +13,37 @@ REM Cambiar a directorio python_api
 cd /d "%SCRIPT_DIR%"
 
 REM Verificar si Python está instalado
-where python >nul 2>nul
-if %ERRORLEVEL% NEQ 0 (
-    echo [ERROR] Python no está instalado o no está en el PATH
+set PYTHON_CMD=
+if exist "%~dp0..\.venv\Scripts\pythonw.exe" (
+    set PYTHON_CMD="%~dp0..\.venv\Scripts\pythonw.exe"
+) else (
+    where pythonw >nul 2>nul
+    if %ERRORLEVEL% EQU 0 (
+        set PYTHON_CMD=pythonw.exe
+    ) else if exist "%SYSTEMROOT%\pyw.exe" (
+        set PYTHON_CMD="%SYSTEMROOT%\pyw.exe"
+    )
+)
+
+if not defined PYTHON_CMD (
+    echo [ERROR] Pythonw no encontrado. Instala Python 3.12 o 3.13 y/o crea el entorno .venv.
+    pause
+    exit /b 1
+)
+
+REM Verificar versión de Python compatible
+for /f "tokens=2 delims= " %%A in ('%PYTHON_CMD% --version 2^>^&1') do set PY_VERSION=%%A
+for /f "tokens=1-3 delims=." %%A in ("%PY_VERSION%") do (
+    set PY_MAJOR=%%A
+    set PY_MINOR=%%B
+)
+if "%PY_MAJOR%" NEQ "3" (
+    echo [ERROR] Se requiere Python 3.12 o 3.13. Se detectó Python %PY_VERSION%.
+    pause
+    exit /b 1
+)
+if %PY_MINOR% GEQ 14 (
+    echo [ERROR] Python %PY_VERSION% no es compatible. Usa Python 3.12 o 3.13.
     pause
     exit /b 1
 )
@@ -41,7 +69,7 @@ if %ERRORLEVEL% EQU 0 (
 
 REM Iniciar servidor en background usando VBS
 echo Iniciando servidor chatbot...
-start "" /min pythonw.exe main.py
+start "" /min %PYTHON_CMD% main.py
 
 REM Esperar a que el servidor inicie
 timeout /t 3 /nobreak

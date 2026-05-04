@@ -154,7 +154,7 @@ Cuando menciones ventas, deja claro que mencionas al VENDEDOR/EMPLEADO que la re
         # Agregar información de ventas del día
         if 'today_sales' in context:
             today = context['today_sales']
-            base_prompt += f"""\n\n📅 VENTAS DE HOY ({context.get('current_date', 'hoy')}):
+            base_prompt += f"""\n\n📅 VENTAS DE HOY ({today.get('current_date', 'hoy')}):
 - Total de ventas: {today['total_sales']}
 - Ingresos: ${today['total_revenue']:.2f}
 - Promedio por venta: ${today['average_sale']:.2f}

@@ -1,5 +1,5 @@
 # Dependencias de FastAPI Chatbot Service - Bodeshop
-# Python 3.8+
+# Python 3.8 - 3.13
 
 # Framework FastAPI
 fastapi==0.104.1

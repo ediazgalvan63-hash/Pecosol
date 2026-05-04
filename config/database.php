@@ -7,7 +7,7 @@ class Database {
     private static $db_name  = "pecosol_db";
     private static $username = "root";
     private static $password = "";   // Si tu XAMPP tiene contraseña, colócala aquí
-    private static $port     = 3306; // Puerto por defecto MySQL; ajustado a 3307 (tu instancia XAMPP)
+    private static $port     = 3306; // Puerto por defecto MySQL; ajusta a 3307 si tu instancia XAMPP usa ese puerto
     public static  $conn;
 
     public static function connect() {

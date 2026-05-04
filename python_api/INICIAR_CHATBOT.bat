@@ -43,40 +43,55 @@ if not exist ".env" (
 )
 
 REM Verificar que exista Python
-python --version >nul 2>&1
-if errorlevel 1 (
-    REM Intentar ubicaciones comunes de Python
-    set PYTHON_EXE=
-    
-    if exist "C:\Program Files\Python311\python.exe" (
-        set PYTHON_EXE="C:\Program Files\Python311\python.exe"
-    ) else if exist "C:\Program Files\Python312\python.exe" (
-        set PYTHON_EXE="C:\Program Files\Python312\python.exe"
-    ) else if exist "C:\Users\%USERNAME%\AppData\Local\Programs\Python\Python311\python.exe" (
-        set PYTHON_EXE="C:\Users\%USERNAME%\AppData\Local\Programs\Python\Python311\python.exe"
-    ) else if exist "C:\Users\%USERNAME%\AppData\Local\Programs\Python\Python312\python.exe" (
-        set PYTHON_EXE="C:\Users\%USERNAME%\AppData\Local\Programs\Python\Python312\python.exe"
-    ) else if exist "C:\Users\%USERNAME%\AppData\Local\Microsoft\WindowsApps\python.exe" (
-        set PYTHON_EXE="C:\Users\%USERNAME%\AppData\Local\Microsoft\WindowsApps\python.exe"
-    )
-    
-    if defined PYTHON_EXE (
-        echo [+] Python encontrado en: !PYTHON_EXE!
-        REM Usar Python encontrado para el resto del script
-        set PYTHON_CMD=!PYTHON_EXE!
-    ) else (
-        echo [-] ERROR: Python no esta instalado o no esta en PATH
-        echo.
-        echo Soluciones:
-        echo 1. Instala Python desde https://www.python.org
-        echo 2. Asegúrate de marcar "Add Python to PATH" durante la instalación
-        echo 3. Reinicia esta ventana despues de instalar Python
-        echo.
-        pause
-        exit /b 1
-    )
+set PYTHON_CMD=
+if exist "%SCRIPT_DIR%..\.venv\Scripts\python.exe" (
+    set PYTHON_CMD=%SCRIPT_DIR%..\.venv\Scripts\python.exe
 ) else (
-    set PYTHON_CMD=python
+    python --version >nul 2>&1
+    if errorlevel 1 (
+        REM Intentar ubicaciones comunes de Python
+        if exist "C:\Program Files\Python311\python.exe" (
+            set PYTHON_CMD=C:\Program Files\Python311\python.exe
+        ) else if exist "C:\Program Files\Python312\python.exe" (
+            set PYTHON_CMD=C:\Program Files\Python312\python.exe
+        ) else if exist "C:\Users\%USERNAME%\AppData\Local\Programs\Python\Python311\python.exe" (
+            set PYTHON_CMD=C:\Users\%USERNAME%\AppData\Local\Programs\Python\Python311\python.exe
+        ) else if exist "C:\Users\%USERNAME%\AppData\Local\Programs\Python\Python312\python.exe" (
+            set PYTHON_CMD=C:\Users\%USERNAME%\AppData\Local\Programs\Python\Python312\python.exe
+        ) else if exist "%SYSTEMROOT%\py.exe" (
+            set PYTHON_CMD=%SYSTEMROOT%\py.exe -3
+        )
+    ) else (
+        set PYTHON_CMD=python
+    )
+)
+if not defined PYTHON_CMD (
+    echo [-] ERROR: Python no esta instalado o no esta en PATH y no se encontro .venv
+    echo.
+    echo Soluciones:
+    echo 1. Instala Python 3.11, 3.12 o 3.13 desde https://www.python.org
+    echo 2. Asegúrate de marcar "Add Python to PATH" durante la instalación
+    echo 3. Reinicia esta ventana despues de instalar Python
+    echo.
+    pause
+    exit /b 1
+)
+
+REM Verificar versión de Python compatible
+for /f "tokens=2 delims= " %%A in ('%PYTHON_CMD% --version 2^>^&1') do set PY_VERSION=%%A
+for /f "tokens=1-3 delims=." %%A in ("%PY_VERSION%") do (
+    set PY_MAJOR=%%A
+    set PY_MINOR=%%B
+)
+if "%PY_MAJOR%" NEQ "3" (
+    echo [-] ERROR: Se necesita Python 3.11, 3.12 o 3.13. Se detectó Python %PY_VERSION%.
+    pause
+    exit /b 1
+)
+if %PY_MINOR% GEQ 14 (
+    echo [-] ERROR: Python %PY_VERSION% no es compatible. Usa Python 3.11, 3.12 o 3.13.
+    pause
+    exit /b 1
 )
 
 REM Verificar que exista requirements.txt
@@ -89,11 +104,11 @@ if not exist "requirements.txt" (
 REM Instalar dependencias si es necesario
 echo.
 echo [*] Verificando dependencias de Python...
-%PYTHON_CMD% -m pip install -q -r requirements.txt >nul 2>&1
+call "%PYTHON_CMD%" -m pip install -q -r requirements.txt
 
 if errorlevel 1 (
-    echo [!] Instalando dependencias (primera vez)...
-    %PYTHON_CMD% -m pip install -r requirements.txt
+    echo [!] Instalando dependencias nuevamente...
+    call "%PYTHON_CMD%" -m pip install -r requirements.txt
     if errorlevel 1 (
         echo [-] ERROR: No se pudieron instalar las dependencias
         pause
@@ -103,17 +118,16 @@ if errorlevel 1 (
 
 REM Iniciar el servidor
 echo.
-echo [+] Iniciando servidor FastAPI...
+echo [+] Iniciando servidor de Chatbot FastAPI...
 echo.
 echo    URL: http://127.0.0.1:8000
-echo    Documentacion: http://127.0.0.1:8000/docs
-echo.
+
 echo Presiona Ctrl+C para detener el servidor
 echo.
 echo ============================================
 echo.
 
-%PYTHON_CMD% -m uvicorn main:app --host 127.0.0.1 --port 8000 --reload
+call "%PYTHON_CMD%" -m uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 
 echo.
 echo Servidor detenido.

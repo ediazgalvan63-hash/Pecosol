@@ -26,13 +26,18 @@ class Sale {
         int $quantity,
         float $unitPrice,
         float $totalPrice,
-        string $description = ''
+        string $description = '',
+        ?string $saleDate = null
     ) {
+        if ($saleDate === null) {
+            $saleDate = date('Y-m-d H:i:s');
+        }
+
         $sql = "
             INSERT INTO {$this->table}
-              (user_id, product_id, quantity, unit_price, total_price, description)
+              (user_id, product_id, quantity, unit_price, total_price, description, sale_date)
             VALUES
-              (:user_id, :product_id, :quantity, :unit_price, :total_price, :description)
+              (:user_id, :product_id, :quantity, :unit_price, :total_price, :description, :sale_date)
         ";
         $stmt = $this->conn->prepare($sql);
         $stmt->bindParam(':user_id',    $userId,     PDO::PARAM_INT);
@@ -41,6 +46,7 @@ class Sale {
         $stmt->bindParam(':unit_price', $unitPrice);
         $stmt->bindParam(':total_price',$totalPrice);
         $stmt->bindParam(':description',$description);
+        $stmt->bindParam(':sale_date',   $saleDate);
         $success = $stmt->execute();
         if ($success) {
             return (int) $this->conn->lastInsertId();
