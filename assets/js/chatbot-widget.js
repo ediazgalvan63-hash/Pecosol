@@ -14,7 +14,7 @@ class ChatbotWidget {
         } else if (configuredUrl === localDefault && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
             this.apiUrl = `${window.location.origin}/api/chat`;
         } else {
-            this.apiUrl = configuredUrl;
+            this.apiUrl = this.normalizeApiUrl(configuredUrl);
         }
         this.isOpen = false;
         this.apiUrlResolved = false;
@@ -22,10 +22,35 @@ class ChatbotWidget {
         this.init();
     }
 
+    normalizeApiUrl(url) {
+        if (!url) {
+            return '';
+        }
+
+        let normalized = String(url).trim();
+        if (!/^https?:\/\//i.test(normalized)) {
+            normalized = `${window.location.origin}${normalized.startsWith('/') ? '' : '/'}${normalized}`;
+        }
+
+        normalized = normalized.replace(/\/+$/g, '');
+        if (!/\/api\/chat$/i.test(normalized)) {
+            normalized += '/api/chat';
+        }
+
+        return normalized;
+    }
+
+    buildHealthUrl(url) {
+        if (/\/api\/chat\/?$/i.test(url)) {
+            return url.replace(/\/api\/chat\/?$/i, '/health');
+        }
+        return `${url.replace(/\/+$/g, '')}/health`;
+    }
+
     async resolveApiUrl(retries = 5, delayMs = 1500) {
         const candidates = [];
         if (typeof window !== 'undefined' && window.CHATBOT_API_URL) {
-            candidates.push(String(window.CHATBOT_API_URL).trim());
+            candidates.push(this.normalizeApiUrl(String(window.CHATBOT_API_URL).trim()));
         }
         if (window.location && window.location.origin) {
             candidates.push(`${window.location.origin}/api/chat`);
@@ -37,7 +62,7 @@ class ChatbotWidget {
 
         for (let attempt = 1; attempt <= retries; attempt++) {
             for (const url of uniqueCandidates) {
-                const healthUrl = url.replace(/\/api\/chat\/?$/, '/health');
+                const healthUrl = this.buildHealthUrl(url);
                 try {
                     const controller = new AbortController();
                     const timeout = setTimeout(() => controller.abort(), 1500);
@@ -233,7 +258,7 @@ class ChatbotWidget {
 
         if (!this.apiUrlResolved) {
             this.hideTyping();
-            this.addMessage('⚠️ El servidor de chatbot aún no está disponible. Espera unos segundos y vuelve a intentarlo. Si el servidor local no está iniciado, ejecuta python_api/INICIAR_CHATBOT.bat o python_api/start.bat y asegúrate de usar Python 3.12 o 3.13.', 'error');
+            this.addMessage('⚠️ El servidor de chatbot aún no está disponible. Espera unos segundos e intenta otra vez. Si estás en local, ejecuta python_api/INICIAR_CHATBOT.bat o python_api/start.bat y verifica que CHATBOT_API_URL apunte al servicio correcto.', 'error');
             return;
         }
 

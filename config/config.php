@@ -16,8 +16,17 @@ define('BASE_URL', $baseUrl);
  * - Railway: define CHATBOT_API_URL con tu dominio de servicio Python
  * - Si no existe CHATBOT_API_URL, usa APP_BASE_URL + /api/chat
  */
-$chatbotApiUrl = getenv('CHATBOT_API_URL');
-if (!$chatbotApiUrl) {
+$chatbotApiUrl = getenv('CHATBOT_API_URL') ?: getenv('RAILWAY_SERVICE_PECOSOL_CHATBOT_URL');
+if ($chatbotApiUrl) {
+    $chatbotApiUrl = trim($chatbotApiUrl);
+    if (!preg_match('#^https?://#i', $chatbotApiUrl)) {
+        $chatbotApiUrl = 'https://' . preg_replace('#^https?://#i', '', $chatbotApiUrl);
+    }
+    $chatbotApiUrl = rtrim($chatbotApiUrl, '/');
+    if (!preg_match('#/api/chat$#i', $chatbotApiUrl)) {
+        $chatbotApiUrl .= '/api/chat';
+    }
+} else {
     $appBaseUrl = getenv('APP_BASE_URL');
     if ($appBaseUrl && !preg_match('#^(https?://)?(localhost|127\.0\.0\.1)#i', $appBaseUrl)) {
         $chatbotApiUrl = rtrim($appBaseUrl, '/') . '/api/chat';

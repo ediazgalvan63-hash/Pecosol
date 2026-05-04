@@ -17,11 +17,11 @@ class DatabaseService:
     
     def __init__(self):
         self.config = {
-            'host': os.getenv('DB_HOST', 'localhost'),
-            'database': os.getenv('DB_NAME', 'pecosol_db'),
-            'user': os.getenv('DB_USER', 'root'),
-            'password': os.getenv('DB_PASSWORD', ''),
-            'port': int(os.getenv('DB_PORT', '3306'))
+            'host': os.getenv('DB_HOST', os.getenv('MYSQLHOST', 'localhost')),
+            'database': os.getenv('DB_NAME', os.getenv('MYSQLDATABASE', 'pecosol_db')),
+            'user': os.getenv('DB_USER', os.getenv('MYSQLUSER', 'root')),
+            'password': os.getenv('DB_PASSWORD', os.getenv('MYSQLPASSWORD', '')),
+            'port': int(os.getenv('DB_PORT', os.getenv('MYSQLPORT', '3306')))
         }
         self.connection = None
         # Offset horario local para reportes diarios (ej: -05:00).
