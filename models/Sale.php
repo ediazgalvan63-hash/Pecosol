@@ -39,6 +39,18 @@ class Sale {
             $this->hasClientNameColumn = false;
         }
 
+        // Auto-migración opcional: si falta la columna, intentar crearla.
+        // Esto permite que entornos (Railway) con BD antigua se actualicen sin acceso manual.
+        if ($this->hasClientNameColumn === false) {
+            try {
+                $this->conn->exec("ALTER TABLE {$this->table} ADD COLUMN client_name VARCHAR(120) NOT NULL DEFAULT 'Cliente General' AFTER total_price");
+                $this->hasClientNameColumn = true;
+            } catch (Throwable $e) {
+                // Si no hay permisos o la columna ya existe con otro estado, ignorar.
+                $this->hasClientNameColumn = false;
+            }
+        }
+
         return $this->hasClientNameColumn;
     }
 
