@@ -7,7 +7,9 @@ $currentController = $_GET['controller'] ?? '';
 $currentAction     = $_GET['action'] ?? '';
 
 $tzDebug = '';
-if (!empty($_SESSION['role']) && $_SESSION['role'] === 'admin') {
+// Mostrar debug de TZ solo cuando se habilita explícitamente (evita verse "no profesional")
+$showTzDebug = (getenv('APP_DEBUG') === 'true' || getenv('APP_DEBUG') === '1');
+if ($showTzDebug && !empty($_SESSION['role']) && $_SESSION['role'] === 'admin') {
   $tzDebug = sprintf(
     'APP_TIMEZONE=%s | DB_TIMEZONE=%s | now=%s',
     defined('APP_TIMEZONE') ? APP_TIMEZONE : '(no APP_TIMEZONE)',
