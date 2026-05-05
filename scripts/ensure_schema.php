@@ -12,6 +12,39 @@ function out(string $msg): void {
     echo $msg . PHP_EOL;
 }
 
+function connectDb(): PDO {
+    // When running locally via `railway run`, internal DNS like mysql.railway.internal
+    // won't resolve. Prefer MYSQL_PUBLIC_URL if available.
+    $publicUrl = getenv('MYSQL_PUBLIC_URL') ?: '';
+    if ($publicUrl !== '') {
+        $parts = parse_url($publicUrl);
+        if (is_array($parts) && !empty($parts['host'])) {
+            $host = $parts['host'];
+            $port = isset($parts['port']) ? (int) $parts['port'] : 3306;
+            $user = $parts['user'] ?? '';
+            $pass = $parts['pass'] ?? '';
+            $dbName = '';
+            if (!empty($parts['path'])) {
+                $dbName = ltrim((string) $parts['path'], '/');
+            }
+            if ($dbName === '') {
+                $dbName = getenv('DB_DATABASE') ?: getenv('MYSQLDATABASE') ?: '';
+            }
+
+            $pdo = new PDO(
+                "mysql:host={$host};port={$port};dbname={$dbName}",
+                $user,
+                $pass,
+                [PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4"]
+            );
+            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            return $pdo;
+        }
+    }
+
+    return Database::connect();
+}
+
 function tableExists(PDO $db, string $table): bool {
     $sql = "SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :t LIMIT 1";
     $stmt = $db->prepare($sql);
@@ -27,7 +60,7 @@ function columnExists(PDO $db, string $table, string $column): bool {
 }
 
 try {
-    $db = Database::connect();
+    $db = connectDb();
     out("Connected. DB_TIMEZONE=" . (defined('DB_TIMEZONE') ? DB_TIMEZONE : 'n/a') . " APP_TIMEZONE=" . (defined('APP_TIMEZONE') ? APP_TIMEZONE : 'n/a'));
 
     // 1) sales.client_name
