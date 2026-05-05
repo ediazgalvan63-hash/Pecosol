@@ -5,6 +5,16 @@ $username = $_SESSION['full_name'] ?? 'Usuario';
 // Detectar controlador y acción actuales
 $currentController = $_GET['controller'] ?? '';
 $currentAction     = $_GET['action'] ?? '';
+
+$tzDebug = '';
+if (!empty($_SESSION['role']) && $_SESSION['role'] === 'admin') {
+  $tzDebug = sprintf(
+    'APP_TIMEZONE=%s | DB_TIMEZONE=%s | now=%s',
+    defined('APP_TIMEZONE') ? APP_TIMEZONE : '(no APP_TIMEZONE)',
+    defined('DB_TIMEZONE') ? DB_TIMEZONE : '(no DB_TIMEZONE)',
+    date('Y-m-d H:i:s')
+  );
+}
 ?>
 
 <!-- ==== STYLES ==== -->
@@ -175,6 +185,11 @@ $currentAction     = $_GET['action'] ?? '';
 
 <!-- ==== HEADER HTML ==== -->
 <header>
+  <?php if ($tzDebug !== ''): ?>
+    <div style="padding:6px 48px; background:#0f172a; color:#9ae7ff; font-size:12px; border-bottom:1px solid rgba(0,255,240,0.15);">
+      <?php echo htmlspecialchars($tzDebug); ?>
+    </div>
+  <?php endif; ?>
   <nav>
     <!-- Logo -->
     <a href="<?php echo BASE_URL; ?>?controller=dashboard&action=adminHome" class="brand">
@@ -191,6 +206,18 @@ $currentAction     = $_GET['action'] ?? '';
       <a href="<?php echo BASE_URL; ?>?controller=admin&action=listInventoryMovements"
          class="<?php echo ($currentController === 'admin' && in_array($currentAction, ['listInventoryMovements', 'addInventoryMovementForm'], true)) ? 'active' : ''; ?>">
         Inventario
+      </a>
+      <a href="<?php echo BASE_URL; ?>?controller=admin&action=inventoryRecountForm"
+         class="<?php echo ($currentController === 'admin' && $currentAction === 'inventoryRecountForm') ? 'active' : ''; ?>">
+        Reconteo
+      </a>
+      <a href="<?php echo BASE_URL; ?>?controller=admin&action=listPurchases"
+         class="<?php echo ($currentController === 'admin' && in_array($currentAction, ['listPurchases', 'addPurchaseForm'], true)) ? 'active' : ''; ?>">
+        Compras
+      </a>
+      <a href="<?php echo BASE_URL; ?>?controller=admin&action=listWorkOrders"
+         class="<?php echo ($currentController === 'admin' && in_array($currentAction, ['listWorkOrders', 'addWorkOrderForm'], true)) ? 'active' : ''; ?>">
+        Ordenes
       </a>
       <a href="<?php echo BASE_URL; ?>?controller=admin&action=lowStockAlerts"
          class="<?php echo ($currentController === 'admin' && $currentAction === 'lowStockAlerts') ? 'active' : ''; ?>">

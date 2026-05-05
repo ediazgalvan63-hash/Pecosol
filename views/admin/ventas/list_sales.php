@@ -121,6 +121,14 @@
 
 <div class="container">
   <h1>Listado de Ventas</h1>
+  <?php if (!empty($_SESSION['error_sale_delete'])): ?>
+    <div class="error"><?php echo htmlspecialchars($_SESSION['error_sale_delete']); unset($_SESSION['error_sale_delete']); ?></div>
+  <?php endif; ?>
+  <?php if (!empty($_GET['created_sale_id'])): ?>
+    <div style="background:#173f2f;color:#9af7c8;border:1px solid #2fa86d;padding:10px;border-radius:8px;margin-bottom:14px;">
+      Venta registrada correctamente. <a style="color:#9af7c8;text-decoration:underline;" href="<?php echo BASE_URL; ?>index.php?controller=admin&action=downloadSaleInvoicePdf&id=<?php echo (int)$_GET['created_sale_id']; ?>">Descargar PDF</a>
+    </div>
+  <?php endif; ?>
   <p style="color:#a0cfe8; margin-bottom:18px;">Las ventas se consideran como salidas de inventario y se registran en el kardex para mantener trazabilidad.</p>
 
   <a href="<?php echo BASE_URL; ?>index.php?controller=admin&action=addSaleAdminForm" class="button">
@@ -139,6 +147,7 @@
           <th>Cantidad</th>
           <th>Precio Unitario</th>
           <th>Total</th>
+          <th>Cliente</th>
           <th>Descripción</th>
           <th>Fecha</th>
           <th>Acciones</th>
@@ -153,14 +162,19 @@
             <td><?php echo $v->quantity; ?></td>
             <td>S/. <?php echo number_format($v->unit_price, 2, '.', ','); ?></td>
             <td>S/. <?php echo number_format($v->total_price, 2, '.', ','); ?></td>
+            <td><?php echo htmlspecialchars($v->client_name ?? 'Cliente General'); ?></td>
             <td><?php echo htmlspecialchars($v->description); ?></td>
-            <td><?php echo date('Y-m-d H:i', strtotime($v->sale_date)); ?></td>
+            <td><?php echo formatSaleDate($v->sale_date, 'd-m-Y H:i'); ?></td>
             <td><div class="actions">
                 <a 
                   href="<?php echo BASE_URL; ?>index.php?controller=admin&action=editSaleAdminForm&id=<?php echo $v->id; ?>" 
                   class="edit"
                   title="Editar Venta"
                 >✏️</a>
+                <a 
+                  href="<?php echo BASE_URL; ?>index.php?controller=admin&action=downloadSaleInvoicePdf&id=<?php echo $v->id; ?>" 
+                  title="Descargar PDF"
+                >📄</a>
                 <a 
                   href="<?php echo BASE_URL; ?>index.php?controller=admin&action=deleteSaleAdmin&id=<?php echo $v->id; ?>" 
                   class="delete"

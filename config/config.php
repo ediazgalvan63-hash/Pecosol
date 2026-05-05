@@ -2,6 +2,25 @@
 // config/config.php
 
 /**
+ * Configuración de zona horaria
+ * Por defecto: Perú (UTC-5)
+ * Local: se puede sobrescribir con variable de entorno APP_TIMEZONE
+ */
+$appTimezone = getenv('APP_TIMEZONE') ?: 'America/Lima';
+date_default_timezone_set($appTimezone);
+define('APP_TIMEZONE', $appTimezone);
+
+/**
+ * Zona horaria de la BD (cómo se guardan los DATETIME).
+ * - En Railway normalmente el runtime/DB trabaja en UTC.
+ * - En local suele guardarse en hora local.
+ * Se puede forzar con variable de entorno DB_TIMEZONE.
+ */
+$isRailway = (bool) (getenv('RAILWAY_ENVIRONMENT') ?: getenv('RAILWAY_PROJECT_ID') ?: getenv('RAILWAY_SERVICE_ID'));
+$dbTimezone = getenv('DB_TIMEZONE') ?: ($isRailway ? 'UTC' : APP_TIMEZONE);
+define('DB_TIMEZONE', $dbTimezone);
+
+/**
  * URL base del proyecto.
  * - Local: usa APP_BASE_URL si existe, si no http://localhost/pecosol/
  * - Railway/producción: define APP_BASE_URL en variables de entorno
@@ -140,3 +159,37 @@ function startLocalChatbotServer(): void
 
 // Nombre del proyecto
 define('PROJECT_NAME', 'Pecosol');
+
+/**
+ * Función auxiliar para formatear fechas con zona horaria
+ * @param string $dateString Fecha en formato string (e.g., '2026-05-04 21:20:30')
+ * @param string $format Formato de salida (default: 'd-m-Y H:i')
+ * @return string Fecha formateada en la zona horaria local
+ */
+function formatSaleDate($dateString, $format = 'd-m-Y H:i') {
+    if (empty($dateString)) {
+        return '';
+    }
+    try {
+        $localTz = new DateTimeZone(APP_TIMEZONE);
+
+        // MySQL DATETIME no incluye zona horaria (se interpreta como "hora local del negocio").
+        // Solo convertimos si la cadena ya trae un offset o sufijo Z (UTC).
+        $hasExplicitTz = (bool) preg_match('/(Z|[+\-]\d{2}:\d{2})$/i', trim((string) $dateString));
+
+        if ($hasExplicitTz) {
+            $dt = new DateTime($dateString);
+            $dt->setTimeZone($localTz);
+            return $dt->format($format);
+        }
+
+        // Si viene sin tz, interpretar según DB_TIMEZONE y convertir a hora local.
+        $sourceTz = new DateTimeZone(defined('DB_TIMEZONE') ? DB_TIMEZONE : APP_TIMEZONE);
+        $dt = new DateTime($dateString, $sourceTz);
+        $dt->setTimeZone($localTz);
+        return $dt->format($format);
+    } catch (Exception $e) {
+        // Fallback: usar la función date() estándar
+        return date($format, strtotime($dateString));
+    }
+}

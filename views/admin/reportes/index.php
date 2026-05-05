@@ -99,6 +99,39 @@
             </div>
         </form>
     </div>
+
+    <div class="section-card">
+        <h2>Bitácora de Auditoría (Trazabilidad)</h2>
+        <p class="help-text">Registro de operaciones críticas para sustento técnico: ventas, compras, ajustes y órdenes de trabajo.</p>
+        <div style="overflow:auto;">
+            <table style="width:100%; border-collapse:collapse;">
+                <thead>
+                    <tr>
+                        <th style="padding:10px; border-bottom:1px solid #2a3b63;">Fecha</th>
+                        <th style="padding:10px; border-bottom:1px solid #2a3b63;">Usuario</th>
+                        <th style="padding:10px; border-bottom:1px solid #2a3b63;">Acción</th>
+                        <th style="padding:10px; border-bottom:1px solid #2a3b63;">Entidad</th>
+                        <th style="padding:10px; border-bottom:1px solid #2a3b63;">Detalle</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (!empty($auditorias)): ?>
+                        <?php foreach ($auditorias as $a): ?>
+                            <tr>
+                                <td style="padding:8px; border-bottom:1px solid #24314f;"><?php echo htmlspecialchars($a->created_at); ?></td>
+                                <td style="padding:8px; border-bottom:1px solid #24314f;"><?php echo htmlspecialchars($a->user_name ?? 'N/A'); ?></td>
+                                <td style="padding:8px; border-bottom:1px solid #24314f;"><?php echo htmlspecialchars(strtoupper($a->action)); ?></td>
+                                <td style="padding:8px; border-bottom:1px solid #24314f;"><?php echo htmlspecialchars($a->entity); ?></td>
+                                <td style="padding:8px; border-bottom:1px solid #24314f;"><?php echo htmlspecialchars($a->details ?? ''); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr><td colspan="5" style="padding:10px;">Sin eventos de auditoría aún.</td></tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 </body>
 </html>

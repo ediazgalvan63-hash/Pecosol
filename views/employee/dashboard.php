@@ -154,7 +154,7 @@ if (session_status() === PHP_SESSION_NONE) {
               <td><?php echo $venta->quantity; ?></td>
               <td>S/. <?php echo number_format($venta->unit_price, 2, '.', ','); ?></td>
               <td>S/. <?php echo number_format($venta->total_price, 2, '.', ','); ?></td>
-              <td><?php echo date('d-m-Y H:i', strtotime($venta->sale_date)); ?></td>
+              <td><?php echo formatSaleDate($venta->sale_date); ?></td>
             </tr>
           <?php endforeach; ?>
         </tbody>

@@ -205,6 +205,16 @@
         required
       >
 
+      <label for="client_name">Cliente:</label>
+      <input
+        type="text"
+        id="client_name"
+        name="client_name"
+        maxlength="120"
+        value="<?php echo htmlspecialchars($venta->client_name ?? ''); ?>"
+        required
+      >
+
       <label for="description">Descripción (opcional):</label>
       <textarea
         id="description"
@@ -217,7 +227,7 @@
 
     <p class="info-text">
       <strong>Fecha de venta:</strong> 
-      <?php echo date('Y-m-d H:i', strtotime($venta->sale_date)); ?>
+      <?php echo formatSaleDate($venta->sale_date, 'Y-m-d H:i'); ?>
     </p>
     <p class="info-text">
       <strong>Stock actual del producto antes de editar:</strong> 

@@ -292,6 +292,7 @@ tr:last-child td {
             <th>ID</th>
             <th>Empleado</th>
             <th>Producto</th>
+            <th>Cliente</th>
             <th>Cantidad</th>
             <th>Precio Unit.</th>
             <th>Total</th>
@@ -304,10 +305,11 @@ tr:last-child td {
               <td><?php echo $venta->id; ?></td>
               <td><?php echo htmlspecialchars($venta->user_name); ?></td>
               <td><?php echo htmlspecialchars($venta->product_name); ?></td>
+              <td><?php echo htmlspecialchars($venta->client_name ?? 'Cliente General'); ?></td>
               <td><?php echo $venta->quantity; ?></td>
               <td>S/. <?php echo number_format($venta->unit_price, 2, '.', ','); ?></td>
               <td>S/. <?php echo number_format($venta->total_price, 2, '.', ','); ?></td>
-              <td><?php echo date('d-m-Y H:i', strtotime($venta->sale_date)); ?></td>
+              <td><?php echo formatSaleDate($venta->sale_date); ?></td>
             </tr>
           <?php endforeach; ?>
         </tbody>

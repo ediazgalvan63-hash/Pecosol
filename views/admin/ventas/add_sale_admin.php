@@ -203,6 +203,16 @@
         required
       >
 
+      <label for="client_name">Cliente:</label>
+      <input
+        type="text"
+        id="client_name"
+        name="client_name"
+        maxlength="120"
+        placeholder="Nombre del cliente"
+        required
+      >
+
       <label for="description">Descripción (opcional):</label>
       <textarea
         id="description"

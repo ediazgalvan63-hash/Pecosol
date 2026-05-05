@@ -6,6 +6,9 @@ class AdminController {
     private $userModel;
     private $saleModel;
     private $inventoryMovementModel;
+    private $purchaseModel;
+    private $workOrderModel;
+    private $auditLogModel;
 
     public function __construct() {
         // 1) Arrancar sesión si no existe
@@ -31,11 +34,17 @@ class AdminController {
         require_once __DIR__ . '/../models/User.php';
         require_once __DIR__ . '/../models/Sale.php';
         require_once __DIR__ . '/../models/InventoryMovement.php';
+        require_once __DIR__ . '/../models/Purchase.php';
+        require_once __DIR__ . '/../models/WorkOrder.php';
+        require_once __DIR__ . '/../models/AuditLog.php';
 
         $this->productModel = new Product();
         $this->userModel    = new User();
         $this->saleModel    = new Sale();
         $this->inventoryMovementModel = new InventoryMovement();
+        $this->purchaseModel = new Purchase();
+        $this->workOrderModel = new WorkOrder();
+        $this->auditLogModel = new AuditLog();
     }
 
     /**************************************************************************
@@ -337,11 +346,12 @@ class AdminController {
         $userId      = isset($_POST['user_id'])    ? (int)$_POST['user_id']    : 0;
         $productId   = isset($_POST['product_id']) ? (int)$_POST['product_id'] : 0;
         $quantity    = isset($_POST['quantity'])   ? (int)$_POST['quantity']   : 0;
+        $clientName  = trim($_POST['client_name'] ?? '');
         $description = trim($_POST['description'] ?? '');
 
         $error = '';
-        if ($userId <= 0 || $productId <= 0 || $quantity <= 0) {
-            $error = 'Empleado, producto y cantidad válidos son obligatorios.';
+        if ($userId <= 0 || $productId <= 0 || $quantity <= 0 || $clientName === '') {
+            $error = 'Empleado, producto, cantidad y cliente son obligatorios.';
         } else {
             $empleado = $this->userModel->findById($userId);
             if (!$empleado || $empleado->role !== 'employee') {
@@ -380,6 +390,7 @@ class AdminController {
                 $quantity,
                 $unitPrice,
                 $totalPrice,
+                $clientName,
                 $description
             );
             if (!$newSaleId) {
@@ -398,6 +409,14 @@ class AdminController {
                 throw new RuntimeException('No se pudo registrar el movimiento de salida.');
             }
 
+            $this->auditLogModel->create(
+                (int)$_SESSION['user_id'],
+                'create',
+                'sale',
+                (int)$newSaleId,
+                "Venta registrada para cliente {$clientName} por S/. " . number_format($totalPrice, 2, '.', ',')
+            );
+
             $conn->commit();
         } catch (Throwable $e) {
             if ($conn->inTransaction()) {
@@ -410,7 +429,7 @@ class AdminController {
             return;
         }
 
-        header('Location: index.php?controller=admin&action=listSalesAdmin');
+        header('Location: index.php?controller=admin&action=listSalesAdmin&created_sale_id=' . $newSaleId);
         exit;
     }
 
@@ -438,12 +457,13 @@ class AdminController {
         $userId      = isset($_POST['user_id'])    ? (int)$_POST['user_id']    : 0;
         $productId   = isset($_POST['product_id']) ? (int)$_POST['product_id'] : 0;
         $quantity    = isset($_POST['quantity'])   ? (int)$_POST['quantity']   : 0;
+        $clientName  = trim($_POST['client_name'] ?? '');
         $description = trim($_POST['description'] ?? '');
 
         $error = '';
         $venta = null;
-        if ($id <= 0 || $userId <= 0 || $productId <= 0 || $quantity <= 0) {
-            $error = 'Todos los campos (empleado, producto, cantidad) son obligatorios.';
+        if ($id <= 0 || $userId <= 0 || $productId <= 0 || $quantity <= 0 || $clientName === '') {
+            $error = 'Todos los campos (empleado, producto, cantidad y cliente) son obligatorios.';
         } else {
             // Traer la venta original (antes de editar)
             $venta = $this->saleModel->findByIdWithDetails($id);
@@ -474,6 +494,7 @@ class AdminController {
                     'quantity'      => $quantity,
                     'unit_price'    => 0,
                     'total_price'   => 0,
+                    'client_name'   => $clientName,
                     'description'   => $description,
                     'sale_date'     => '',
                     'user_name'     => '',
@@ -575,11 +596,20 @@ class AdminController {
                 $quantity,
                 $unitPrice,
                 $totalPrice,
+                $clientName,
                 $description
             );
             if (!$actualizado) {
                 throw new RuntimeException('No se pudo actualizar la venta.');
             }
+
+            $this->auditLogModel->create(
+                (int)$_SESSION['user_id'],
+                'update',
+                'sale',
+                $id,
+                "Venta actualizada para cliente {$clientName}"
+            );
 
             if ($description !== '') {
                 $this->saleModel->updateSaleMovementNoteBySaleId($id, $description);
@@ -640,6 +670,14 @@ class AdminController {
                 throw new RuntimeException('No se pudo registrar movimiento de eliminación.');
             }
 
+            $this->auditLogModel->create(
+                (int)$_SESSION['user_id'],
+                'delete',
+                'sale',
+                $id,
+                'Venta eliminada y stock restaurado'
+            );
+
             $conn->commit();
         } catch (Throwable $e) {
             if ($conn->inTransaction()) {
@@ -649,6 +687,86 @@ class AdminController {
         }
 
         header('Location: index.php?controller=admin&action=listSalesAdmin');
+        exit;
+    }
+
+    public function downloadSaleInvoicePdf() {
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        if ($id <= 0) {
+            header('Location: index.php?controller=admin&action=listSalesAdmin');
+            exit;
+        }
+
+        $venta = $this->saleModel->findByIdWithDetails($id);
+        if (!$venta) {
+            header('Location: index.php?controller=admin&action=listSalesAdmin');
+            exit;
+        }
+
+        if (!class_exists(\Dompdf\Dompdf::class)) {
+            $_SESSION['error_sale_delete'] = 'No se pudo generar PDF. Instala dompdf con composer.';
+            header('Location: index.php?controller=admin&action=listSalesAdmin');
+            exit;
+        }
+
+        $logoPath = __DIR__ . '/../assets/img/LogoPecosol.png';
+        $logoData = '';
+        if (is_file($logoPath)) {
+            $content = @file_get_contents($logoPath);
+            if ($content !== false) {
+                $logoData = 'data:image/png;base64,' . base64_encode($content);
+            }
+        }
+
+        $clientName = trim((string)($venta->client_name ?? 'Cliente General'));
+        $html = '
+            <html>
+            <body style="font-family: DejaVu Sans, sans-serif; color:#1a1a2e;">
+                <div style="border:1px solid #ddd; padding:18px;">
+                    <table style="width:100%; border-collapse:collapse; margin-bottom:16px;">
+                        <tr>
+                            <td style="vertical-align:top;">
+                                ' . ($logoData !== '' ? '<img src="' . $logoData . '" style="height:55px;">' : '') . '
+                                <h2 style="margin:10px 0 4px;">Perú Cold Solutions S.A.C.</h2>
+                                <div>RUC: 20603016000</div>
+                            </td>
+                            <td style="text-align:right; vertical-align:top;">
+                                <h3 style="margin:0;">Factura de Venta</h3>
+                                <div>Nro: ' . (int)$venta->id . '</div>
+                                <div>Fecha: ' . htmlspecialchars((string)formatSaleDate((string)$venta->sale_date, 'd-m-Y H:i')) . '</div>
+                            </td>
+                        </tr>
+                    </table>
+                    <p><strong>Cliente:</strong> ' . htmlspecialchars($clientName) . '</p>
+                    <table style="width:100%; border-collapse:collapse;">
+                        <thead>
+                            <tr>
+                                <th style="border:1px solid #ccc; padding:8px;">Producto</th>
+                                <th style="border:1px solid #ccc; padding:8px;">Cantidad</th>
+                                <th style="border:1px solid #ccc; padding:8px;">Precio</th>
+                                <th style="border:1px solid #ccc; padding:8px;">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="border:1px solid #ccc; padding:8px;">' . htmlspecialchars((string)$venta->product_name) . '</td>
+                                <td style="border:1px solid #ccc; padding:8px; text-align:center;">' . (int)$venta->quantity . '</td>
+                                <td style="border:1px solid #ccc; padding:8px; text-align:right;">S/. ' . number_format((float)$venta->unit_price, 2, '.', ',') . '</td>
+                                <td style="border:1px solid #ccc; padding:8px; text-align:right;">S/. ' . number_format((float)$venta->total_price, 2, '.', ',') . '</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <h3 style="text-align:right; margin-top:14px;">TOTAL: S/. ' . number_format((float)$venta->total_price, 2, '.', ',') . '</h3>
+                </div>
+            </body>
+            </html>
+        ';
+
+        $dompdf = new \Dompdf\Dompdf(['isRemoteEnabled' => true]);
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+        $dompdf->stream('factura_venta_' . (int)$venta->id . '.pdf', ['Attachment' => true]);
         exit;
     }
 
@@ -750,7 +868,280 @@ class AdminController {
 
     public function reports() {
         $productos = $this->productModel->getAll();
+        $auditorias = $this->auditLogModel->getRecent(80);
         require_once __DIR__ . '/../views/admin/reportes/index.php';
+    }
+
+    /**************************************************************************
+     * RECONTEO DE INVENTARIO
+     **************************************************************************/
+    public function inventoryRecountForm() {
+        $productos = $this->productModel->getAll();
+        require_once __DIR__ . '/../views/admin/inventario/recount.php';
+    }
+
+    public function processInventoryRecount() {
+        $productId = isset($_POST['product_id']) ? (int)$_POST['product_id'] : 0;
+        $physicalStock = isset($_POST['physical_stock']) ? (int)$_POST['physical_stock'] : -1;
+        $userId = (int)$_SESSION['user_id'];
+
+        $error = '';
+        $success = '';
+        if ($productId <= 0 || $physicalStock < 0) {
+            $error = 'Selecciona un producto y un stock físico válido.';
+        }
+
+        $producto = $this->productModel->findById($productId);
+        if (!$producto) {
+            $error = 'El producto seleccionado no existe.';
+        }
+
+        if (!empty($error)) {
+            $productos = $this->productModel->getAll();
+            require_once __DIR__ . '/../views/admin/inventario/recount.php';
+            return;
+        }
+
+        $systemStock = (int)$producto->stock;
+        $difference = $physicalStock - $systemStock;
+        if ($difference === 0) {
+            $success = 'No hay diferencias entre stock del sistema y stock físico.';
+            $productos = $this->productModel->getAll();
+            require_once __DIR__ . '/../views/admin/inventario/recount.php';
+            return;
+        }
+
+        $movementType = $difference > 0 ? 'ingreso' : 'salida';
+        $quantity = abs($difference);
+        $reason = 'Ajuste por reconteo';
+
+        $conn = $this->saleModel->getConnection();
+        try {
+            $conn->beginTransaction();
+
+            if ($movementType === 'ingreso') {
+                $adjusted = $this->productModel->increaseStock($productId, $quantity);
+            } else {
+                $adjusted = $this->productModel->decreaseStockIfAvailable($productId, $quantity);
+            }
+            if (!$adjusted) {
+                throw new RuntimeException('No se pudo ajustar el stock durante el reconteo.');
+            }
+
+            $okMovement = $this->inventoryMovementModel->create(
+                $productId,
+                $userId,
+                $quantity,
+                $movementType,
+                $reason
+            );
+            if (!$okMovement) {
+                throw new RuntimeException('No se pudo registrar el movimiento de reconteo.');
+            }
+
+            $this->auditLogModel->create(
+                (int)$_SESSION['user_id'],
+                'adjust',
+                'inventory',
+                $productId,
+                "Reconteo aplicado. Diferencia: {$difference}"
+            );
+
+            $conn->commit();
+            $success = 'Reconteo aplicado correctamente. Se registró movimiento de ' . strtoupper($movementType) . '.';
+        } catch (Throwable $e) {
+            if ($conn->inTransaction()) {
+                $conn->rollBack();
+            }
+            $error = 'Error al ajustar inventario: ' . $e->getMessage();
+        }
+
+        $productos = $this->productModel->getAll();
+        require_once __DIR__ . '/../views/admin/inventario/recount.php';
+    }
+
+    /**************************************************************************
+     * COMPRAS / ABASTECIMIENTO
+     **************************************************************************/
+    public function listPurchases() {
+        $compras = $this->purchaseModel->getAll(300);
+        require_once __DIR__ . '/../views/admin/compras/list_purchases.php';
+    }
+
+    public function addPurchaseForm() {
+        $productos = $this->productModel->getAll();
+        require_once __DIR__ . '/../views/admin/compras/add_purchase.php';
+    }
+
+    public function storePurchase() {
+        $productId = isset($_POST['product_id']) ? (int)$_POST['product_id'] : 0;
+        $quantity = isset($_POST['quantity']) ? (int)$_POST['quantity'] : 0;
+        $supplier = trim($_POST['supplier'] ?? '');
+        $notes = trim($_POST['notes'] ?? '');
+        $userId = (int)$_SESSION['user_id'];
+
+        $error = '';
+        if ($productId <= 0 || $quantity <= 0 || $supplier === '') {
+            $error = 'Producto, cantidad y proveedor son obligatorios.';
+        }
+        $producto = $this->productModel->findById($productId);
+        if (!$producto) {
+            $error = 'El producto seleccionado no existe.';
+        }
+
+        if (!empty($error)) {
+            $productos = $this->productModel->getAll();
+            require_once __DIR__ . '/../views/admin/compras/add_purchase.php';
+            return;
+        }
+
+        $conn = $this->saleModel->getConnection();
+        try {
+            $conn->beginTransaction();
+
+            $adjusted = $this->productModel->increaseStock($productId, $quantity);
+            if (!$adjusted) {
+                throw new RuntimeException('No se pudo aumentar stock.');
+            }
+
+            $saved = $this->purchaseModel->create($productId, $userId, $quantity, $supplier, $notes);
+            if (!$saved) {
+                throw new RuntimeException('No se pudo guardar la compra. Verifica tabla purchases en BD.');
+            }
+
+            $movementReason = 'Compra proveedor: ' . $supplier;
+            if ($notes !== '') {
+                $movementReason .= ' - ' . $notes;
+            }
+            $okMovement = $this->inventoryMovementModel->create(
+                $productId,
+                $userId,
+                $quantity,
+                'ingreso',
+                $movementReason
+            );
+            if (!$okMovement) {
+                throw new RuntimeException('No se pudo registrar el ingreso en Kardex.');
+            }
+
+            $this->auditLogModel->create(
+                (int)$_SESSION['user_id'],
+                'create',
+                'purchase',
+                null,
+                "Compra registrada. Proveedor: {$supplier}, Cantidad: {$quantity}"
+            );
+
+            $conn->commit();
+            header('Location: index.php?controller=admin&action=listPurchases');
+            exit;
+        } catch (Throwable $e) {
+            if ($conn->inTransaction()) {
+                $conn->rollBack();
+            }
+            $error = 'No se pudo registrar la compra: ' . $e->getMessage();
+            $productos = $this->productModel->getAll();
+            require_once __DIR__ . '/../views/admin/compras/add_purchase.php';
+            return;
+        }
+    }
+
+    /**************************************************************************
+     * ORDENES DE TRABAJO
+     **************************************************************************/
+    public function listWorkOrders() {
+        $ordenes = $this->workOrderModel->getAll(300);
+        require_once __DIR__ . '/../views/admin/ordenes/list_work_orders.php';
+    }
+
+    public function addWorkOrderForm() {
+        $ventas = $this->saleModel->getAllSales();
+        require_once __DIR__ . '/../views/admin/ordenes/add_work_order.php';
+    }
+
+    public function storeWorkOrder() {
+        $clientName = trim($_POST['client_name'] ?? '');
+        $serviceType = trim($_POST['service_type'] ?? '');
+        $technicianName = trim($_POST['technician_name'] ?? '');
+        $materialsUsed = trim($_POST['materials_used'] ?? '');
+        $status = trim($_POST['status'] ?? 'pendiente');
+        $saleId = isset($_POST['sale_id']) && $_POST['sale_id'] !== '' ? (int)$_POST['sale_id'] : null;
+        $notes = trim($_POST['notes'] ?? '');
+        $userId = (int)$_SESSION['user_id'];
+
+        $allowedStatuses = ['pendiente', 'en_proceso', 'finalizado'];
+        $error = '';
+        if ($clientName === '' || $serviceType === '' || $technicianName === '' || !in_array($status, $allowedStatuses, true)) {
+            $error = 'Cliente, tipo de servicio, técnico y estado válido son obligatorios.';
+        }
+        if ($saleId !== null) {
+            $venta = $this->saleModel->findByIdWithDetails($saleId);
+            if (!$venta) {
+                $error = 'La venta vinculada no existe.';
+            }
+        }
+
+        if (!empty($error)) {
+            $ventas = $this->saleModel->getAllSales();
+            require_once __DIR__ . '/../views/admin/ordenes/add_work_order.php';
+            return;
+        }
+
+        $saved = $this->workOrderModel->create(
+            $clientName,
+            $serviceType,
+            $technicianName,
+            $materialsUsed,
+            $status,
+            $saleId,
+            $notes,
+            $userId
+        );
+        if (!$saved) {
+            $error = 'No se pudo registrar la orden de trabajo. Verifica que la tabla work_orders exista (ejecuta scripts/tesis_upgrade.sql).';
+            $ventas = $this->saleModel->getAllSales();
+            require_once __DIR__ . '/../views/admin/ordenes/add_work_order.php';
+            return;
+        }
+
+        $this->auditLogModel->create(
+            (int)$_SESSION['user_id'],
+            'create',
+            'work_order',
+            null,
+            "Orden de trabajo registrada para cliente {$clientName}"
+        );
+
+        header('Location: index.php?controller=admin&action=listWorkOrders');
+        exit;
+    }
+
+    public function updateWorkOrderStatus() {
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        $status = trim($_POST['status'] ?? '');
+        $allowedStatuses = ['pendiente', 'en_proceso', 'finalizado'];
+
+        if ($id <= 0 || !in_array($status, $allowedStatuses, true)) {
+            $_SESSION['error_work_order'] = 'Datos inválidos para actualizar estado.';
+            header('Location: index.php?controller=admin&action=listWorkOrders');
+            exit;
+        }
+
+        $updated = $this->workOrderModel->updateStatus($id, $status);
+        if (!$updated) {
+            $_SESSION['error_work_order'] = 'No se pudo actualizar el estado de la orden.';
+        } else {
+            $this->auditLogModel->create(
+                (int)$_SESSION['user_id'],
+                'update',
+                'work_order',
+                $id,
+                "Estado actualizado a {$status}"
+            );
+            $_SESSION['success_work_order'] = 'Estado de la orden actualizado.';
+        }
+        header('Location: index.php?controller=admin&action=listWorkOrders');
+        exit;
     }
 
     public function exportCurrentInventoryCsv() {
@@ -919,7 +1310,7 @@ class AdminController {
         $row = 2;
         foreach ($ventas as $venta) {
             $sheet->setCellValue('A' . $row, (int)$venta->id);
-            $sheet->setCellValue('B' . $row, $venta->sale_date);
+            $sheet->setCellValue('B' . $row, formatSaleDate((string)$venta->sale_date, 'Y-m-d H:i:s'));
             $sheet->setCellValue('C' . $row, $venta->user_name);
             $sheet->setCellValue('D' . $row, $venta->product_name);
             $sheet->setCellValue('E' . $row, (int)$venta->quantity);
