@@ -39,7 +39,15 @@
     </style>
 </head>
 <body>
-<?php include __DIR__ . '/../partials/header.php'; ?>
+<?php
+$role = $_SESSION['role'] ?? '';
+$useEmployeeHeader = in_array($role, ['comercial', 'logistica', 'finanzas', 'estrategico', 'gerencia'], true);
+if ($useEmployeeHeader) {
+    include __DIR__ . '/../../employee/partials/header.php';
+} else {
+    include __DIR__ . '/../partials/header.php';
+}
+?>
 <div class="container">
     <h1>Reconteo de Inventario</h1>
     <p>Compara stock de sistema vs stock físico y ajusta automáticamente.</p>

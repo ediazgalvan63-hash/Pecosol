@@ -327,6 +327,22 @@ class Sale {
         return (float) $row->total;
     }
 
+    public function countSalesByDateAndUser(string $desde, string $hasta, int $userId): int {
+        $sql = "
+            SELECT COUNT(*) AS total
+            FROM {$this->table}
+            WHERE DATE(sale_date) BETWEEN :desde AND :hasta
+              AND user_id = :user_id
+        ";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindParam(':desde', $desde);
+        $stmt->bindParam(':hasta', $hasta);
+        $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_OBJ);
+        return (int) $row->total;
+    }
+
     /**
      * getLastSales($limit = 5)
      * - Recupera las últimas $limit ventas de todos los usuarios, ordenadas por fecha descendente.
@@ -396,6 +412,87 @@ class Sale {
     }
 
     /**
+     * getSalesTrendByUser($userId, $days)
+     * - Devuelve la suma de ventas por día del usuario en los últimos $days días.
+     */
+    public function getSalesTrendByUser(int $userId, int $days = 7): array {
+        $today = date('Y-m-d');
+        $startDate = date('Y-m-d', strtotime("-" . ($days - 1) . " days", strtotime($today)));
+        $sql = "
+            SELECT DATE(sale_date) AS sale_day, COALESCE(SUM(total_price), 0) AS total
+            FROM {$this->table}
+            WHERE user_id = :user_id
+              AND DATE(sale_date) BETWEEN :desde AND :hasta
+            GROUP BY sale_day
+            ORDER BY sale_day ASC
+        ";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
+        $stmt->bindParam(':desde', $startDate);
+        $stmt->bindParam(':hasta', $today);
+        $stmt->execute();
+        $rows = $stmt->fetchAll(PDO::FETCH_OBJ);
+
+        $trend = [];
+        for ($i = 0; $i < $days; $i++) {
+            $day = date('Y-m-d', strtotime("-" . ($days - 1 - $i) . " days", strtotime($today)));
+            $trend[$day] = 0.0;
+        }
+        foreach ($rows as $row) {
+            $trend[$row->sale_day] = (float) $row->total;
+        }
+        return $trend;
+    }
+
+    /**
+     * getTopClientsByUser($userId, $limit)
+     * - Devuelve los clientes con mayor volumen de ventas para un comercial.
+     */
+    public function getTopClientsByUser(int $userId, int $limit = 3): array {
+        $clientNameSelect = $this->hasClientNameColumn()
+            ? "COALESCE(NULLIF(TRIM(client_name), ''), 'Cliente General')"
+            : "'Cliente General'";
+        $sql = "
+            SELECT {$clientNameSelect} AS client_name,
+                   SUM(total_price) AS total_revenue,
+                   COUNT(*) AS sales_count
+            FROM {$this->table}
+            WHERE user_id = :user_id
+            GROUP BY client_name
+            ORDER BY total_revenue DESC
+            LIMIT :limit
+        ";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
+        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_OBJ);
+    }
+
+    /**
+     * getTopProductsByUser($userId, $limit)
+     * - Devuelve los productos con mayor facturación para un comercial.
+     */
+    public function getTopProductsByUser(int $userId, int $limit = 3): array {
+        $sql = "
+            SELECT p.name AS product_name,
+                   SUM(s.quantity) AS total_quantity,
+                   SUM(s.total_price) AS total_revenue
+            FROM {$this->table} AS s
+            JOIN products AS p ON s.product_id = p.id
+            WHERE s.user_id = :user_id
+            GROUP BY s.product_id, p.name
+            ORDER BY total_revenue DESC
+            LIMIT :limit
+        ";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
+        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_OBJ);
+    }
+
+    /**
      * getAllSalesByUser($userId)
      * - Devuelve todas las ventas de un empleado específico, ordenadas por fecha descendente.
      * - Útil para el listado completo si se requiere.
@@ -456,6 +553,14 @@ class Sale {
         ";
         $stmt = $this->conn->prepare($sql);
         $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_OBJ);
+        return (int) $row->total;
+    }
+
+    public function countSales(): int {
+        $sql = "SELECT COUNT(*) AS total FROM {$this->table}";
+        $stmt = $this->conn->prepare($sql);
         $stmt->execute();
         $row = $stmt->fetch(PDO::FETCH_OBJ);
         return (int) $row->total;

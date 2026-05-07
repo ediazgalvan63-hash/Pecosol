@@ -1,11 +1,13 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Registrar Orden de Trabajo</title>
-    <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/style.css">
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style>
+<?php
+$role = $_SESSION['role'] ?? '';
+$useEmployeeHeader = in_array($role, ['comercial', 'logistica', 'finanzas', 'estrategico', 'gerencia'], true);
+if ($useEmployeeHeader) {
+    include __DIR__ . '/../../employee/partials/header.php';
+} else {
+    include __DIR__ . '/../partials/header.php';
+}
+?>
+<style>
       body {
         background-color: #1a1a2e;
         background-image: url('<?php echo BASE_URL; ?>assets/img/overlapping-circles.svg');
@@ -47,6 +49,7 @@
       }
 
       .error {
+        margin: 14px 0;
         margin: 14px 0;
         background: rgba(255, 75, 75, 0.14);
         border: 1px solid rgba(255, 107, 107, 0.55);
@@ -147,9 +150,6 @@
 
       .btn-ghost:hover { background: rgba(0,255,240,0.08); }
     </style>
-</head>
-<body>
-<?php include __DIR__ . '/../partials/header.php'; ?>
 <div class="container">
     <div class="page-head">
       <div>
@@ -157,7 +157,7 @@
         <p>Registra el servicio y deja trazabilidad. Opcionalmente puedes vincular la orden a una venta existente.</p>
       </div>
       <div>
-        <a class="btn btn-ghost" href="<?php echo BASE_URL; ?>index.php?controller=admin&action=listWorkOrders">← Volver</a>
+        <a class="btn btn-ghost" href="<?php echo BASE_URL; ?>index.php?controller=<?php echo $useEmployeeHeader ? 'dashboard&action=logisticsWorkOrders' : 'admin&action=listWorkOrders'; ?>">← Volver</a>
       </div>
     </div>
     <?php if (!empty($error)): ?>
@@ -218,10 +218,8 @@
       </div>
 
       <div class="form-actions">
-        <a class="btn btn-ghost" href="<?php echo BASE_URL; ?>index.php?controller=admin&action=listWorkOrders">Cancelar</a>
+        <a class="btn btn-ghost" href="<?php echo BASE_URL; ?>index.php?controller=<?php echo $useEmployeeHeader ? 'dashboard&action=logisticsWorkOrders' : 'admin&action=listWorkOrders'; ?>">Cancelar</a>
         <button type="submit" class="btn btn-primary">Registrar orden</button>
       </div>
     </form>
 </div>
-</body>
-</html>

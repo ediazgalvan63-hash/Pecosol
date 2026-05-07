@@ -3,6 +3,37 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 $username = $_SESSION['username'] ?? 'Empleado';
+$role = $_SESSION['role'] ?? 'employee';
+$roleLabelMap = [
+  'employee' => 'Empleado',
+  'comercial' => 'Comercial',
+  'logistica' => 'Logística',
+  'finanzas' => 'Finanzas',
+  'estrategico' => 'Estratégico',
+  'gerencia' => 'Gerencia',
+];
+$roleLabel = $roleLabelMap[$role] ?? ucfirst($role);
+
+$homeHref = BASE_URL . 'index.php?controller=dashboard&action=home';
+$links = [];
+$links[] = ['Dashboard', $homeHref];
+if (in_array($role, ['employee', 'comercial'], true)) {
+  $links[] = ['Registrar Venta', BASE_URL . 'index.php?controller=employee&action=addSaleForm'];
+  $links[] = ['Mis Ventas', BASE_URL . 'index.php?controller=employee&action=listSalesEmployee'];
+  $links[] = ['Productos', BASE_URL . 'index.php?controller=employee&action=listProductsEmployee'];
+} elseif ($role === 'logistica') {
+  $links[] = ['Inventario', BASE_URL . 'index.php?controller=dashboard&action=logisticsInventory'];
+  $links[] = ['Reconteo', BASE_URL . 'index.php?controller=dashboard&action=logisticsRecount'];
+  $links[] = ['Compras', BASE_URL . 'index.php?controller=dashboard&action=logisticsPurchases'];
+  $links[] = ['Órdenes', BASE_URL . 'index.php?controller=dashboard&action=logisticsWorkOrders'];
+} elseif ($role === 'finanzas') {
+  $links[] = ['Ventas', BASE_URL . 'index.php?controller=dashboard&action=financeSales'];
+  $links[] = ['Reportes', BASE_URL . 'index.php?controller=dashboard&action=financeReports'];
+} elseif ($role === 'estrategico') {
+  $links[] = ['Reportes', BASE_URL . 'index.php?controller=dashboard&action=strategyReports'];
+} elseif ($role === 'gerencia') {
+  $links[] = ['Reportes', BASE_URL . 'index.php?controller=dashboard&action=managementReports'];
+}
 ?>
 
 <style>
@@ -138,17 +169,17 @@ $username = $_SESSION['username'] ?? 'Empleado';
 <header class="employee">
   <nav class="emp-nav">
     <!-- Branding con ícono -->
-    <a href="<?php echo BASE_URL; ?>index.php?controller=dashboard&action=employeeHome" class="emp-brand">
+    <a href="<?php echo $homeHref; ?>" class="emp-brand">
       <img src="<?php echo BASE_URL; ?>assets/img/LogoPecosol.png" alt="LogoPecosol">
-      Pecosol <small>Empleado</small>
+      Pecosol <small><?php echo htmlspecialchars($roleLabel); ?></small>
     </a>
 
     <!-- Enlaces y usuario -->
     <div class="emp-links" style="width: fit-content; margin: 0 auto;">
-  <a href="<?php echo BASE_URL; ?>index.php?controller=employee&action=addSaleForm">Registrar Venta</a>
-  <a href="<?php echo BASE_URL; ?>index.php?controller=employee&action=listSalesEmployee">Mis Ventas</a>
-  <a href="<?php echo BASE_URL; ?>index.php?controller=employee&action=listProductsEmployee">Productos</a>
-  <a href="<?php echo BASE_URL; ?>index.php?controller=employee&action=profile">👤 Mi Perfil</a>
+      <?php foreach ($links as $lnk): ?>
+        <a href="<?php echo $lnk[1]; ?>"><?php echo htmlspecialchars($lnk[0]); ?></a>
+      <?php endforeach; ?>
+      <a href="<?php echo BASE_URL; ?>index.php?controller=employee&action=profile">👤 Mi Perfil</a>
   
 </div>
 <div class="user">

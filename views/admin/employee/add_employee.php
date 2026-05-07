@@ -196,7 +196,11 @@ if (session_status() === PHP_SESSION_NONE) {
         <label for="role">Rol:</label>
         <select id="role" name="role" required>
           <option value="">-- Selecciona un rol --</option>
-          <option value="employee"<?php if(($_POST['role'] ?? '')==='employee') echo ' selected'; ?>>Empleado</option>
+          <option value="comercial"<?php if(($_POST['role'] ?? '')==='comercial') echo ' selected'; ?>>Comercial</option>
+          <option value="logistica"<?php if(($_POST['role'] ?? '')==='logistica') echo ' selected'; ?>>Logística</option>
+          <option value="gerencia"<?php if(($_POST['role'] ?? '')==='gerencia') echo ' selected'; ?>>Gerencia</option>
+          <option value="finanzas"<?php if(($_POST['role'] ?? '')==='finanzas') echo ' selected'; ?>>Finanzas</option>
+          <option value="estrategico"<?php if(($_POST['role'] ?? '')==='estrategico') echo ' selected'; ?>>Estratégico</option>
           <option value="admin"<?php if(($_POST['role'] ?? '')==='admin') echo ' selected'; ?>>Administrador</option>
         </select>
 

@@ -59,6 +59,14 @@ class Product {
         return $stmt->execute();
     }
 
+    public function decreaseStock(int $productId, int $quantity): bool {
+        $sql = "UPDATE {$this->table} SET stock = stock - :quantity WHERE id = :id";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindParam(':quantity', $quantity, PDO::PARAM_INT);
+        $stmt->bindParam(':id', $productId, PDO::PARAM_INT);
+        return $stmt->execute();
+    }
+
     public function decreaseStockIfAvailable(int $productId, int $quantity): bool {
         $sql = "
             UPDATE {$this->table}

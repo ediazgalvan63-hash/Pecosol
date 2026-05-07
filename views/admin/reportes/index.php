@@ -27,19 +27,30 @@
     </style>
 </head>
 <body>
-<?php include __DIR__ . '/../partials/header.php'; ?>
+<?php
+$role = $_SESSION['role'] ?? '';
+$useEmployeeHeader = in_array($role, ['comercial', 'logistica', 'finanzas', 'estrategico', 'gerencia'], true);
+if ($useEmployeeHeader) {
+    include __DIR__ . '/../../employee/partials/header.php';
+} else {
+    include __DIR__ . '/../partials/header.php';
+}
+$reportsAction = $reportsAction ?? 'reports';
+$reportsController = ($dashboardMode ?? false) ? 'dashboard' : 'admin';
+$reportUrlBase = BASE_URL . 'index.php?controller=' . $reportsController . '&action=' . $reportsAction;
+?>
 <div class="container">
     <h1 class="header-title">Reportes Exportables</h1>
 
     <div class="section-card">
         <h2>Inventario Actual</h2>
-        <p class="help-text">Descarga un archivo Excel (.xlsx) con el estado actual de todos los productos, sus niveles de stock y alertas de bajo stock.</p>
-        <a class="button" href="<?php echo BASE_URL; ?>index.php?controller=admin&action=exportCurrentInventoryCsv">Descargar Inventario Actual</a>
+        <p class="help-text">Descarga un archivo XLSX con el estado actual de todos los productos, sus niveles de stock y alertas de bajo stock.</p>
+        <a class="button" href="<?php echo BASE_URL; ?>index.php?controller=admin&action=exportCurrentInventoryCsv">Descargar XLSX</a>
     </div>
 
     <div class="section-card">
         <h2>Movimientos / Kardex</h2>
-        <p class="help-text">Aplica filtros por rango de fechas, producto y tipo de movimiento antes de exportar a Excel.</p>
+        <p class="help-text">Aplica filtros por rango de fechas, producto y tipo de movimiento antes de exportar a XLSX.</p>
         <form method="get" action="<?php echo BASE_URL; ?>index.php?controller=admin&action=exportMovementsCsv">
             <input type="hidden" name="controller" value="admin">
             <input type="hidden" name="action" value="exportMovementsCsv">
@@ -71,15 +82,15 @@
                 </div>
             </div>
             <div class="form-actions">
-                <button type="submit" class="button">Exportar Movimientos</button>
-                <button type="reset" onclick="window.location.href='<?php echo BASE_URL; ?>index.php?controller=admin&action=reports'" class="button">Limpiar filtros</button>
+                <button type="submit" class="button">Exportar XLSX</button>
+                <button type="reset" onclick="window.location.href='<?php echo htmlspecialchars($reportUrlBase); ?>'" class="button">Limpiar filtros</button>
             </div>
         </form>
     </div>
 
     <div class="section-card">
         <h2>Ventas</h2>
-        <p class="help-text">Filtra las ventas por rango de fechas para obtener un informe Excel coherente con la trazabilidad del inventario.</p>
+        <p class="help-text">Filtra las ventas por rango de fechas para obtener un informe XLSX coherente con la trazabilidad del inventario.</p>
         <form method="get" action="<?php echo BASE_URL; ?>index.php?controller=admin&action=exportSalesCsv">
             <input type="hidden" name="controller" value="admin">
             <input type="hidden" name="action" value="exportSalesCsv">
@@ -94,8 +105,8 @@
                 </div>
             </div>
             <div class="form-actions">
-                <button type="submit" class="button">Exportar Ventas</button>
-                <button type="reset" onclick="window.location.href='<?php echo BASE_URL; ?>index.php?controller=admin&action=reports'" class="button">Limpiar filtros</button>
+                <button type="submit" class="button">Exportar XLSX</button>
+                <button type="reset" onclick="window.location.href='<?php echo htmlspecialchars($reportUrlBase); ?>'" class="button">Limpiar filtros</button>
             </div>
         </form>
     </div>
@@ -103,30 +114,41 @@
     <div class="section-card">
         <h2>Bitácora de Auditoría (Trazabilidad)</h2>
         <p class="help-text">Registro de operaciones críticas para sustento técnico: ventas, compras, ajustes y órdenes de trabajo.</p>
-        <div style="overflow:auto;">
-            <table style="width:100%; border-collapse:collapse;">
-                <thead>
+        <div style="overflow-x: auto; max-height: 400px; overflow-y: auto;">
+            <table style="width:100%; border-collapse: collapse; font-size: 14px;">
+                <thead style="position: sticky; top: 0; background: #16213e; z-index: 1;">
                     <tr>
-                        <th style="padding:10px; border-bottom:1px solid #2a3b63;">Fecha</th>
-                        <th style="padding:10px; border-bottom:1px solid #2a3b63;">Usuario</th>
-                        <th style="padding:10px; border-bottom:1px solid #2a3b63;">Acción</th>
-                        <th style="padding:10px; border-bottom:1px solid #2a3b63;">Entidad</th>
-                        <th style="padding:10px; border-bottom:1px solid #2a3b63;">Detalle</th>
+                        <th style="padding: 12px 8px; border-bottom: 2px solid #00fff0; color: #00fff0; text-align: left; font-weight: 600;">Fecha</th>
+                        <th style="padding: 12px 8px; border-bottom: 2px solid #00fff0; color: #00fff0; text-align: left; font-weight: 600;">Usuario</th>
+                        <th style="padding: 12px 8px; border-bottom: 2px solid #00fff0; color: #00fff0; text-align: left; font-weight: 600;">Acción</th>
+                        <th style="padding: 12px 8px; border-bottom: 2px solid #00fff0; color: #00fff0; text-align: left; font-weight: 600;">Entidad</th>
+                        <th style="padding: 12px 8px; border-bottom: 2px solid #00fff0; color: #00fff0; text-align: left; font-weight: 600;">Detalle</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (!empty($auditorias)): ?>
+                        <?php $rowCount = 0; ?>
                         <?php foreach ($auditorias as $a): ?>
-                            <tr>
-                                <td style="padding:8px; border-bottom:1px solid #24314f;"><?php echo htmlspecialchars($a->created_at); ?></td>
-                                <td style="padding:8px; border-bottom:1px solid #24314f;"><?php echo htmlspecialchars($a->user_name ?? 'N/A'); ?></td>
-                                <td style="padding:8px; border-bottom:1px solid #24314f;"><?php echo htmlspecialchars(strtoupper($a->action)); ?></td>
-                                <td style="padding:8px; border-bottom:1px solid #24314f;"><?php echo htmlspecialchars($a->entity); ?></td>
-                                <td style="padding:8px; border-bottom:1px solid #24314f;"><?php echo htmlspecialchars($a->details ?? ''); ?></td>
+                            <?php $rowCount++; ?>
+                            <tr style="background-color: <?php echo $rowCount % 2 === 0 ? '#1a1a2e' : '#16213e'; ?>; transition: background-color 0.2s;">
+                                <td style="padding: 10px 8px; border-bottom: 1px solid #2a3b63; color: #eaeaea;"><?php echo htmlspecialchars(date('d/m/Y H:i', strtotime($a->created_at))); ?></td>
+                                <td style="padding: 10px 8px; border-bottom: 1px solid #2a3b63; color: #eaeaea;"><?php echo htmlspecialchars($a->user_name ?? 'Sistema'); ?></td>
+                                <td style="padding: 10px 8px; border-bottom: 1px solid #2a3b63;">
+                                    <span style="display: inline-flex; align-items: center; gap: 6px; color: <?php echo $a->action === 'create' ? '#4ade80' : ($a->action === 'update' ? '#fbbf24' : ($a->action === 'delete' ? '#ff6b6b' : '#a0a0a0')); ?>; font-weight: 500;">
+                                        <?php 
+                                        $icon = $a->action === 'create' ? '➕' : ($a->action === 'update' ? '✏️' : ($a->action === 'delete' ? '🗑️' : 'ℹ️'));
+                                        echo $icon . ' ' . htmlspecialchars(strtoupper($a->action));
+                                        ?>
+                                    </span>
+                                </td>
+                                <td style="padding: 10px 8px; border-bottom: 1px solid #2a3b63; color: #eaeaea;"><?php echo htmlspecialchars(ucfirst($a->entity)); ?></td>
+                                <td style="padding: 10px 8px; border-bottom: 1px solid #2a3b63; color: #a0a0a0; max-width: 300px; word-wrap: break-word;"><?php echo htmlspecialchars($a->details ?? 'Sin detalles'); ?></td>
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <tr><td colspan="5" style="padding:10px;">Sin eventos de auditoría aún.</td></tr>
+                        <tr>
+                            <td colspan="5" style="padding: 20px; text-align: center; color: #a0a0a0; font-style: italic;">Sin eventos de auditoría aún.</td>
+                        </tr>
                     <?php endif; ?>
                 </tbody>
             </table>

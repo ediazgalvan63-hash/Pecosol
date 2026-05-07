@@ -104,6 +104,7 @@
             <th>Cantidad</th>
             <th>Precio Unit.</th>
             <th>Total</th>
+            <th>Cliente</th>
             <th>Fecha</th>
           </tr>
         </thead>
@@ -115,6 +116,7 @@
               <td><?php echo $venta->quantity; ?></td>
               <td>S/. <?php echo number_format($venta->unit_price, 2, '.', ','); ?></td>
               <td>S/. <?php echo number_format($venta->total_price, 2, '.', ','); ?></td>
+              <td><?php echo htmlspecialchars($venta->client_name ?? 'Cliente General'); ?></td>
               <td><?php echo formatSaleDate($venta->sale_date); ?></td>
             </tr>
           <?php endforeach; ?>

@@ -11,7 +11,40 @@
 <body>
 
 <?php
-require_once __DIR__ . '/partials/header.php';
+$role = $_SESSION['role'] ?? '';
+$useEmployeeHeader = in_array($role, ['comercial', 'logistica', 'finanzas', 'estrategico', 'gerencia', 'employee'], true);
+if ($useEmployeeHeader) {
+    require_once __DIR__ . '/partials/header.php';
+} else {
+    require_once __DIR__ . '/../admin/partials/header.php';
+}
+
+// Definir homeHref según rol
+$homeHref = BASE_URL . 'index.php?controller=dashboard&action=';
+switch ($role) {
+    case 'admin':
+        $homeHref .= 'adminHome';
+        break;
+    case 'gerencia':
+        $homeHref .= 'managementHome';
+        break;
+    case 'comercial':
+    case 'employee':
+        $homeHref .= 'employeeHome';
+        break;
+    case 'logistica':
+        $homeHref .= 'logisticsHome';
+        break;
+    case 'finanzas':
+        $homeHref .= 'financeHome';
+        break;
+    case 'estrategico':
+        $homeHref .= 'strategyHome';
+        break;
+    default:
+        $homeHref .= 'home';
+        break;
+}
 ?>
 
 <style>
@@ -312,7 +345,7 @@ require_once __DIR__ . '/partials/header.php';
     </div>
 
     <div class="form-actions">
-      <a href="index.php?controller=dashboard&action=employeeHome" class="btn btn-secondary">Cancelar</a>
+      <a href="<?php echo $homeHref; ?>" class="btn btn-secondary">Cancelar</a>
       <button type="submit" class="btn btn-primary">Guardar Cambios</button>
     </div>
   </form>

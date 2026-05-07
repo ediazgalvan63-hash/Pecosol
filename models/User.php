@@ -40,11 +40,22 @@ class User {
 
     /**
      * getAllEmployees()
-     * - Devuelve todos los usuarios con rol = 'employee' como arreglo de objetos.
-     * - Ordenados por ID de forma ascendente.
+     * - Devuelve todos los usuarios que no son admin, ordenados por ID asc.
+     * - Incluye roles de empleados, comercial, gerencia, logística, finanzas y estratégico.
      */
     public function getAllEmployees(): array {
-        $sql  = "SELECT * FROM {$this->table} WHERE role = 'employee' ORDER BY id ASC";
+        $sql  = "SELECT * FROM {$this->table} WHERE role != 'admin' ORDER BY id ASC";
+        $stmt = $this->conn->query($sql);
+        return $stmt->fetchAll(PDO::FETCH_OBJ);
+    }
+
+    /**
+     * getAdminAndCommercial()
+     * - Devuelve solo usuarios con rol 'admin' o 'comercial', ordenados por ID asc.
+     * - Útil para seleccionar quién registra una venta.
+     */
+    public function getAdminAndCommercial(): array {
+        $sql  = "SELECT * FROM {$this->table} WHERE role IN ('admin', 'comercial') ORDER BY id ASC";
         $stmt = $this->conn->query($sql);
         return $stmt->fetchAll(PDO::FETCH_OBJ);
     }
@@ -80,23 +91,23 @@ class User {
     }
 
     /**
-     * update($id, $fullName, $email, $role)
-     * - Actualiza datos básicos de usuario (full_name, email, role).
-     * - Devuelve true si la actualización fue exitosa, o false en caso contrario.
+     * updateProfile($id, $username, $fullName, $email)
+     * - Actualiza username, full_name, email de un usuario.
+     * - Devuelve true si exitoso, false en caso contrario.
      */
-    public function update(int $id, string $fullName, string $email, string $role): bool {
+    public function updateProfile(int $id, string $username, string $fullName, string $email): bool {
         $sql = "
             UPDATE {$this->table}
-            SET full_name = :full_name,
-                email     = :email,
-                role      = :role
+            SET username = :username,
+                full_name = :full_name,
+                email = :email
             WHERE id = :id
         ";
         $stmt = $this->conn->prepare($sql);
+        $stmt->bindParam(':username', $username);
         $stmt->bindParam(':full_name', $fullName);
-        $stmt->bindParam(':email',     $email);
-        $stmt->bindParam(':role',      $role);
-        $stmt->bindParam(':id',        $id, PDO::PARAM_INT);
+        $stmt->bindParam(':email', $email);
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
         return $stmt->execute();
     }
 
@@ -142,6 +153,24 @@ class User {
         $sql = "
             SELECT COUNT(*) AS total
             FROM sales
+            WHERE user_id = :user_id
+        ";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_OBJ);
+        return (int) $row->total;
+    }
+
+    /**
+     * countInventoryMovementsByUser($userId)
+     * - Devuelve la cantidad de movimientos de inventario relacionados con un usuario.
+     * - Previene la eliminación de empleados con registros en stock_movements.
+     */
+    public function countInventoryMovementsByUser(int $userId): int {
+        $sql = "
+            SELECT COUNT(*) AS total
+            FROM stock_movements
             WHERE user_id = :user_id
         ";
         $stmt = $this->conn->prepare($sql);
@@ -208,11 +237,11 @@ class User {
     }
 
     /**
-     * updateProfile($id, $username, $fullName, $email)
+     * updateUserProfile($id, $username, $fullName, $email)
      * - Actualiza datos del perfil de usuario (username, full_name, email).
      * - Devuelve true si la actualización fue exitosa, o false en caso contrario.
      */
-    public function updateProfile(int $id, string $username, string $fullName, string $email): bool {
+    public function updateUserProfile(int $id, string $username, string $fullName, string $email): bool {
         $sql = "
             UPDATE {$this->table}
             SET username  = :username,

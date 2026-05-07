@@ -61,14 +61,51 @@
             padding:8px;
         }
         .muted { color:#a6c6d8; }
+        .btn-add-large {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(96, 165, 250, 0.3);
+            transition: all 0.3s ease;
+            border: 2px solid rgba(96, 165, 250, 0.5);
+        }
+        .btn-add-large:hover {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(96, 165, 250, 0.4);
+        }
+        .btn-icon {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
-<?php include __DIR__ . '/../partials/header.php'; ?>
+<?php
+$role = $_SESSION['role'] ?? '';
+$useEmployeeHeader = in_array($role, ['comercial', 'logistica', 'finanzas', 'estrategico', 'gerencia'], true);
+if ($useEmployeeHeader) {
+    include __DIR__ . '/../../employee/partials/header.php';
+} else {
+    include __DIR__ . '/../partials/header.php';
+}
+?>
 <div class="container" style="max-width: 1150px; margin: 32px auto;">
     <div class="toolbar">
         <h1>Órdenes de Trabajo</h1>
-        <a class="button" href="<?php echo BASE_URL; ?>index.php?controller=admin&action=addWorkOrderForm">Nueva orden</a>
+        <?php if (in_array($role, ['admin', 'logistica'])): ?>
+        <a href="index.php?controller=admin&action=addWorkOrderForm" class="btn-add-large">
+            <span class="btn-icon">+</span>
+            Agregar Orden
+        </a>
+        <?php endif; ?>
     </div>
 
     <?php if (!empty($_SESSION['error_work_order'])): ?>

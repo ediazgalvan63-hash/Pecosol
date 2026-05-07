@@ -57,11 +57,18 @@ $movementType = htmlspecialchars($_GET['movement_type'] ?? '');
     </style>
 </head>
 <body>
-<?php include __DIR__ . '/../partials/header.php'; ?>
+<?php
+$role = $_SESSION['role'] ?? '';
+$useEmployeeHeader = in_array($role, ['comercial', 'logistica', 'finanzas', 'estrategico', 'gerencia'], true);
+if ($useEmployeeHeader) {
+    include __DIR__ . '/../../employee/partials/header.php';
+} else {
+    include __DIR__ . '/../partials/header.php';
+}
+?>
 <div class="container">
     <div class="page-header">
         <h1>Historial de Movimientos (Kardex)</h1>
-        <a class="button" href="<?php echo BASE_URL; ?>index.php?controller=admin&action=addInventoryMovementForm">Registrar Movimiento</a>
     </div>
 
     <div class="filter-card">
@@ -94,12 +101,10 @@ $movementType = htmlspecialchars($_GET['movement_type'] ?? '');
             </div>
         </div>
         <div class="filter-actions">
-            <form id="filterForm" method="get" action="<?php echo BASE_URL; ?>index.php?controller=admin&action=listInventoryMovements" style="display:inline-flex; width: 100%;">
-                <input type="hidden" name="controller" value="admin">
-                <input type="hidden" name="action" value="listInventoryMovements">
+            <form id="filterForm" method="get" action="<?php echo BASE_URL; ?>index.php?controller=dashboard&action=logisticsInventory" style="display:inline-flex; width: 100%;">
                 <button type="submit" class="button">Aplicar filtros</button>
             </form>
-            <a class="button" href="<?php echo BASE_URL; ?>index.php?controller=admin&action=listInventoryMovements">Restablecer filtros</a>
+            <a class="button" href="<?php echo BASE_URL; ?>index.php?controller=dashboard&action=logisticsInventory">Restablecer filtros</a>
         </div>
     </div>
 

@@ -137,7 +137,15 @@ unset($_SESSION['error_product_delete']);
 <body>
 
     <!-- Encabezado común -->
-    <?php include __DIR__ . '/../partials/header.php'; ?>
+    <?php
+    $role = $_SESSION['role'] ?? '';
+    $useEmployeeHeader = in_array($role, ['comercial', 'logistica', 'finanzas', 'estrategico', 'gerencia'], true);
+    if ($useEmployeeHeader) {
+        include __DIR__ . '/../../employee/partials/header.php';
+    } else {
+        include __DIR__ . '/../partials/header.php';
+    }
+    ?>
 
     <div class="container">
         <h1>Listado de Productos</h1>

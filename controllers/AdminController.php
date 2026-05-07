@@ -10,6 +10,26 @@ class AdminController {
     private $workOrderModel;
     private $auditLogModel;
 
+    private function authorizeAction(string $role, string $action): void {
+        $allowedActions = [
+            'admin' => ['*'],  // Control total del sistema
+            'gerencia' => ['reports'],  // Solo reportes ejecutivos
+            'comercial' => ['listSalesAdmin', 'addSaleAdminForm', 'storeSaleAdmin'],  // Gestión de ventas
+            'logistica' => ['listInventoryMovements', 'inventoryRecountForm', 'processInventoryRecount', 'listWorkOrders', 'addWorkOrderForm', 'storeWorkOrder', 'updateWorkOrderStatus', 'listPurchases', 'addPurchaseForm', 'storePurchase', 'editPurchaseForm', 'updatePurchase', 'deletePurchase'],  // Operación de almacén y compras
+            'finanzas' => ['listPurchases', 'listSalesAdmin', 'editSaleAdminForm', 'updateSaleAdmin', 'deleteSaleAdmin', 'reports', 'exportCurrentInventoryCsv', 'exportMovementsCsv', 'exportSalesCsv'],  // Control financiero y CxP/CxC
+            'estrategico' => ['listProducts', 'reports'],  // Datos maestros y análisis
+        ];
+
+        if ($role === 'admin') {
+            return;
+        }
+
+        if (empty($action) || !isset($allowedActions[$role]) || (!in_array('*', $allowedActions[$role], true) && !in_array($action, $allowedActions[$role], true))) {
+            header('Location: index.php?controller=dashboard&action=home');
+            exit;
+        }
+    }
+
     public function __construct() {
         // 1) Arrancar sesión si no existe
         if (session_status() === PHP_SESSION_NONE) {
@@ -22,12 +42,10 @@ class AdminController {
             exit;
         }
 
-        // 3) Verificar que el rol sea 'admin'
-        if ($_SESSION['role'] !== 'admin') {
-            // Si no es admin, enviarlo al dashboard de empleado
-            header('Location: index.php?controller=dashboard&action=employeeHome');
-            exit;
-        }
+        // 3) Autorizar el acceso según rol y acción solicitada
+        $role   = $_SESSION['role'] ?? '';
+        $action = $_GET['action'] ?? '';
+        $this->authorizeAction($role, $action);
 
         // 4) Instanciar modelos necesarios
         require_once __DIR__ . '/../models/Product.php';
@@ -198,7 +216,7 @@ class AdminController {
     // Validar campos
     if ($username === '' || $password === '' || $fullName === '' || $email === '' || $role === '') {
         $error = 'Todos los campos son obligatorios, incluyendo el rol.';
-    } elseif (!in_array($role, ['employee','admin'], true)) {
+    } elseif (!in_array($role, ['admin','gerencia','comercial','logistica','finanzas','estrategico'], true)) {
         $error = 'Rol no válido.';
     } else {
         // Verificar usuario existente
@@ -236,7 +254,7 @@ class AdminController {
         }
 
         $empleado = $this->userModel->findById($id);
-        if (!$empleado || $empleado->role !== 'employee') {
+        if (!$empleado || $empleado->role === 'admin') {
             header('Location: index.php?controller=admin&action=listEmployees');
             exit;
         }
@@ -249,17 +267,20 @@ class AdminController {
         $id        = isset($_POST['id']) ? (int)$_POST['id'] : 0;
         $fullName  = trim($_POST['full_name'] ?? '');
         $email     = trim($_POST['email'] ?? '');
+        $role      = trim($_POST['role'] ?? '');
         $changePwd = isset($_POST['change_password']) && $_POST['change_password'] === 'on';
         $newPwd    = trim($_POST['new_password'] ?? '');
 
         $error = '';
         $empleadoExistente = null;
 
-        if ($id <= 0 || $fullName === '' || $email === '') {
+        if ($id <= 0 || $fullName === '' || $email === '' || $role === '') {
             $error = 'ID inválido o campos obligatorios vacíos.';
+        } elseif (!in_array($role, ['admin','gerencia','comercial','logistica','finanzas','estrategico'], true)) {
+            $error = 'Rol no válido.';
         } else {
             $empleadoExistente = $this->userModel->findById($id);
-            if (!$empleadoExistente || $empleadoExistente->role !== 'employee') {
+            if (!$empleadoExistente || $empleadoExistente->role === 'admin') {
                 $error = 'El empleado no existe.';
             }
             if (empty($error) && $changePwd && $newPwd === '') {
@@ -273,13 +294,13 @@ class AdminController {
                 'username'  => $empleadoExistente->username ?? '',
                 'full_name' => $fullName,
                 'email'     => $email,
-                'role'      => 'employee'
+                'role'      => $role ?: ($empleadoExistente->role ?? 'employee')
             ];
             require_once __DIR__ . '/../views/admin/employee/edit_employee.php';
             return;
         }
 
-        $actualizado = $this->userModel->update($id, $fullName, $email, 'employee');
+        $actualizado = $this->userModel->update($id, $fullName, $email, $role);
         if (!$actualizado) {
             $error = 'Error al actualizar los datos del empleado. Intenta nuevamente.';
             $empleado = (object)[
@@ -312,8 +333,16 @@ class AdminController {
         }
 
         $numVentas = $this->saleModel->countSalesByUser($id);
-        if ($numVentas > 0) {
-            $_SESSION['error_employee_delete'] = "No se puede eliminar al empleado porque tiene {$numVentas} venta(s).";
+        $numMovimientos = $this->userModel->countInventoryMovementsByUser($id);
+        if ($numVentas > 0 || $numMovimientos > 0) {
+            $messages = [];
+            if ($numVentas > 0) {
+                $messages[] = "{$numVentas} venta(s)";
+            }
+            if ($numMovimientos > 0) {
+                $messages[] = "{$numMovimientos} movimiento(s) de inventario";
+            }
+            $_SESSION['error_employee_delete'] = 'No se puede eliminar al empleado porque tiene ' . implode(' y ', $messages) . '.';
             header('Location: index.php?controller=admin&action=listEmployees');
             exit;
         }
@@ -336,13 +365,23 @@ class AdminController {
     }
 
     public function addSaleAdminForm() {
-        // Obtener todos los empleados y productos para los selects
-        $empleados = $this->userModel->getAllEmployees();
+        $role = $_SESSION['role'] ?? '';
+        if (!in_array($role, ['admin', 'comercial'], true)) {
+            header('Location: index.php?controller=dashboard&action=home');
+            exit;
+        }
+        // Obtener solo admin y comercial para registrar ventas
+        $empleados = $this->userModel->getAdminAndCommercial();
         $productos = $this->productModel->getAll();
         require_once __DIR__ . '/../views/admin/ventas/add_sale_admin.php';
     }
 
     public function storeSaleAdmin() {
+        $role = $_SESSION['role'] ?? '';
+        if (!in_array($role, ['admin', 'comercial'], true)) {
+            header('Location: index.php?controller=dashboard&action=home');
+            exit;
+        }
         $userId      = isset($_POST['user_id'])    ? (int)$_POST['user_id']    : 0;
         $productId   = isset($_POST['product_id']) ? (int)$_POST['product_id'] : 0;
         $quantity    = isset($_POST['quantity'])   ? (int)$_POST['quantity']   : 0;
@@ -354,7 +393,7 @@ class AdminController {
             $error = 'Empleado, producto, cantidad y cliente son obligatorios.';
         } else {
             $empleado = $this->userModel->findById($userId);
-            if (!$empleado || $empleado->role !== 'employee') {
+            if (!$empleado || !in_array($empleado->role, ['admin', 'comercial'], true)) {
                 $error = 'El empleado seleccionado no es válido.';
             }
             $producto = $this->productModel->findById($productId);
@@ -366,7 +405,7 @@ class AdminController {
         }
 
         if (!empty($error)) {
-            $empleados = $this->userModel->getAllEmployees();
+            $empleados = $this->userModel->getAdminAndCommercial();
             $productos = $this->productModel->getAll();
             require_once __DIR__ . '/../views/admin/ventas/add_sale_admin.php';
             return;
@@ -423,31 +462,39 @@ class AdminController {
                 $conn->rollBack();
             }
             $error = 'Error al registrar venta: ' . $e->getMessage();
-            $empleados = $this->userModel->getAllEmployees();
+            $empleados = $this->userModel->getAdminAndCommercial();
             $productos = $this->productModel->getAll();
             require_once __DIR__ . '/../views/admin/ventas/add_sale_admin.php';
             return;
         }
 
-        header('Location: index.php?controller=admin&action=listSalesAdmin&created_sale_id=' . $newSaleId);
+        header('Location: index.php?controller=' . ($role === 'comercial' ? 'employee' : 'admin') . '&action=' . ($role === 'comercial' ? 'listSalesEmployee' : 'listSalesAdmin') . '&created_sale_id=' . $newSaleId);
         exit;
     }
 
     public function editSaleAdminForm() {
         $saleId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        $role = $_SESSION['role'] ?? '';
+        $listRedirect = $role === 'finanzas'
+            ? 'index.php?controller=dashboard&action=financeSales'
+            : 'index.php?controller=admin&action=listSalesAdmin';
+
         if ($saleId <= 0) {
-            header('Location: index.php?controller=admin&action=listSalesAdmin');
+            header('Location: ' . $listRedirect);
             exit;
         }
 
         // Obtener la venta con detalles y renombrar a $venta
         $venta = $this->saleModel->findByIdWithDetails($saleId);
         if (!$venta) {
-            header('Location: index.php?controller=admin&action=listSalesAdmin');
+            header('Location: ' . $listRedirect);
             exit;
         }
 
-        $empleados = $this->userModel->getAllEmployees();
+        $role = $_SESSION['role'] ?? '';
+        $empleados = $role === 'finanzas'
+            ? $this->userModel->getAdminAndCommercial()
+            : $this->userModel->getAllEmployees();
         $productos = $this->productModel->getAll();
         require_once __DIR__ . '/../views/admin/ventas/edit_sale_admin.php';
     }
@@ -471,7 +518,7 @@ class AdminController {
                 $error = 'La venta que intentas editar no existe.';
             }
             $empleado = $this->userModel->findById($userId);
-            if (!$empleado || $empleado->role !== 'employee') {
+            if (!$empleado || !in_array($empleado->role, ['admin', 'comercial'], true)) {
                 $error = 'El empleado seleccionado no es válido.';
             }
             $producto = $this->productModel->findById($productId);
@@ -482,7 +529,10 @@ class AdminController {
 
         if (!empty($error)) {
             // Si hay error, recargar vista usando la variable $venta
-            $empleados = $this->userModel->getAllEmployees();
+            $role = $_SESSION['role'] ?? '';
+            $empleados = $role === 'finanzas'
+                ? $this->userModel->getAdminAndCommercial()
+                : $this->userModel->getAllEmployees();
             $productos = $this->productModel->getAll();
 
             // Si no existe, crear un objeto fallback con los datos mínimos
@@ -628,7 +678,12 @@ class AdminController {
             return;
         }
 
-        header('Location: index.php?controller=admin&action=listSalesAdmin');
+        $role = $_SESSION['role'] ?? '';
+        $redirectTo = $role === 'finanzas'
+            ? 'index.php?controller=dashboard&action=financeSales'
+            : 'index.php?controller=admin&action=listSalesAdmin';
+
+        header('Location: ' . $redirectTo);
         exit;
     }
 
@@ -686,7 +741,12 @@ class AdminController {
             $_SESSION['error_sale_delete'] = 'No se pudo eliminar la venta: ' . $e->getMessage();
         }
 
-        header('Location: index.php?controller=admin&action=listSalesAdmin');
+        $role = $_SESSION['role'] ?? '';
+        $redirectTo = $role === 'finanzas'
+            ? 'index.php?controller=dashboard&action=financeSales'
+            : 'index.php?controller=admin&action=listSalesAdmin';
+
+        header('Location: ' . $redirectTo);
         exit;
     }
 
@@ -872,6 +932,158 @@ class AdminController {
         require_once __DIR__ . '/../views/admin/reportes/index.php';
     }
 
+    public function exportCurrentInventoryCsv() {
+        $productos = $this->productModel->getAll();
+        $filename = 'inventario_actual_' . date('Ymd_His') . '.xlsx';
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Inventario Actual');
+
+        $headers = ['ID', 'Nombre', 'Descripción', 'Precio', 'Stock', 'Stock Mínimo', 'Estado'];
+        $sheet->fromArray($headers, null, 'A1');
+
+        $row = 2;
+        foreach ($productos as $prod) {
+            $estado = $prod->stock <= $prod->stock_minimum ? 'Bajo Stock' : 'Normal';
+            $sheet->fromArray([
+                $prod->id,
+                $prod->name,
+                $prod->description,
+                $prod->price,
+                $prod->stock,
+                $prod->stock_minimum,
+                $estado
+            ], null, 'A' . $row);
+            $row++;
+        }
+
+        $lastRow = $row - 1;
+        $sheet->getStyle('A1:G1')->getFont()->setBold(true)->getColor()->setRGB('FFFFFF');
+        $sheet->getStyle('A1:G1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+            ->getStartColor()->setRGB('0F3460');
+        $sheet->getStyle('D2:D' . $lastRow)->getNumberFormat()->setFormatCode('#,##0.00');
+        $sheet->getStyle('E2:F' . $lastRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('G2:G' . $lastRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+        foreach (range('A', 'G') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename=' . $filename);
+        header('Cache-Control: max-age=0');
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
+    }
+
+    public function exportMovementsCsv() {
+        $startDate = trim($_GET['start_date'] ?? '');
+        $endDate = trim($_GET['end_date'] ?? '');
+        $productId = isset($_GET['product_id']) ? (int)$_GET['product_id'] : null;
+        $movementType = trim($_GET['movement_type'] ?? '');
+
+        $movements = $this->inventoryMovementModel->getFiltered($startDate, $endDate, $productId, $movementType);
+        $filename = 'movimientos_inventario_' . date('Ymd_His') . '.xlsx';
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Movimientos');
+
+        $headers = ['Fecha', 'Producto', 'Usuario', 'Tipo', 'Cantidad', 'Motivo'];
+        $sheet->fromArray($headers, null, 'A1');
+
+        $row = 2;
+        foreach ($movements as $mov) {
+            $dateValue = !empty($mov->movement_date)
+                ? \PhpOffice\PhpSpreadsheet\Shared\Date::PHPToExcel((new \DateTime($mov->movement_date))->getTimestamp())
+                : '';
+            $sheet->fromArray([
+                $dateValue,
+                $mov->product_name,
+                $mov->user_name,
+                ucfirst($mov->movement_type),
+                abs((int)$mov->quantity_change),
+                $mov->notes
+            ], null, 'A' . $row);
+            $row++;
+        }
+
+        $lastRow = $row - 1;
+        $sheet->getStyle('A1:F1')->getFont()->setBold(true)->getColor()->setRGB('FFFFFF');
+        $sheet->getStyle('A1:F1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+            ->getStartColor()->setRGB('0F3460');
+        $sheet->getStyle('A2:A' . $lastRow)->getNumberFormat()->setFormatCode('dd/mm/yyyy hh:mm');
+        $sheet->getStyle('D2:D' . $lastRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('E2:E' . $lastRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+        foreach (range('A', 'F') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename=' . $filename);
+        header('Cache-Control: max-age=0');
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
+    }
+
+    public function exportSalesCsv() {
+        $startDate = trim($_GET['start_date'] ?? '');
+        $endDate = trim($_GET['end_date'] ?? '');
+
+        $ventas = $this->saleModel->getAllSales($startDate, $endDate);
+        $filename = 'ventas_' . date('Ymd_His') . '.xlsx';
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Ventas');
+
+        $headers = ['ID', 'Fecha', 'Empleado', 'Producto', 'Cantidad', 'Precio Unitario', 'Total', 'Cliente', 'Descripción'];
+        $sheet->fromArray($headers, null, 'A1');
+
+        $row = 2;
+        foreach ($ventas as $venta) {
+            $dateValue = $venta->sale_date ? \PhpOffice\PhpSpreadsheet\Shared\Date::PHPToExcel((new \DateTime($venta->sale_date))->getTimestamp()) : '';
+            $sheet->fromArray([
+                $venta->id,
+                $dateValue,
+                $venta->user_name,
+                $venta->product_name,
+                $venta->quantity,
+                (float)$venta->unit_price,
+                (float)$venta->total_price,
+                $venta->client_name,
+                $venta->description
+            ], null, 'A' . $row);
+            $row++;
+        }
+
+        $lastRow = $row - 1;
+        $sheet->getStyle('A1:I1')->getFont()->setBold(true)->getColor()->setRGB('FFFFFF');
+        $sheet->getStyle('A1:I1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+            ->getStartColor()->setRGB('0F3460');
+        $sheet->getStyle('B2:B' . $lastRow)->getNumberFormat()->setFormatCode('dd/mm/yyyy hh:mm');
+        $sheet->getStyle('F2:G' . $lastRow)->getNumberFormat()->setFormatCode('#,##0.00');
+        $sheet->getStyle('E2:E' . $lastRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+        foreach (range('A', 'I') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename=' . $filename);
+        header('Cache-Control: max-age=0');
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
+    }
+
     /**************************************************************************
      * RECONTEO DE INVENTARIO
      **************************************************************************/
@@ -976,6 +1188,7 @@ class AdminController {
     public function storePurchase() {
         $productId = isset($_POST['product_id']) ? (int)$_POST['product_id'] : 0;
         $quantity = isset($_POST['quantity']) ? (int)$_POST['quantity'] : 0;
+        $price = isset($_POST['price']) ? (float)$_POST['price'] : 0.0;
         $supplier = trim($_POST['supplier'] ?? '');
         $notes = trim($_POST['notes'] ?? '');
         $userId = (int)$_SESSION['user_id'];
@@ -1004,7 +1217,7 @@ class AdminController {
                 throw new RuntimeException('No se pudo aumentar stock.');
             }
 
-            $saved = $this->purchaseModel->create($productId, $userId, $quantity, $supplier, $notes);
+            $saved = $this->purchaseModel->create($productId, $userId, $quantity, $supplier, $notes, $price);
             if (!$saved) {
                 throw new RuntimeException('No se pudo guardar la compra. Verifica tabla purchases en BD.');
             }
@@ -1043,6 +1256,151 @@ class AdminController {
             $productos = $this->productModel->getAll();
             require_once __DIR__ . '/../views/admin/compras/add_purchase.php';
             return;
+        }
+    }
+
+    public function editPurchaseForm() {
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        $compra = $this->purchaseModel->getById($id);
+        if (!$compra) {
+            header('Location: index.php?controller=admin&action=listPurchases&error=Compra no encontrada');
+            exit;
+        }
+        $productos = $this->productModel->getAll();
+        require_once __DIR__ . '/../views/admin/compras/edit_purchase.php';
+    }
+
+    public function updatePurchase() {
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        $productId = isset($_POST['product_id']) ? (int)$_POST['product_id'] : 0;
+        $quantity = isset($_POST['quantity']) ? (int)$_POST['quantity'] : 0;
+        $price = isset($_POST['price']) ? (float)$_POST['price'] : 0.0;
+        $supplier = trim($_POST['supplier'] ?? '');
+        $notes = trim($_POST['notes'] ?? '');
+
+        $error = '';
+        if ($productId <= 0 || $quantity <= 0 || $supplier === '') {
+            $error = 'Producto, cantidad y proveedor son obligatorios.';
+        }
+        $producto = $this->productModel->findById($productId);
+        if (!$producto) {
+            $error = 'El producto seleccionado no existe.';
+        }
+        $compra = $this->purchaseModel->getById($id);
+        if (!$compra) {
+            $error = 'Compra no encontrada.';
+        }
+
+        if (!empty($error)) {
+            $productos = $this->productModel->getAll();
+            $compra = $this->purchaseModel->getById($id);
+            require_once __DIR__ . '/../views/admin/compras/edit_purchase.php';
+            return;
+        }
+
+        $conn = $this->saleModel->getConnection();
+        try {
+            $conn->beginTransaction();
+
+            // Ajustar stock: restar cantidad anterior y sumar nueva
+            $adjusted1 = $this->productModel->decreaseStock($compra->product_id, $compra->quantity);
+            if (!$adjusted1) {
+                throw new RuntimeException('No se pudo ajustar stock anterior.');
+            }
+            $adjusted2 = $this->productModel->increaseStock($productId, $quantity);
+            if (!$adjusted2) {
+                throw new RuntimeException('No se pudo ajustar stock nuevo.');
+            }
+
+            $updated = $this->purchaseModel->update($id, $productId, $quantity, $supplier, $notes, $price);
+            if (!$updated) {
+                throw new RuntimeException('No se pudo actualizar la compra.');
+            }
+
+            // Actualizar movimiento de inventario (simplificado: eliminar y crear nuevo)
+            // Nota: En producción, mejor actualizar el movimiento existente
+            $this->inventoryMovementModel->deleteByNotes("Compra ID: {$id}");
+            $movementReason = 'Compra actualizada proveedor: ' . $supplier;
+            if ($notes !== '') {
+                $movementReason .= ' - ' . $notes;
+            }
+            $okMovement = $this->inventoryMovementModel->create(
+                $productId,
+                (int)$_SESSION['user_id'],
+                $quantity,
+                'ingreso',
+                $movementReason
+            );
+            if (!$okMovement) {
+                throw new RuntimeException('No se pudo registrar el ingreso en Kardex.');
+            }
+
+            $this->auditLogModel->create(
+                (int)$_SESSION['user_id'],
+                'update',
+                'purchase',
+                $id,
+                "Compra actualizada. Proveedor: {$supplier}, Cantidad: {$quantity}"
+            );
+
+            $conn->commit();
+            header('Location: index.php?controller=admin&action=listPurchases&updated=1');
+            exit;
+        } catch (Throwable $e) {
+            if ($conn->inTransaction()) {
+                $conn->rollBack();
+            }
+            $error = 'No se pudo actualizar la compra: ' . $e->getMessage();
+            $productos = $this->productModel->getAll();
+            $compra = $this->purchaseModel->getById($id);
+            require_once __DIR__ . '/../views/admin/compras/edit_purchase.php';
+            return;
+        }
+    }
+
+    public function deletePurchase() {
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        $compra = $this->purchaseModel->getById($id);
+        if (!$compra) {
+            header('Location: index.php?controller=admin&action=listPurchases&error=Compra no encontrada');
+            exit;
+        }
+
+        $conn = $this->saleModel->getConnection();
+        try {
+            $conn->beginTransaction();
+
+            // Ajustar stock: restar cantidad
+            $adjusted = $this->productModel->decreaseStock($compra->product_id, $compra->quantity);
+            if (!$adjusted) {
+                throw new RuntimeException('No se pudo ajustar stock.');
+            }
+
+            $deleted = $this->purchaseModel->delete($id);
+            if (!$deleted) {
+                throw new RuntimeException('No se pudo eliminar la compra.');
+            }
+
+            // Eliminar movimiento de inventario
+            $this->inventoryMovementModel->deleteByNotes("Compra ID: {$id}");
+
+            $this->auditLogModel->create(
+                (int)$_SESSION['user_id'],
+                'delete',
+                'purchase',
+                $id,
+                "Compra eliminada. Proveedor: {$compra->supplier}, Cantidad: {$compra->quantity}"
+            );
+
+            $conn->commit();
+            header('Location: index.php?controller=admin&action=listPurchases&deleted=1');
+            exit;
+        } catch (Throwable $e) {
+            if ($conn->inTransaction()) {
+                $conn->rollBack();
+            }
+            header('Location: index.php?controller=admin&action=listPurchases&error=' . urlencode('No se pudo eliminar: ' . $e->getMessage()));
+            exit;
         }
     }
 
@@ -1144,224 +1502,7 @@ class AdminController {
         exit;
     }
 
-    public function exportCurrentInventoryCsv() {
-        $productos = $this->productModel->getAll();
-        $filename = 'reporte_inventario_' . date('Ymd_His') . '.xlsx';
 
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('Inventario Actual');
-
-        $headers = ['ID', 'Producto', 'Descripción', 'Precio', 'Stock', 'Stock mínimo', 'Estado'];
-        $sheet->fromArray($headers, null, 'A1');
-
-        $row = 2;
-        foreach ($productos as $prod) {
-            $estado = ((int)$prod->stock <= (int)$prod->stock_minimum) ? 'Bajo Stock' : 'OK';
-            $sheet->setCellValue('A' . $row, (int)$prod->id);
-            $sheet->setCellValue('B' . $row, $prod->name);
-            $sheet->setCellValue('C' . $row, $prod->description);
-            $sheet->setCellValue('D' . $row, (float)$prod->price);
-            $sheet->setCellValue('E' . $row, (int)$prod->stock);
-            $sheet->setCellValue('F' . $row, (int)$prod->stock_minimum);
-            $sheet->setCellValue('G' . $row, $estado);
-            $row++;
-        }
-
-        $lastRow = $row - 1;
-        $tableRange = 'A1:G' . $lastRow;
-
-        $table = new \PhpOffice\PhpSpreadsheet\Worksheet\Table($tableRange, 'Inventario');
-        $table->setShowHeaderRow(true);
-        $table->setAllowFilter(true);
-        $tableStyle = new \PhpOffice\PhpSpreadsheet\Worksheet\Table\TableStyle(
-            \PhpOffice\PhpSpreadsheet\Worksheet\Table\TableStyle::TABLE_STYLE_MEDIUM2
-        );
-        $table->setStyle($tableStyle);
-        $sheet->addTable($table);
-
-        $sheet->getStyle('A1:G1')->getFont()->setBold(true);
-        $sheet->getStyle('A1:G1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-            ->getStartColor()->setRGB('0F3460');
-        $sheet->getStyle('A1:G1')->getFont()->getColor()->setRGB('FFFFFF');
-
-        $sheet->getStyle('D2:D' . $lastRow)->getNumberFormat()
-            ->setFormatCode('$#,##0.00');
-
-        $sheet->getStyle('A2:A' . $lastRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle('E2:F' . $lastRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle('G2:G' . $lastRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-
-        foreach (range('A', 'G') as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
-        }
-
-        $conditional = new \PhpOffice\PhpSpreadsheet\Style\Conditional();
-        $conditional->setConditionType(\PhpOffice\PhpSpreadsheet\Style\Conditional::CONDITION_CONTAINSTEXT)
-            ->setOperatorType(\PhpOffice\PhpSpreadsheet\Style\Conditional::OPERATOR_EQUAL)
-            ->setText('Bajo Stock');
-        $conditional->getStyle()->getFont()->getColor()->setRGB('9C0006');
-        $conditional->getStyle()->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-            ->getStartColor()->setRGB('FFC7CE');
-        $conditional->getStyle()->getFont()->setBold(true);
-
-        $conditionalStyles = $sheet->getStyle('G2:G' . $lastRow)->getConditionalStyles();
-        $conditionalStyles[] = $conditional;
-        $sheet->getStyle('G2:G' . $lastRow)->setConditionalStyles($conditionalStyles);
-
-        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment; filename=' . $filename);
-        header('Cache-Control: max-age=0');
-
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-        $writer->save('php://output');
-        exit;
-    }
-
-    public function exportMovementsCsv() {
-        $startDate    = trim($_GET['start_date'] ?? '');
-        $endDate      = trim($_GET['end_date'] ?? '');
-        $productId    = isset($_GET['product_id']) ? (int)$_GET['product_id'] : null;
-        $movementType = trim($_GET['movement_type'] ?? '');
-
-        $movimientos = $this->inventoryMovementModel->getFiltered(
-            $startDate !== '' ? $startDate : null,
-            $endDate !== '' ? $endDate : null,
-            $productId > 0 ? $productId : null,
-            $movementType !== '' ? $movementType : null,
-            1000
-        );
-
-        $filename = 'reporte_movimientos_' . date('Ymd_His') . '.xlsx';
-
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('Movimientos de Inventario');
-
-        $headers = ['ID', 'Fecha', 'Tipo', 'Producto', 'Cantidad', 'Usuario', 'Motivo'];
-        $sheet->fromArray($headers, null, 'A1');
-
-        $row = 2;
-        foreach ($movimientos as $mov) {
-            $sheet->setCellValue('A' . $row, (int)$mov->id);
-            $sheet->setCellValue('B' . $row, $mov->movement_date);
-            $sheet->setCellValue('C' . $row, strtoupper($mov->movement_type));
-            $sheet->setCellValue('D' . $row, $mov->product_name);
-            $sheet->setCellValue('E' . $row, abs((int)$mov->quantity_change));
-            $sheet->setCellValue('F' . $row, $mov->user_name);
-            $sheet->setCellValue('G' . $row, $mov->notes);
-            $row++;
-        }
-
-        $lastRow = $row - 1;
-        $tableRange = 'A1:G' . $lastRow;
-
-        $table = new \PhpOffice\PhpSpreadsheet\Worksheet\Table($tableRange, 'Movimientos');
-        $table->setShowHeaderRow(true);
-        $table->setAllowFilter(true);
-        $tableStyle = new \PhpOffice\PhpSpreadsheet\Worksheet\Table\TableStyle(
-            \PhpOffice\PhpSpreadsheet\Worksheet\Table\TableStyle::TABLE_STYLE_MEDIUM2
-        );
-        $table->setStyle($tableStyle);
-        $sheet->addTable($table);
-
-        $sheet->getStyle('A1:G1')->getFont()->setBold(true);
-        $sheet->getStyle('A1:G1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-            ->getStartColor()->setRGB('0F3460');
-        $sheet->getStyle('A1:G1')->getFont()->getColor()->setRGB('FFFFFF');
-
-        $sheet->getStyle('B2:B' . $lastRow)->getNumberFormat()
-            ->setFormatCode('yyyy-mm-dd');
-
-        $sheet->getStyle('A2:A' . $lastRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle('C2:C' . $lastRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle('E2:E' . $lastRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-
-        foreach (range('A', 'G') as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
-        }
-
-        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment; filename=' . $filename);
-        header('Cache-Control: max-age=0');
-
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-        $writer->save('php://output');
-        exit;
-    }
-
-    public function exportSalesCsv() {
-        $startDate = trim($_GET['start_date'] ?? '');
-        $endDate   = trim($_GET['end_date'] ?? '');
-        $ventas = $this->saleModel->getAllSales(
-            $startDate !== '' ? $startDate : null,
-            $endDate   !== '' ? $endDate   : null
-        );
-
-        $filename = 'reporte_ventas_' . date('Ymd_His') . '.xlsx';
-
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('Ventas');
-
-        $headers = ['ID', 'Fecha', 'Empleado', 'Producto', 'Cantidad', 'Precio Unitario', 'Total', 'Descripción'];
-        $sheet->fromArray($headers, null, 'A1');
-
-        $row = 2;
-        foreach ($ventas as $venta) {
-            $sheet->setCellValue('A' . $row, (int)$venta->id);
-            $sheet->setCellValue('B' . $row, formatSaleDate((string)$venta->sale_date, 'Y-m-d H:i:s'));
-            $sheet->setCellValue('C' . $row, $venta->user_name);
-            $sheet->setCellValue('D' . $row, $venta->product_name);
-            $sheet->setCellValue('E' . $row, (int)$venta->quantity);
-            $sheet->setCellValue('F' . $row, (float)$venta->unit_price);
-            $sheet->setCellValue('G' . $row, (float)$venta->total_price);
-            $sheet->setCellValue('H' . $row, $venta->description);
-            $row++;
-        }
-
-        $lastRow = $row - 1;
-        $tableRange = 'A1:H' . $lastRow;
-
-        $table = new \PhpOffice\PhpSpreadsheet\Worksheet\Table($tableRange, 'Ventas');
-        $table->setShowHeaderRow(true);
-        $table->setAllowFilter(true);
-        $tableStyle = new \PhpOffice\PhpSpreadsheet\Worksheet\Table\TableStyle(
-            \PhpOffice\PhpSpreadsheet\Worksheet\Table\TableStyle::TABLE_STYLE_MEDIUM2
-        );
-        $table->setStyle($tableStyle);
-        $sheet->addTable($table);
-
-        $sheet->getStyle('A1:H1')->getFont()->setBold(true);
-        $sheet->getStyle('A1:H1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-            ->getStartColor()->setRGB('0F3460');
-        $sheet->getStyle('A1:H1')->getFont()->getColor()->setRGB('FFFFFF');
-
-        $sheet->getStyle('B2:B' . $lastRow)->getNumberFormat()
-            ->setFormatCode('yyyy-mm-dd');
-
-        $sheet->getStyle('F2:G' . $lastRow)->getNumberFormat()
-            ->setFormatCode('$#,##0.00');
-
-        $sheet->getStyle('A2:A' . $lastRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle('E2:E' . $lastRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-
-        foreach (range('A', 'H') as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
-        }
-
-        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment; filename=' . $filename);
-        header('Cache-Control: max-age=0');
-
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-        $writer->save('php://output');
-        exit;
-    }
-
-    /**************************************************************************
-     * PERFIL DE USUARIO
-     **************************************************************************/
 
     public function profile() {
         $userId = $_SESSION['user_id'];

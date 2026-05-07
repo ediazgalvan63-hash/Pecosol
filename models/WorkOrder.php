@@ -99,4 +99,19 @@ class WorkOrder {
             return false;
         }
     }
+
+    public function countActive(): int {
+        if (!$this->existsTable()) {
+            return 0;
+        }
+        $sql = "SELECT COUNT(*) AS total FROM {$this->table} WHERE status NOT IN ('completada', 'cancelada')";
+        try {
+            $stmt = $this->conn->prepare($sql);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_OBJ);
+            return (int) $row->total;
+        } catch (Throwable $e) {
+            return 0;
+        }
+    }
 }

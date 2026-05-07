@@ -52,6 +52,8 @@ if ($showTzDebug && !empty($_SESSION['role']) && $_SESSION['role'] === 'admin') 
     align-items: center;
     gap: 12px;
     text-decoration: none;
+    flex-shrink: 0;
+    min-width: 240px;
   }
 
   .brand img {
@@ -73,10 +75,12 @@ if ($showTzDebug && !empty($_SESSION['role']) && $_SESSION['role'] === 'admin') 
 
   .nav-links {
     display: flex;
-    gap: 32px;
+    gap: 26px;
     flex-grow: 1;
     justify-content: center;
     flex-wrap: wrap;
+    align-items: center;
+    padding: 6px 0;
   }
 
   .nav-links a {
@@ -84,7 +88,7 @@ if ($showTzDebug && !empty($_SESSION['role']) && $_SESSION['role'] === 'admin') 
     color: var(--light);
     text-decoration: none;
     font-weight: 500;
-    padding: 8px 4px;
+    padding: 10px 6px;
     transition: all 0.3s ease;
   }
 
@@ -250,7 +254,7 @@ if ($showTzDebug && !empty($_SESSION['role']) && $_SESSION['role'] === 'admin') 
     <!-- Usuario -->
     <div class="user">
       <span>Bienvenido, <strong><?php echo htmlspecialchars($username); ?></strong></span>
-      <a href="<?php echo BASE_URL; ?>?controller=admin&action=profile" style="margin-right: 10px; color: #00fff0; text-decoration: none;">👤 Mi Perfil</a>
+      <a href="<?php echo BASE_URL; ?>?controller=employee&action=profile" style="margin-right: 10px; color: #00fff0; text-decoration: none;">👤 Mi Perfil</a>
       <a class="logout" href="<?php echo BASE_URL; ?>?controller=auth&action=logout">Cerrar sesión</a>
     </div>
   </nav>

@@ -1,11 +1,13 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Registrar Compra</title>
-    <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/style.css">
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style>
+<?php
+$role = $_SESSION['role'] ?? '';
+$useEmployeeHeader = in_array($role, ['comercial', 'logistica', 'finanzas', 'estrategico', 'gerencia'], true);
+if ($useEmployeeHeader) {
+    include __DIR__ . '/../../employee/partials/header.php';
+} else {
+    include __DIR__ . '/../partials/header.php';
+}
+?>
+<style>
       body {
         background-color: #1a1a2e;
         background-image: url('<?php echo BASE_URL; ?>assets/img/overlapping-circles.svg');
@@ -35,7 +37,7 @@
 
       .page-head h1 {
         margin: 0;
-        color: #00fff0;
+        color: #60a5fa;
         font-size: 2rem;
         line-height: 1.15;
       }
@@ -48,7 +50,7 @@
 
       .form-shell {
         background: rgba(22, 33, 62, 0.94);
-        border: 1px solid rgba(0,255,240,0.18);
+        border: 1px solid rgba(96, 165, 250, 0.18);
         border-radius: 16px;
         box-shadow: 0 12px 34px rgba(0,0,0,0.35);
         overflow: hidden;
@@ -79,7 +81,7 @@
       select, input, textarea {
         width: 100%;
         background: #0f172a;
-        border: 1px solid rgba(0,255,240,0.22);
+        border: 1px solid rgba(96, 165, 250, 0.22);
         color: #eaeaea;
         border-radius: 12px;
         padding: 12px 12px;
@@ -91,8 +93,8 @@
       textarea { resize: vertical; min-height: 92px; }
 
       select:focus, input:focus, textarea:focus {
-        border-color: rgba(0,255,240,0.55);
-        box-shadow: 0 0 0 4px rgba(0,255,240,0.10);
+        border-color: rgba(96, 165, 250, 0.55);
+        box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.10);
       }
 
       .hint {
@@ -135,24 +137,21 @@
       }
 
       .btn-primary {
-        background: #08d9d6;
+        background: #60a5fa;
         color: #0f172a;
-        border-color: rgba(8,217,214,0.65);
-        box-shadow: 0 10px 22px rgba(8,217,214,0.18);
+        border-color: rgba(96, 165, 250, 0.65);
+        box-shadow: 0 10px 22px rgba(96, 165, 250, 0.18);
       }
 
       .btn-primary:hover { transform: translateY(-1px); }
 
       .btn-ghost {
         background: transparent;
-        color: #00fff0;
+        color: #60a5fa;
       }
 
-      .btn-ghost:hover { background: rgba(0,255,240,0.08); }
+      .btn-ghost:hover { background: rgba(96, 165, 250, 0.08); }
     </style>
-</head>
-<body>
-<?php include __DIR__ . '/../partials/header.php'; ?>
 <div class="container">
     <div class="page-head">
       <div>
@@ -160,7 +159,7 @@
         <p>Esta compra genera un <strong>ingreso automático en Kardex</strong> y actualiza el stock del producto seleccionado.</p>
       </div>
       <div>
-        <a class="btn btn-ghost" href="<?php echo BASE_URL; ?>index.php?controller=admin&action=listPurchases">← Volver</a>
+        <a class="btn btn-ghost" href="<?php echo BASE_URL; ?>index.php?controller=<?php echo $useEmployeeHeader ? 'dashboard&action=logisticsPurchases' : 'admin&action=listPurchases'; ?>">← Volver</a>
       </div>
     </div>
 
@@ -191,6 +190,12 @@
           </div>
 
           <div>
+            <label for="price">Precio Unitario</label>
+            <input type="number" id="price" name="price" min="0" step="0.01" placeholder="Ej: 15.50">
+            <div class="hint">Costo por unidad (opcional, para finanzas).</div>
+          </div>
+
+          <div>
             <label for="supplier">Proveedor *</label>
             <input type="text" id="supplier" name="supplier" maxlength="120" required placeholder="Nombre del proveedor">
           </div>
@@ -203,10 +208,8 @@
       </div>
 
       <div class="form-actions">
-        <a class="btn btn-ghost" href="<?php echo BASE_URL; ?>index.php?controller=admin&action=listPurchases">Cancelar</a>
+        <a class="btn btn-ghost" href="<?php echo BASE_URL; ?>index.php?controller=<?php echo $useEmployeeHeader ? 'dashboard&action=logisticsPurchases' : 'admin&action=listPurchases'; ?>">Cancelar</a>
         <button type="submit" class="btn btn-primary">Registrar compra</button>
       </div>
     </form>
 </div>
-</body>
-</html>

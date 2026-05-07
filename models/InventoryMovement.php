@@ -165,4 +165,18 @@ class InventoryMovement {
     public function getLastMovements(int $limit = 8): array {
         return $this->getAllWithDetails($limit);
     }
+
+    public function deleteByNotes(string $notes): bool {
+        $sql = "DELETE FROM {$this->table} WHERE notes = :notes";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindParam(':notes', $notes);
+        return $stmt->execute();
+    }
+
+    public function countMovements(): int {
+        $sql = "SELECT COUNT(*) AS total FROM {$this->table}";
+        $stmt = $this->conn->query($sql);
+        $row = $stmt->fetch(PDO::FETCH_OBJ);
+        return (int)($row->total ?? 0);
+    }
 }

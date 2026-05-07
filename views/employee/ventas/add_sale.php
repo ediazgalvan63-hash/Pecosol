@@ -178,8 +178,19 @@ foreach ($productos as $prod) {
           min="1"
           placeholder="Ingresa la cantidad"
           required
+          value="<?php echo htmlspecialchars($quantity ?? ''); ?>"
         >
         <div class="note">Máximo disponible: revisa el stock mostrado en el dropdown.</div>
+
+        <label for="client_name">Cliente:</label>
+        <input
+          type="text"
+          id="client_name"
+          name="client_name"
+          placeholder="Nombre del cliente"
+          required
+          value="<?php echo htmlspecialchars($clientName ?? ''); ?>"
+        >
 
         <label for="description">Descripción (opcional):</label>
         <textarea
@@ -187,7 +198,7 @@ foreach ($productos as $prod) {
           id="description"
           rows="3"
           placeholder="Agregar alguna observación (ej. Cliente especial, motivo, etc.)"
-        ></textarea>
+        ><?php echo htmlspecialchars($description ?? ''); ?></textarea>
 
         <button type="submit">Registrar Venta</button>
       </form>

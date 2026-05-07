@@ -148,12 +148,23 @@
 </head>
 <body>
 
-<?php include __DIR__ . '/../partials/header.php'; ?>
+<?php
+$role = $_SESSION['role'] ?? '';
+$useEmployeeHeader = in_array($role, ['comercial', 'logistica', 'finanzas', 'estrategico', 'gerencia'], true);
+if ($useEmployeeHeader) {
+    include __DIR__ . '/../../employee/partials/header.php';
+} else {
+    include __DIR__ . '/../partials/header.php';
+}
+$backUrl = $role === 'finanzas'
+    ? BASE_URL . 'index.php?controller=dashboard&action=financeSales'
+    : BASE_URL . 'index.php?controller=admin&action=listSalesAdmin';
+?>
 
 <div class="container">
   <h1>Editar Venta</h1>
 
-  <a href="<?php echo BASE_URL; ?>index.php?controller=admin&action=listSalesAdmin" class="back-link">
+  <a href="<?php echo $backUrl; ?>" class="back-link">
     ← Volver al Listado de Ventas
   </a>
 

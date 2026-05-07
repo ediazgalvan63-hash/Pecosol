@@ -117,7 +117,15 @@
 </head>
 <body>
 
-<?php include __DIR__ . '/../partials/header.php'; ?>
+<?php
+$role = $_SESSION['role'] ?? '';
+$useEmployeeHeader = in_array($role, ['comercial', 'logistica', 'finanzas', 'estrategico', 'gerencia'], true);
+if ($useEmployeeHeader) {
+    include __DIR__ . '/../../employee/partials/header.php';
+} else {
+    include __DIR__ . '/../partials/header.php';
+}
+?>
 
 <div class="container">
   <h1>Listado de Ventas</h1>
@@ -131,11 +139,13 @@
   <?php endif; ?>
   <p style="color:#a0cfe8; margin-bottom:18px;">Las ventas se consideran como salidas de inventario y se registran en el kardex para mantener trazabilidad.</p>
 
-  <a href="<?php echo BASE_URL; ?>index.php?controller=admin&action=addSaleAdminForm" class="button">
-     Registrar Venta
-  </a>
-  <br>
-  <br>
+  <?php if ($role !== 'finanzas'): ?>
+    <a href="<?php echo BASE_URL; ?>index.php?controller=admin&action=addSaleAdminForm" class="button">
+       Registrar Venta
+    </a>
+    <br>
+    <br>
+  <?php endif; ?>
 
   <?php if (!empty($ventas)): ?>
     <table>

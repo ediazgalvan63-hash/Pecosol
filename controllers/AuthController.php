@@ -64,16 +64,11 @@ class AuthController {
                     $_SESSION['full_name'] = $user->full_name;
                     $_SESSION['role']      = $user->role;
                     
-                    error_log("Login successful! Session established. Redirecting to " . ($user->role === 'admin' ? 'adminHome' : 'employeeHome'));
+                    error_log("Login successful! Session established. Redirecting to role home.");
 
-                    // Redirigir según rol
-                    if ($user->role === 'admin') {
-                        header('Location: index.php?controller=dashboard&action=adminHome');
-                        exit;
-                    } else {
-                        header('Location: index.php?controller=dashboard&action=employeeHome');
-                        exit;
-                    }
+                    // Redirigir al panel según rol
+                    header('Location: index.php?controller=dashboard&action=home');
+                    exit;
                 } else {
                     // Contraseña incorrecta
                     $error = 'Contraseña incorrecta.';

@@ -5,6 +5,14 @@ class EmployeeController {
     private $saleModel;
     private $productModel;
 
+    private function requireRole(array $allowedRoles): void {
+        $role = $_SESSION['role'] ?? '';
+        if (!in_array($role, $allowedRoles, true)) {
+            header('Location: index.php?controller=auth&action=login');
+            exit;
+        }
+    }
+
     public function __construct() {
         // 1) Arrancar sesión si no exista
         if (session_status() === PHP_SESSION_NONE) {
@@ -14,13 +22,6 @@ class EmployeeController {
         // 2) Si no hay usuario logueado, redirigir a login
         if (!isset($_SESSION['user_id'])) {
             header('Location: index.php?controller=auth&action=login');
-            exit;
-        }
-
-        // 3) Verificar que el rol sea 'employee'
-        if ($_SESSION['role'] !== 'employee') {
-            // Si no es empleado, enviarlo al dashboard de admin
-            header('Location: index.php?controller=dashboard&action=adminHome');
             exit;
         }
 
@@ -37,6 +38,7 @@ class EmployeeController {
      * - Necesita la lista de productos (filtrados por stock > 0 en la vista).
      */
     public function addSaleForm() {
+        $this->requireRole(['employee', 'comercial']);
         $productos = $this->productModel->getAll();
         require_once __DIR__ . '/../views/employee/ventas/add_sale.php';
     }
@@ -47,13 +49,17 @@ class EmployeeController {
      *   actualiza stock y registra movimiento en stock_movements.
      */
     public function storeSale() {
+        $this->requireRole(['employee', 'comercial']);
         $productId   = isset($_POST['product_id']) ? (int)$_POST['product_id'] : 0;
         $quantity    = isset($_POST['quantity'])   ? (int)$_POST['quantity']   : 0;
+        $clientName  = trim($_POST['client_name'] ?? '');
         $description = trim($_POST['description'] ?? '');
 
         $error = '';
         if ($productId <= 0 || $quantity <= 0) {
             $error = 'Debe seleccionar un producto y una cantidad válida.';
+        } elseif ($clientName === '') {
+            $error = 'El nombre del cliente es obligatorio.';
         } else {
             $producto = $this->productModel->findById($productId);
             if (!$producto) {
@@ -88,6 +94,7 @@ class EmployeeController {
                 $quantity,
                 $unitPrice,
                 $totalPrice,
+                $clientName,
                 $description
             );
             if (!$newSaleId) {
@@ -117,7 +124,7 @@ class EmployeeController {
             return;
         }
 
-        header('Location: index.php?controller=dashboard&action=employeeHome');
+        header('Location: index.php?controller=employee&action=listSalesEmployee');
         exit;
     }
 
@@ -126,14 +133,7 @@ class EmployeeController {
      * - Muestra todas las ventas que este empleado ha registrado.
      */
     public function listSalesEmployee() {
-        // 1) Asegurar sesión y rol
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'employee') {
-            header('Location: index.php?controller=auth&action=login');
-            exit;
-        }
+        $this->requireRole(['employee', 'comercial']);
 
         // 2) Obtener las ventas de este empleado
         $userId = $_SESSION['user_id'];
@@ -144,14 +144,7 @@ class EmployeeController {
     }
 
     public function listProductsEmployee() {
-        // 1) Validar sesión y rol
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'employee') {
-            header('Location: index.php?controller=auth&action=login');
-            exit;
-        }
+        $this->requireRole(['employee', 'comercial']);
 
         // 2) Obtener todos los productos (podrás filtrarlos por stock en la vista)
         $productos = $this->productModel->getAll();
@@ -165,6 +158,7 @@ class EmployeeController {
      **************************************************************************/
 
     public function profile() {
+        $this->requireRole(['admin', 'employee', 'comercial', 'logistica', 'finanzas', 'gerencia', 'estrategico']);
         require_once __DIR__ . '/../models/User.php';
         $userModel = new User();
         
@@ -174,6 +168,7 @@ class EmployeeController {
     }
 
     public function updateProfile() {
+        $this->requireRole(['admin', 'employee', 'comercial', 'logistica', 'finanzas', 'gerencia', 'estrategico']);
         require_once __DIR__ . '/../models/User.php';
         $userModel = new User();
         
@@ -194,7 +189,7 @@ class EmployeeController {
         }
 
         // Actualizar información básica
-        $updated = $userModel->updateProfile($userId, $username, $fullName, $email);
+        $updated = $userModel->updateUserProfile($userId, $username, $fullName, $email);
         
         if (!$updated) {
             $_SESSION['error'] = 'No se pudo actualizar el perfil.';

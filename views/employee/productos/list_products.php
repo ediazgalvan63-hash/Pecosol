@@ -172,7 +172,27 @@
 
     <!-- Barra superior con botón y buscador -->
     <div class="top-bar">
-      <a href="<?php echo BASE_URL; ?>index.php?controller=dashboard&action=employeeHome" class="btn-back">
+      <?php
+      $homeHref = BASE_URL . 'index.php?controller=dashboard&action=';
+      switch ($_SESSION['role'] ?? 'employee') {
+          case 'gerencia':
+              $homeHref .= 'managementHome';
+              break;
+          case 'employee':
+              $homeHref .= 'employeeHome';
+              break;
+          case 'comercial':
+              $homeHref .= 'commercialHome';
+              break;
+          case 'estrategico':
+              $homeHref .= 'strategyHome';
+              break;
+          default:
+              $homeHref .= 'employeeHome';
+              break;
+      }
+      ?>
+      <a href="<?php echo $homeHref; ?>" class="btn-back">
         ← Volver al Dashboard
       </a>
 
