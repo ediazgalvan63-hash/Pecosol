@@ -168,7 +168,7 @@ if (session_status() === PHP_SESSION_NONE) {
       gap: 14px;
       margin-top: 16px;
     }
-    .action-box {
+    a.action-box {
       border-radius: 18px;
       padding: 16px;
       background: rgba(14, 36, 70, 0.9);
@@ -176,12 +176,13 @@ if (session_status() === PHP_SESSION_NONE) {
       color: #e8f5ff;
       text-decoration: none !important;
     }
-    .action-box h4,
-    .action-box p,
-    .action-box {
+    a.action-box h4,
+    a.action-box p,
+    a.action-box {
       text-decoration: none !important;
+      text-decoration-skip-ink: none !important;
     }
-    .action-box h4 {
+    a.action-box h4 {
       margin: 0 0 8px;
       color: #b5ecff;
       font-size: 0.95rem;
