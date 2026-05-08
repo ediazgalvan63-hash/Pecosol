@@ -20,6 +20,15 @@ if (session_status() === PHP_SESSION_NONE) {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       color: #f1f8ff;
     }
+    
+    /* Asegurar que no haya decoraciones de texto problemáticas */
+    * {
+      text-decoration: none !important;
+    }
+    
+    a, h1, h2, h3, h4, p, span, strong {
+      text-decoration: none !important;
+    }
     .page-shell {
       max-width: 1180px;
       margin: 0 auto;
@@ -165,6 +174,12 @@ if (session_status() === PHP_SESSION_NONE) {
       background: rgba(14, 36, 70, 0.9);
       border: 1px solid rgba(125, 231, 255, 0.12);
       color: #e8f5ff;
+      text-decoration: none !important;
+    }
+    .action-box h4,
+    .action-box p,
+    .action-box {
+      text-decoration: none !important;
     }
     .action-box h4 {
       margin: 0 0 8px;
