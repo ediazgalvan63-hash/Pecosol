@@ -10,7 +10,7 @@ if (session_status() === PHP_SESSION_NONE) {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Panel Comercial | Pecosol</title>
-  <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/style.css">
+  <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/style.css?v=<?php echo time(); ?>">
   <link rel="icon" href="<?php echo BASE_URL; ?>assets/img/LogoPecosol.png" type="image/png" />
   <script src="<?php echo BASE_URL; ?>assets/js/chart.umd.js"></script>
   <style>
@@ -26,8 +26,25 @@ if (session_status() === PHP_SESSION_NONE) {
       text-decoration: none !important;
     }
     
-    a, h1, h2, h3, h4, p, span, strong {
+    a, h1, h2, h3, h4, p, span, strong, div {
       text-decoration: none !important;
+    }
+    
+    /* Específicamente para las tarjetas de acción */
+    .quick-actions a,
+    .action-box,
+    a.action-box,
+    a.action-box:hover,
+    a.action-box:focus,
+    a.action-box:active,
+    a.action-box:visited {
+      text-decoration: none !important;
+      text-decoration-line: none !important;
+      text-decoration-style: none !important;
+      text-decoration-color: transparent !important;
+      text-decoration-thickness: 0 !important;
+      text-underline-offset: 0 !important;
+      text-decoration-skip-ink: none !important;
     }
     .page-shell {
       max-width: 1180px;
