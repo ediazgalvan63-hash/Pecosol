@@ -131,26 +131,6 @@
         display: inline-block;
         text-align: center;
       }
-
-      .btn-primary {
-        background: #60a5fa;
-        color: #0f172a;
-      }
-
-      .btn-primary:hover {
-        background: #00e6d6;
-        transform: translateY(-1px);
-      }
-
-      .btn-secondary {
-        background: rgba(255,255,255,0.1);
-        color: #60a5fa;
-        border: 1px solid rgba(255,255,255,0.2);
-      }
-
-      .btn-secondary:hover {
-        background: rgba(255,255,255,0.15);
-      }
     </style>
 </head>
 <body>

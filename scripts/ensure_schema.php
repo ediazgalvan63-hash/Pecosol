@@ -83,6 +83,7 @@ try {
                 quantity INT NOT NULL,
                 supplier VARCHAR(120) NOT NULL,
                 notes VARCHAR(255) DEFAULT NULL,
+                price DECIMAL(12,2) NOT NULL DEFAULT 0.00,
                 purchase_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         ");

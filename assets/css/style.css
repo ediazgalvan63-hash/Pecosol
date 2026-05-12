@@ -244,4 +244,206 @@ body {
   transform: scale(0.9);
 }
 
+/* Botones globales unificados */
+button[type="submit"],
+button[type="reset"],
+button[type="button"],
+input[type="submit"],
+input[type="reset"],
+input[type="button"],
+.btn,
+.button,
+a.button,
+a.btn,
+.btn-primary,
+.btn-secondary,
+.btn-ghost,
+.btn-add-large,
+.action-button,
+.btn-edit,
+.btn-delete,
+.btn-submit {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.5rem !important;
+  padding: 14px 28px !important;
+  min-height: 48px !important;
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  line-height: 1.2 !important;
+  color: #00fff0 !important;
+  background-color: #0f172a !important;
+  border: 1px solid rgba(0, 255, 240, 0.4) !important;
+  border-radius: 18px !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  transition: all 0.25s ease !important;
+  overflow: hidden !important;
+  box-shadow: 0 0 22px rgba(0, 255, 240, 0.25) !important;
+}
+
+.btn::before,
+.button::before,
+a.button::before,
+a.btn::before,
+.btn-primary::before,
+.btn-secondary::before,
+.btn-ghost::before,
+.btn-add-large::before,
+.action-button::before,
+.btn-edit::before,
+.btn-delete::before,
+.btn-submit::before {
+  content: '' !important;
+  position: absolute !important;
+  top: -2px !important;
+  left: -2px !important;
+  width: calc(100% + 4px) !important;
+  height: calc(100% + 4px) !important;
+  background: linear-gradient(135deg, rgba(0,255,240,0.35), rgba(94,234,212,0.2)) !important;
+  border-radius: 22px !important;
+  z-index: -2 !important;
+  transition: transform 0.35s ease !important;
+}
+
+.btn::after,
+.button::after,
+a.button::after,
+a.btn::after,
+.btn-primary::after,
+.btn-secondary::after,
+.btn-ghost::after,
+.btn-add-large::after,
+.action-button::after,
+.btn-edit::after,
+.btn-delete::after,
+.btn-submit::after {
+  content: '' !important;
+  position: absolute !important;
+  inset: 0 !important;
+  background-color: inherit !important;
+  border-radius: inherit !important;
+  z-index: -1 !important;
+}
+
+.btn:hover,
+.button:hover,
+a.button:hover,
+a.btn:hover,
+.btn-primary:hover,
+.btn-secondary:hover,
+.btn-ghost:hover,
+.btn-add-large:hover,
+.action-button:hover,
+.btn-edit:hover,
+.btn-delete:hover,
+.btn-submit:hover,
+button[type="submit"]:hover,
+button[type="reset"]:hover,
+button[type="button"]:hover,
+input[type="submit"]:hover,
+input[type="reset"]:hover,
+input[type="button"]:hover {
+  color: #0f172a !important;
+  background-color: #00fff0 !important;
+  border-color: rgba(0, 255, 240, 0.55) !important;
+  box-shadow: 0 0 28px rgba(0, 255, 240, 0.55) !important;
+}
+
+.btn:active,
+.button:active,
+a.button:active,
+a.btn:active,
+.btn-primary:active,
+.btn-secondary:active,
+.btn-ghost:active,
+.btn-add-large:active,
+.action-button:active,
+.btn-edit:active,
+.btn-delete:active,
+.btn-submit:active,
+button[type="submit"]:active,
+button[type="reset"]:active,
+button[type="button"]:active,
+input[type="submit"]:active,
+input[type="reset"]:active,
+input[type="button"]:active {
+  transform: translateY(1px) !important;
+}
+
+.btn-primary,
+.button-primary {
+  background-color: #0f172a !important;
+  color: #00fff0 !important;
+}
+
+.btn-secondary {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: #a0fdfd !important;
+  border-color: rgba(160, 253, 253, 0.3) !important;
+  box-shadow: 0 0 12px rgba(0, 255, 240, 0.1) !important;
+}
+
+.btn-ghost {
+  background: transparent !important;
+  color: #00fff0 !important;
+  border-color: rgba(0, 255, 240, 0.4) !important;
+  box-shadow: none !important;
+}
+
+.btn-add-large {
+  padding: 14px 28px !important;
+  font-size: 1rem !important;
+  border-radius: 18px !important;
+  background-color: #0f172a !important;
+  color: #00fff0 !important;
+  border-color: rgba(0, 255, 240, 0.4) !important;
+  box-shadow: 0 0 22px rgba(0, 255, 240, 0.25) !important;
+}
+
+.btn-add-large:hover {
+  transform: translateY(-1px) !important;
+  background-color: #00fff0 !important;
+  color: #0f172a !important;
+  border-color: rgba(0, 255, 240, 0.55) !important;
+  box-shadow: 0 0 28px rgba(0, 255, 240, 0.55) !important;
+}
+
+.btn-edit {
+  background: rgba(0, 255, 240, 0.12) !important;
+  color: #00fff0 !important;
+  border-color: rgba(0, 255, 240, 0.35) !important;
+}
+
+.btn-edit:hover {
+  background: #00fff0 !important;
+  color: #0f172a !important;
+}
+
+.btn-delete {
+  background: rgba(255, 107, 107, 0.18) !important;
+  color: #ff6b6b !important;
+  border-color: rgba(255, 107, 107, 0.35) !important;
+}
+
+.btn-delete:hover {
+  background: #ff6b6b !important;
+  color: #0f172a !important;
+}
+
+.action-button {
+  background: rgba(0, 255, 240, 0.12) !important;
+  color: #00fff0 !important;
+  border-color: rgba(0, 255, 240, 0.35) !important;
+}
+
+.action-button:hover {
+  background: #00fff0 !important;
+  color: #0f172a !important;
+}
+
 

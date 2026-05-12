@@ -272,6 +272,36 @@ if (session_status() === PHP_SESSION_NONE) {
       <h2 class="section-title">Últimos eventos de auditoría</h2>
       <div class="panel-card">
         <div class="panel-body" style="padding: 0;">
+          <?php
+          function traducirAccion(string $accion): string {
+              $mapeo = [
+                  'create' => 'Crear',
+                  'update' => 'Actualizar',
+                  'delete' => 'Eliminar',
+                  'adjust' => 'Ajustar',
+                  'login'  => 'Acceso',
+                  'logout' => 'Salida',
+                  'read'   => 'Consulta',
+              ];
+              return $mapeo[$accion] ?? ucfirst($accion);
+          }
+
+          function traducirEntidad(string $entidad): string {
+              $mapeo = [
+                  'sale' => 'Venta',
+                  'purchase' => 'Compra',
+                  'work_order' => 'Orden de trabajo',
+                  'inventory' => 'Inventario',
+                  'product' => 'Producto',
+                  'user' => 'Usuario',
+                  'client' => 'Cliente',
+                  'supplier' => 'Proveedor',
+                  'inventory_movement' => 'Movimiento de inventario',
+                  'order' => 'Orden',
+              ];
+              return $mapeo[$entidad] ?? ucfirst(str_replace('_', ' ', $entidad));
+          }
+          ?>
           <table class="data-table">
             <thead>
               <tr>
@@ -289,8 +319,8 @@ if (session_status() === PHP_SESSION_NONE) {
                   <tr>
                     <td><?php echo htmlspecialchars(date('d/m/Y H:i', strtotime($log->created_at ?? $log->log_date ?? ''))); ?></td>
                     <td><?php echo htmlspecialchars($log->user_name ?? 'Sistema'); ?></td>
-                    <td><?php echo htmlspecialchars(ucfirst($log->action)); ?></td>
-                    <td><?php echo htmlspecialchars($log->entity); ?></td>
+                    <td><?php echo htmlspecialchars(traducirAccion($log->action)); ?></td>
+                    <td><?php echo htmlspecialchars(traducirEntidad($log->entity)); ?></td>
                   </tr>
                 <?php endforeach; ?>
               <?php endif; ?>

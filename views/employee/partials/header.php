@@ -45,6 +45,11 @@ if (in_array($role, ['employee', 'comercial'], true)) {
     --danger: #ff6b6b;
   }
 
+  /* Asegurar que no haya decoraciones de texto problemáticas */
+  header.employee * {
+    text-decoration: none !important;
+  }
+
   header.employee {
     width: 100%;
     background-color: var(--bg);
@@ -170,7 +175,7 @@ if (in_array($role, ['employee', 'comercial'], true)) {
   <nav class="emp-nav">
     <!-- Branding con ícono -->
     <a href="<?php echo $homeHref; ?>" class="emp-brand">
-      <img src="<?php echo BASE_URL; ?>assets/img/LogoPecosol.png" alt="LogoPecosol">
+      <img src="<?php echo BASE_URL; ?>assets/img/LogoPecosol.png" alt="Logo Pecosol">
       Pecosol <small><?php echo htmlspecialchars($roleLabel); ?></small>
     </a>
 

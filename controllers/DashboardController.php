@@ -340,21 +340,45 @@ class DashboardController {
         $this->requireRole(['estrategico']);
 
         $today = date('Y-m-d');
+        $yearStart = date('Y-01-01');
+        $monthStart = date('Y-m-01');
         $weekStart = date('Y-m-d', strtotime('-6 days'));
 
-        $totalProducts = $this->productModel->countProducts();
-        $totalStock = $this->productModel->getTotalStock();
-        $lowStockCount = $this->productModel->countLowStockProducts();
-        $lowStockAlerts = array_slice($this->productModel->getLowStockProducts(), 0, 6);
+        // Datos anuales para ROI y rotación
+        $totalSalesYear = $this->saleModel->getTotalSalesByDate($yearStart, $today);
+        $totalPurchasesYear = $this->purchaseModel->getTotalPurchasesByDate($yearStart, $today);
+        $currentStock = $this->productModel->getTotalStock();
 
+        // ROI: (Ingresos - Costos) / Costos
+        $roi = $totalPurchasesYear > 0 ? (($totalSalesYear - $totalPurchasesYear) / $totalPurchasesYear) * 100 : 0;
+
+        // Rotación de inventario anual: Ventas / Inventario promedio (aprox con stock actual)
+        $inventoryTurnover = $currentStock > 0 ? $totalSalesYear / $currentStock : 0;
+
+        // Comparativa con metas: Asumir meta mensual de ventas (ejemplo: 10000)
+        $metaVentasMensual = 10000; // Esto podría venir de BD
+        $ventasMesActual = $this->saleModel->getTotalSalesByDate($monthStart, $today);
+        $porcentajeMeta = $metaVentasMensual > 0 ? ($ventasMesActual / $metaVentasMensual) * 100 : 0;
+
+        // Análisis predictivo: Proyección mensual basada en promedio semanal
+        $ventasSemana = $this->saleModel->getTotalSalesByDate($weekStart, $today);
+        $proyeccionMensual = $ventasSemana * 4; // Aprox 4 semanas por mes
+
+        // Tendencia de ventas para gráfica
         $salesTrendLabels = [];
         $salesTrendData = [];
-        for ($i = 6; $i >= 0; $i--) {
-            $date = date('Y-m-d', strtotime("-{$i} days"));
-            $salesTrendLabels[] = date('d M', strtotime($date));
-            $salesTrendData[] = $this->saleModel->getTotalSalesByDate($date, $date);
+        for ($i = 11; $i >= 0; $i--) { // Últimos 12 meses
+            $month = date('Y-m-01', strtotime("-{$i} months"));
+            $monthEnd = date('Y-m-t', strtotime($month));
+            $salesTrendLabels[] = date('M Y', strtotime($month));
+            $salesTrendData[] = $this->saleModel->getTotalSalesByDate($month, $monthEnd);
         }
-        $totalSalesWeek = array_sum($salesTrendData);
+
+        // KPIs adicionales
+        $totalProducts = $this->productModel->countProducts();
+        $lowStockCount = $this->productModel->countLowStockProducts();
+        $totalStock = $this->productModel->getTotalStock();
+        $lowStockAlerts = array_slice($this->productModel->getLowStockProducts(), 0, 6);
 
         $recentSales = $this->saleModel->getLastSales(6);
         $recentPurchases = $this->purchaseModel->getAll(6);

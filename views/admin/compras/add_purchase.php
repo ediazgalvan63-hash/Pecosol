@@ -136,21 +136,6 @@ if ($useEmployeeHeader) {
         transition: transform .12s ease, box-shadow .12s ease, background-color .12s ease;
       }
 
-      .btn-primary {
-        background: #60a5fa;
-        color: #0f172a;
-        border-color: rgba(96, 165, 250, 0.65);
-        box-shadow: 0 10px 22px rgba(96, 165, 250, 0.18);
-      }
-
-      .btn-primary:hover { transform: translateY(-1px); }
-
-      .btn-ghost {
-        background: transparent;
-        color: #60a5fa;
-      }
-
-      .btn-ghost:hover { background: rgba(96, 165, 250, 0.08); }
     </style>
 <div class="container">
     <div class="page-head">

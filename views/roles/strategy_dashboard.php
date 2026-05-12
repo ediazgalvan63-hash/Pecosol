@@ -191,69 +191,71 @@ if (session_status() === PHP_SESSION_NONE) {
   <main class="page-container">
     <div class="kpi-grid">
       <article class="kpi-card">
-        <h3>Total de productos</h3>
-        <strong><?php echo number_format($totalProducts); ?></strong>
-        <p>Catálogo de productos registrados.</p>
+        <h3>ROI Anual</h3>
+        <strong><?php echo number_format($roi, 1); ?>%</strong>
+        <p>Retorno sobre inversión del año en curso.</p>
       </article>
 
       <article class="kpi-card">
-        <h3>Stock total</h3>
-        <strong><?php echo number_format($totalStock); ?></strong>
-        <p>Unidades disponibles en inventario.</p>
+        <h3>Rotación Inventario</h3>
+        <strong><?php echo number_format($inventoryTurnover, 1); ?>x</strong>
+        <p>Veces que se rota el inventario anualmente.</p>
       </article>
 
       <article class="kpi-card">
-        <h3>Artículos críticos</h3>
-        <strong><?php echo number_format($lowStockCount); ?></strong>
-        <p>Productos con stock en o por debajo del mínimo.</p>
+        <h3>Meta Mensual</h3>
+        <strong><?php echo number_format($porcentajeMeta, 1); ?>%</strong>
+        <p>Progreso hacia la meta de ventas del mes.</p>
       </article>
 
       <article class="kpi-card">
-        <h3>Ventas últimos 7 días</h3>
-        <strong>S/. <?php echo number_format($totalSalesWeek, 2, '.', ','); ?></strong>
-        <p>Ingresos generados durante la última semana.</p>
+        <h3>Proyección Mensual</h3>
+        <strong>S/. <?php echo number_format($proyeccionMensual, 0, '.', ','); ?></strong>
+        <p>Estimación de ventas para el mes completo.</p>
       </article>
     </div>
 
     <div class="cards-row">
       <div class="panel-card">
-        <header>Ventas Semanales</header>
+        <header>Tendencia de Ventas Anual</header>
         <div class="panel-body">
           <canvas id="salesTrendChart" width="100%" height="320"></canvas>
         </div>
       </div>
 
       <div class="panel-card">
-        <header>Alertas estratégicas</header>
+        <header>Indicadores Estratégicos</header>
         <div class="panel-body">
           <ul>
             <li>
-              <span>Productos bajos</span>
+              <span>ROI Anual</span>
+              <span><?php echo number_format($roi, 1); ?>%</span>
+            </li>
+            <li>
+              <span>Rotación Inventario</span>
+              <span><?php echo number_format($inventoryTurnover, 1); ?>x</span>
+            </li>
+            <li>
+              <span>Progreso Meta Mensual</span>
+              <span><?php echo number_format($porcentajeMeta, 1); ?>%</span>
+            </li>
+            <li>
+              <span>Productos en Riesgo</span>
               <span><?php echo number_format($lowStockCount); ?></span>
-            </li>
-            <li>
-              <span>Compras recientes</span>
-              <span><?php echo number_format(count($recentPurchases)); ?></span>
-            </li>
-            <li>
-              <span>Eventos de auditoría</span>
-              <span><?php echo number_format(count($recentAudits)); ?></span>
             </li>
           </ul>
 
           <div style="margin-top: 20px;">
-            <p style="margin:0 0 10px; color:#bcd9ff;">Productos en alerta:</p>
+            <p style="margin:0 0 10px; color:#bcd9ff;">Análisis Predictivo:</p>
             <ul style="list-style:none; padding:0; margin:0;">
-              <?php if (count($lowStockAlerts) === 0): ?>
-                <li style="color:#a9c7ff;">No hay artículos en riesgo en este momento.</li>
-              <?php else: ?>
-                <?php foreach ($lowStockAlerts as $item): ?>
-                  <li style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.06);">
-                    <strong><?php echo htmlspecialchars($item->name); ?></strong>
-                    <span class="badge">Stock <?php echo number_format($item->stock); ?></span>
-                  </li>
-                <?php endforeach; ?>
-              <?php endif; ?>
+              <li style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.06);">
+                <strong>Proyección Mensual</strong>
+                <span class="badge">S/. <?php echo number_format($proyeccionMensual, 0, '.', ','); ?></span>
+              </li>
+              <li style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.06);">
+                <strong>Tendencia</strong>
+                <span class="badge"><?php echo end($salesTrendData) > $salesTrendData[count($salesTrendData)-2] ? 'Ascendente' : 'Descendente'; ?></span>
+              </li>
             </ul>
           </div>
         </div>
