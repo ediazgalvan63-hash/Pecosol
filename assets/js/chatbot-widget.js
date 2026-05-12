@@ -11,10 +11,11 @@ class ChatbotWidget {
         const localDefault = 'http://127.0.0.1:8000/api/chat';
         if (!configuredUrl) {
             this.apiUrl = localDefault;
-        } else if (configuredUrl === localDefault && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-            this.apiUrl = `${window.location.origin}/api/chat`;
         } else {
             this.apiUrl = this.normalizeApiUrl(configuredUrl);
+            if (configuredUrl === localDefault && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+                console.warn('⚠️ CHATBOT_API_URL está usando el valor local por defecto en un dominio remoto. Ajusta CHATBOT_API_URL para la URL correcta del servicio Python.');
+            }
         }
         this.isOpen = false;
         this.apiUrlResolved = false;
@@ -49,14 +50,19 @@ class ChatbotWidget {
 
     async resolveApiUrl(retries = 5, delayMs = 1500) {
         const candidates = [];
+        const isLocalhost = window.location && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+        
         if (typeof window !== 'undefined' && window.CHATBOT_API_URL) {
             candidates.push(this.normalizeApiUrl(String(window.CHATBOT_API_URL).trim()));
         }
         if (window.location && window.location.origin) {
             candidates.push(`${window.location.origin}/api/chat`);
         }
-        candidates.push('http://localhost:8000/api/chat');
-        candidates.push('http://127.0.0.1:8000/api/chat');
+        // Solo intentar URLs locales si realmente estamos en localhost
+        if (isLocalhost) {
+            candidates.push('http://localhost:8000/api/chat');
+            candidates.push('http://127.0.0.1:8000/api/chat');
+        }
 
         const uniqueCandidates = [...new Set(candidates.filter(Boolean))];
 

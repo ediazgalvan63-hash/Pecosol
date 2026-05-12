@@ -11,6 +11,7 @@ set SCRIPT_DIR=%~dp0
 
 REM Cambiar al directorio de python_api
 cd /d "%SCRIPT_DIR%"
+set APP_BASE_URL=http://localhost/pecosol
 
 echo.
 echo ============================================

@@ -1,5 +1,6 @@
 @echo off
 cd /d "%~dp0"
+set APP_BASE_URL=http://localhost/pecosol
 echo ====================================
 echo   Pecosol - FastAPI Chatbot Server
 echo ====================================

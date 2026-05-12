@@ -2,8 +2,8 @@
 FastAPI Chatbot Service - Pecosol
 Microservicio Python para el chatbot con acceso directo a la base de datos
 """
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import Optional
 import os
@@ -22,29 +22,31 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Configurar CORS para permitir peticiones desde el frontend PHP
-allowed_origins_raw = os.getenv("CHATBOT_ALLOWED_ORIGINS", "")
-if allowed_origins_raw:
-    allowed_origins = [origin.strip() for origin in allowed_origins_raw.split(",") if origin.strip()]
-else:
-    app_base_url = os.getenv("APP_BASE_URL", "")
-    if app_base_url:
-        allowed_origins = [origin.strip() for origin in app_base_url.split(",") if origin.strip()]
-    else:
-        allowed_origins = [
-            "http://localhost",
-            "http://localhost:80",
-            "http://localhost:3000",
-            "http://127.0.0.1",
-            "http://127.0.0.1:80",
-        ]
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Middleware simple para permitir CORS universal
+@app.middleware("http")
+async def add_cors_headers(request: Request, call_next):
+    """Middleware para agregar headers CORS a todas las respuestas"""
+    if request.method == "OPTIONS":
+        return JSONResponse(
+            status_code=200,
+            headers={
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+                "Access-Control-Allow-Headers": "*",
+                "Access-Control-Max-Age": "600",
+            }
+        )
+    
+    response = await call_next(request)
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    return response
+
+print("[CORS] ✅ Middleware CORS simple configurado para permitir todos los orígenes")
+
+
+
 
 # Inicializar servicios
 db_service = DatabaseService()
