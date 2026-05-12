@@ -61,26 +61,6 @@
             padding:8px;
         }
         .muted { color:#a6c6d8; }
-        .btn-add-large {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 20px;
-            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
-            color: #ffffff;
-            text-decoration: none;
-            font-weight: 700;
-            font-size: 1rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(96, 165, 250, 0.3);
-            transition: all 0.3s ease;
-            border: 2px solid rgba(96, 165, 250, 0.5);
-        }
-        .btn-add-large:hover {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(96, 165, 250, 0.4);
-        }
         .btn-icon {
             font-size: 1.2rem;
             font-weight: bold;
@@ -101,7 +81,7 @@ if ($useEmployeeHeader) {
     <div class="toolbar">
         <h1>Órdenes de Trabajo</h1>
         <?php if (in_array($role, ['admin', 'logistica'])): ?>
-        <a href="index.php?controller=admin&action=addWorkOrderForm" class="btn-add-large">
+        <a href="index.php?controller=admin&action=addWorkOrderForm" class="btn btn-add-large">
             <span class="btn-icon">+</span>
             Agregar Orden
         </a>

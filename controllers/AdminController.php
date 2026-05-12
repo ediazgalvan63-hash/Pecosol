@@ -13,7 +13,7 @@ class AdminController {
     private function authorizeAction(string $role, string $action): void {
         $allowedActions = [
             'admin' => ['*'],  // Control total del sistema
-            'gerencia' => ['reports'],  // Solo reportes ejecutivos
+            'gerencia' => ['reports', 'exportCurrentInventoryCsv', 'exportMovementsCsv', 'exportSalesCsv'],  // Solo reportes ejecutivos
             'comercial' => ['listSalesAdmin', 'addSaleAdminForm', 'storeSaleAdmin'],  // Gestión de ventas
             'logistica' => ['listInventoryMovements', 'inventoryRecountForm', 'processInventoryRecount', 'listWorkOrders', 'addWorkOrderForm', 'storeWorkOrder', 'updateWorkOrderStatus', 'listPurchases', 'addPurchaseForm', 'storePurchase', 'editPurchaseForm', 'updatePurchase', 'deletePurchase'],  // Operación de almacén y compras
             'finanzas' => ['listPurchases', 'listSalesAdmin', 'editSaleAdminForm', 'updateSaleAdmin', 'deleteSaleAdmin', 'reports', 'exportCurrentInventoryCsv', 'exportMovementsCsv', 'exportSalesCsv'],  // Control financiero y CxP/CxC
