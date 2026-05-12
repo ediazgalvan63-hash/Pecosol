@@ -2,6 +2,31 @@
 
 ---
 
+## ⚡ **AYUDA RÁPIDA - SEGÚN TU SITUACIÓN**
+
+### 🌐 ¿Estás en **Railway** y el chatbot no funciona? 🚨 (NUEVO)
+👉 **Empieza aquí:** [`QUICK_START_RAILWAY.md`](QUICK_START_RAILWAY.md) (5 min - Ultra rápido)
+👉 Luego: [`SETUP_CHATBOT_RAILWAY.md`](SETUP_CHATBOT_RAILWAY.md) (15 min - Paso a paso)
+👉 Copia variables: [`ENV_CHEAT_SHEET.md`](ENV_CHEAT_SHEET.md) (Copy & paste exacto)
+👉 Si falla: [`TROUBLESHOOTING_CHATBOT.md`](TROUBLESHOOTING_CHATBOT.md) (Soluciones)
+👉 Resumen: [`SOLUCION_CHATBOT_RAILWAY.md`](SOLUCION_CHATBOT_RAILWAY.md) (Lo que hicimos)
+👉 Verifica: [`verify_chatbot.php`](verify_chatbot.php) (Diagnóstico web)
+👉 Script: `.\scripts\deploy_chatbot_to_railway.ps1` (Automatizar)
+
+### 💻 ¿Trabajas en **Local** (XAMPP)?
+👉 Lee: [`INICIO_RAPIDO.md`](INICIO_RAPIDO.md) (5 minutos)
+👉 Luego: [`GUIA_CHATBOT.md`](GUIA_CHATBOT.md) (Completo)
+
+### 🏗️ ¿Necesitas entender la **arquitectura**?
+👉 Lee: [`DIAGRAMA_ARQUITECTURA.md`](DIAGRAMA_ARQUITECTURA.md) (Visual)
+👉 Luego: [`RESUMEN_IMPLEMENTACION.md`](RESUMEN_IMPLEMENTACION.md) (Ejecutivo)
+
+### 📊 ¿Necesitas un **resumen técnico**?
+👉 Lee: [`CHECKLIST_IMPLEMENTACION.md`](CHECKLIST_IMPLEMENTACION.md)
+👉 O: [`CHATBOT_IMPLEMENTACION.md`](CHATBOT_IMPLEMENTACION.md)
+
+---
+
 ## 🚀 **EMPIEZA AQUÍ**
 
 ### 1. **`INICIO_RAPIDO.md`** ⏱️ (5 minutos)
@@ -82,9 +107,76 @@
 
 ---
 
+## 🌐 **RAILWAY Y PRODUCCIÓN**
+
+### 9. **`QUICK_START_RAILWAY.md`** ⚡ (NEW!)
+   - Guía ultra rápida (5 minutos)
+   - Checklist de 4 pasos
+   - Variables esenciales
+   - Verificación inmediata
+   - **👉 EMPIEZA AQUÍ PRIMERO**
+
+### 10. **`SETUP_CHATBOT_RAILWAY.md`** 🚀 (NEW!)
+   - Configuración paso a paso en Railway
+   - Variables de entorno requeridas
+   - Cómo verificar que funciona
+   - Solución de problemas básicos
+   - URLs para diagnosticar
+   - **👉 GUÍA COMPLETA (15 min)**
+
+### 11. **`ENV_CHEAT_SHEET.md`** 📋 (NEW!)
+   - Copy & paste de variables exactas
+   - Servicio pecosol-web
+   - Servicio pecosol-chatbot
+   - Verificación de configuración
+   - Errores comunes y soluciones
+   - **👉 PARA COPIAR Y PEGAR**
+
+### 12. **`TROUBLESHOOTING_CHATBOT.md`** 🔧 (NEW!)
+   - CORS errors - Soluciones
+   - 502 Bad Gateway - Qué hacer
+   - Database connection failed
+   - OpenAI API Key invalid
+   - Python packages errors
+   - Chatbot no aparece en la web
+   - Verificación rápida
+   - Checklist de configuración
+   - **👉 PARA RESOLVER PROBLEMAS**
+
+### 13. **`SOLUCION_CHATBOT_RAILWAY.md`** 📊 (NEW!)
+   - Resumen de la solución completa
+   - Archivos creados y para qué sirven
+   - Cómo usar cada herramienta
+   - Flujo completo del chatbot
+   - Próximos pasos
+   - **👉 PARA ENTENDER QUÉ SE HIZO**
+
+### 14. **`scripts/deploy_chatbot_to_railway.ps1`** 🎯 (NEW!)
+   - Script PowerShell automático
+   - Guía interactiva de configuración
+   - Genera variables de entorno
+   - Guarda configuración localmente
+   - **👉 EJECUTAR CON: .\scripts\deploy_chatbot_to_railway.ps1**
+
+### 15. **`scripts/README.md`** 📚 (NEW!)
+   - Documentación de todos los scripts
+   - Diferencia entre deploy_chatbot_to_railway.ps1 y deploy_railway.ps1
+   - Ejemplos de uso
+   - Troubleshooting de ejecución
+
+### 16. **`verify_chatbot.php`** ✅ (NEW!)
+   - Verificador web de diagnóstico
+   - Verifica configuración
+   - Prueba conectividad del API
+   - Comprueba CORS
+   - Verifica conexión a BD
+   - **👉 ACCEDE: https://tu-dominio.railway.app/verify_chatbot.php**
+
+---
+
 ## 💻 **COMANDOS Y HERRAMIENTAS**
 
-### 9. **`COMANDOS_POWERSHELL.md`** ⚡ (PowerShell)
+### 17. **`COMANDOS_POWERSHELL.md`** ⚡ (PowerShell)
    - Cómo abrir PowerShell
    - Instalación inicial
    - Verificación
