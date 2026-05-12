@@ -327,6 +327,8 @@ class DashboardController {
         $this->requireRole(['estrategico']);
         $productos = $this->productModel->getAll();
         $auditorias = $this->auditLogModel->getRecent(80);
+        $dashboardMode = true;
+        $reportsAction = 'strategyReports';
         require __DIR__ . '/../views/admin/reportes/index.php';
     }
 

@@ -17,7 +17,7 @@ class AdminController {
             'comercial' => ['listSalesAdmin', 'addSaleAdminForm', 'storeSaleAdmin'],  // Gestión de ventas
             'logistica' => ['listInventoryMovements', 'inventoryRecountForm', 'processInventoryRecount', 'listWorkOrders', 'addWorkOrderForm', 'storeWorkOrder', 'updateWorkOrderStatus', 'listPurchases', 'addPurchaseForm', 'storePurchase', 'editPurchaseForm', 'updatePurchase', 'deletePurchase'],  // Operación de almacén y compras
             'finanzas' => ['listPurchases', 'listSalesAdmin', 'editSaleAdminForm', 'updateSaleAdmin', 'deleteSaleAdmin', 'reports', 'exportCurrentInventoryCsv', 'exportMovementsCsv', 'exportSalesCsv'],  // Control financiero y CxP/CxC
-            'estrategico' => ['listProducts', 'reports'],  // Datos maestros y análisis
+            'estrategico' => ['listProducts', 'reports', 'exportCurrentInventoryCsv', 'exportMovementsCsv', 'exportSalesCsv'],  // Datos maestros y análisis
         ];
 
         if ($role === 'admin') {

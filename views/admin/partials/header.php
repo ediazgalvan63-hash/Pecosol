@@ -264,3 +264,5 @@ if ($showTzDebug && !empty($_SESSION['role']) && $_SESSION['role'] === 'admin') 
   window.CHATBOT_API_URL = <?php echo json_encode(CHATBOT_API_URL, JSON_UNESCAPED_SLASHES); ?>;
   window.CHATBOT_USER_ID = <?php echo json_encode($_SESSION['user_id'] ?? null, JSON_UNESCAPED_SLASHES); ?>;
 </script>
+<link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/chatbot-widget.css" />
+<script src="<?php echo BASE_URL; ?>assets/js/chatbot-widget.js"></script>

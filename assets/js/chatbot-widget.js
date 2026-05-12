@@ -386,10 +386,15 @@ class ChatbotWidget {
 }
 
 // Inicializar el widget cuando el DOM esté listo
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        window.chatbotWidget = new ChatbotWidget();
-    });
-} else {
+function initializeChatbotWidget() {
+    if (window.chatbotWidget instanceof ChatbotWidget) {
+        return;
+    }
     window.chatbotWidget = new ChatbotWidget();
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeChatbotWidget);
+} else {
+    initializeChatbotWidget();
 }
