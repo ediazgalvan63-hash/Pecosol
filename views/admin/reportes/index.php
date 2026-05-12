@@ -136,8 +136,13 @@ $reportUrlBase = BASE_URL . 'index.php?controller=' . $reportsController . '&act
                             'login'  => 'Acceso',
                             'logout' => 'Salida',
                             'read'   => 'Consulta',
+                            'insert' => 'Insertar',
+                            'edit'   => 'Editar',
+                            'remove' => 'Remover',
+                            'add'    => 'Agregar',
+                            'modify' => 'Modificar',
                         ];
-                        return $mapeo[$accion] ?? ucfirst($accion);
+                        return $mapeo[$accion] ?? ucfirst(str_replace('_', ' ', $accion));
                     }
 
                     function traducirEntidad(string $entidad): string {
@@ -152,6 +157,10 @@ $reportUrlBase = BASE_URL . 'index.php?controller=' . $reportsController . '&act
                             'supplier' => 'Proveedor',
                             'inventory_movement' => 'Movimiento de inventario',
                             'order' => 'Orden',
+                            'audit_log' => 'Registro de auditoría',
+                            'category' => 'Categoría',
+                            'role' => 'Rol',
+                            'permission' => 'Permiso',
                         ];
                         return $mapeo[$entidad] ?? ucfirst(str_replace('_', ' ', $entidad));
                     }
