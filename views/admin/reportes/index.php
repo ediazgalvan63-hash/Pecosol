@@ -15,9 +15,8 @@
         .field-row input,
         .field-row select { width: 220px; padding: 10px 12px; border-radius: 10px; border: 1px solid #0f3460; background: rgba(0,255,240,0.06); color: #eaeaea; }
         .field-row input[type="date"] { max-width: 220px; }
-        .field-row button { margin-top: 4px; }
         .help-text { color: #a0cfe8; margin-bottom: 18px; }
-        .form-actions { display: flex; flex-wrap: wrap; gap: 14px; }
+        .form-actions { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 16px; }
         .note { color: #e0e0e0; font-size: 0.95rem; }
         @media(max-width: 820px) {
             .field-row { flex-direction: column; align-items: stretch; }
