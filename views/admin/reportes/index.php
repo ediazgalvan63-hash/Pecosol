@@ -45,7 +45,7 @@ $reportUrlBase = BASE_URL . 'index.php?controller=' . $reportsController . '&act
     <div class="section-card">
         <h2>Inventario Actual</h2>
         <p class="help-text">Descarga un archivo XLSX con el estado actual de todos los productos, sus niveles de stock y alertas de bajo stock.</p>
-        <a class="button" href="<?php echo BASE_URL; ?>index.php?controller=admin&action=exportCurrentInventoryCsv">Descargar XLSX</a>
+        <a class="btn btn-add-large" href="<?php echo BASE_URL; ?>index.php?controller=admin&action=exportCurrentInventoryCsv">Descargar XLSX</a>
     </div>
 
     <div class="section-card">
@@ -82,8 +82,8 @@ $reportUrlBase = BASE_URL . 'index.php?controller=' . $reportsController . '&act
                 </div>
             </div>
             <div class="form-actions">
-                <button type="submit" class="button">Exportar XLSX</button>
-                <button type="reset" onclick="window.location.href='<?php echo htmlspecialchars($reportUrlBase); ?>'" class="button">Limpiar filtros</button>
+                <button type="submit" class="btn btn-add-large">Exportar XLSX</button>
+                <button type="reset" onclick="window.location.href='<?php echo htmlspecialchars($reportUrlBase); ?>'" class="btn btn-add-large">Limpiar filtros</button>
             </div>
         </form>
     </div>
@@ -105,8 +105,8 @@ $reportUrlBase = BASE_URL . 'index.php?controller=' . $reportsController . '&act
                 </div>
             </div>
             <div class="form-actions">
-                <button type="submit" class="button">Exportar XLSX</button>
-                <button type="reset" onclick="window.location.href='<?php echo htmlspecialchars($reportUrlBase); ?>'" class="button">Limpiar filtros</button>
+                <button type="submit" class="btn btn-add-large">Exportar XLSX</button>
+                <button type="reset" onclick="window.location.href='<?php echo htmlspecialchars($reportUrlBase); ?>'" class="btn btn-add-large">Limpiar filtros</button>
             </div>
         </form>
     </div>
@@ -126,6 +126,44 @@ $reportUrlBase = BASE_URL . 'index.php?controller=' . $reportsController . '&act
                     </tr>
                 </thead>
                 <tbody>
+                    <?php
+                    function traducirAccion(string $accion): string {
+                        $mapeo = [
+                            'create' => 'Crear',
+                            'update' => 'Actualizar',
+                            'delete' => 'Eliminar',
+                            'adjust' => 'Ajustar',
+                            'login'  => 'Acceso',
+                            'logout' => 'Salida',
+                            'read'   => 'Consulta',
+                        ];
+                        return $mapeo[$accion] ?? ucfirst($accion);
+                    }
+
+                    function traducirEntidad(string $entidad): string {
+                        $mapeo = [
+                            'sale' => 'Venta',
+                            'purchase' => 'Compra',
+                            'work_order' => 'Orden de trabajo',
+                            'inventory' => 'Inventario',
+                            'product' => 'Producto',
+                            'user' => 'Usuario',
+                            'client' => 'Cliente',
+                            'supplier' => 'Proveedor',
+                            'inventory_movement' => 'Movimiento de inventario',
+                            'order' => 'Orden',
+                        ];
+                        return $mapeo[$entidad] ?? ucfirst(str_replace('_', ' ', $entidad));
+                    }
+
+                    function iconoAccion(string $accion): string {
+                        return $accion === 'create' ? '➕' : ($accion === 'update' ? '✏️' : ($accion === 'delete' ? '🗑️' : ($accion === 'adjust' ? '🛠️' : 'ℹ️')));
+                    }
+
+                    function colorAccion(string $accion): string {
+                        return $accion === 'create' ? '#4ade80' : ($accion === 'update' ? '#fbbf24' : ($accion === 'delete' ? '#ff6b6b' : ($accion === 'adjust' ? '#60a5fa' : '#a0a0a0')));
+                    }
+                    ?>
                     <?php if (!empty($auditorias)): ?>
                         <?php $rowCount = 0; ?>
                         <?php foreach ($auditorias as $a): ?>
@@ -134,14 +172,11 @@ $reportUrlBase = BASE_URL . 'index.php?controller=' . $reportsController . '&act
                                 <td style="padding: 10px 8px; border-bottom: 1px solid #2a3b63; color: #eaeaea;"><?php echo htmlspecialchars(date('d/m/Y H:i', strtotime($a->created_at))); ?></td>
                                 <td style="padding: 10px 8px; border-bottom: 1px solid #2a3b63; color: #eaeaea;"><?php echo htmlspecialchars($a->user_name ?? 'Sistema'); ?></td>
                                 <td style="padding: 10px 8px; border-bottom: 1px solid #2a3b63;">
-                                    <span style="display: inline-flex; align-items: center; gap: 6px; color: <?php echo $a->action === 'create' ? '#4ade80' : ($a->action === 'update' ? '#fbbf24' : ($a->action === 'delete' ? '#ff6b6b' : '#a0a0a0')); ?>; font-weight: 500;">
-                                        <?php 
-                                        $icon = $a->action === 'create' ? '➕' : ($a->action === 'update' ? '✏️' : ($a->action === 'delete' ? '🗑️' : 'ℹ️'));
-                                        echo $icon . ' ' . htmlspecialchars(strtoupper($a->action));
-                                        ?>
+                                    <span style="display: inline-flex; align-items: center; gap: 6px; color: <?php echo colorAccion($a->action); ?>; font-weight: 500;">
+                                        <?php echo iconoAccion($a->action) . ' ' . htmlspecialchars(traducirAccion($a->action)); ?>
                                     </span>
                                 </td>
-                                <td style="padding: 10px 8px; border-bottom: 1px solid #2a3b63; color: #eaeaea;"><?php echo htmlspecialchars(ucfirst($a->entity)); ?></td>
+                                <td style="padding: 10px 8px; border-bottom: 1px solid #2a3b63; color: #eaeaea;"><?php echo htmlspecialchars(traducirEntidad($a->entity)); ?></td>
                                 <td style="padding: 10px 8px; border-bottom: 1px solid #2a3b63; color: #a0a0a0; max-width: 300px; word-wrap: break-word;"><?php echo htmlspecialchars($a->details ?? 'Sin detalles'); ?></td>
                             </tr>
                         <?php endforeach; ?>
