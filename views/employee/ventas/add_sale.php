@@ -30,7 +30,7 @@ foreach ($productos as $prod) {
     }
 
     .container {
-      max-width: 500px;
+      max-width: 600px;
       margin: 60px auto;
       padding: 0 20px;
     }
@@ -43,8 +43,8 @@ foreach ($productos as $prod) {
     }
 
     .form-card {
-      background-color: #0f3460;
-      border-radius: 16px;
+      background-color: #16213e;
+      border-radius: 14px;
       padding: 32px 28px;
       box-shadow: 0 0 20px rgba(0,255,240,0.1);
       position: relative;
