@@ -59,34 +59,66 @@ foreach ($productos as $prod) {
 
     label {
       display: block;
-      margin-top: 16px;
-      font-weight: 500;
-      color: #eaeaea;
+      margin-top: 20px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      color: #d2f7ff;
     }
 
     select,
+    input[type="text"],
     input[type="number"],
     textarea {
       width: 100%;
-      padding: 10px 14px;
-      margin-top: 6px;
-      border: 1px solid #00fff0;
-      border-radius: 8px;
-      background-color: #16213e;
+      padding: 14px 16px;
+      margin-top: 8px;
+      border: 1px solid rgba(0, 255, 240, 0.35);
+      border-radius: 14px;
+      background-color: rgba(15, 23, 42, 0.95);
       color: #eaeaea;
       font-size: 1rem;
+      box-shadow: inset 0 0 12px rgba(0, 255, 240, 0.08);
+      transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease;
+    }
+
+    select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: linear-gradient(45deg, transparent 50%, #00fff0 50%),
+                        linear-gradient(135deg, #00fff0 50%, transparent 50%);
+      background-position: calc(100% - 20px) calc(1em + 2px), calc(100% - 15px) calc(1em + 2px);
+      background-size: 5px 5px, 5px 5px;
+      background-repeat: no-repeat;
     }
 
     select option {
-      font-family: 'Courier New', Courier, monospace;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       font-size: 0.95rem;
-      padding: 6px 10px;
+      padding: 8px 10px;
       background-color: #0f172a;
       color: #eaeaea;
     }
 
+    input[type="text"]::placeholder,
+    input[type="number"]::placeholder,
+    textarea::placeholder {
+      color: rgba(234, 234, 234, 0.55);
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    textarea:focus,
+    select:focus {
+      outline: none;
+      border-color: #5ef3d4;
+      box-shadow: 0 0 0 4px rgba(0, 255, 240, 0.12);
+      transform: translateY(-1px);
+    }
+
     textarea {
       resize: vertical;
+      min-height: 100px;
     }
 
     button {
@@ -187,7 +219,8 @@ foreach ($productos as $prod) {
           type="text"
           id="client_name"
           name="client_name"
-          placeholder="Nombre del cliente"
+          autocomplete="name"
+          placeholder="Nombre completo del cliente"
           required
           value="<?php echo htmlspecialchars($clientName ?? ''); ?>"
         >
