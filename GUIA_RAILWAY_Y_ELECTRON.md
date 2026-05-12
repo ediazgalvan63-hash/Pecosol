@@ -66,10 +66,22 @@ mysql -h <MYSQLHOST> -P <MYSQLPORT> -u <MYSQLUSER> -p <MYSQLDATABASE> < pecosol_
 
 ### 1.5 Script de despliegue incluido
 
-Tambien puedes usar el script:
+También puedes usar el script de despliegue para GitHub + Railway en un solo paso:
 
 ```powershell
 .\scripts\deploy_railway.ps1 -WebServiceId "<id_web>" -ChatbotServiceId "<id_chatbot>"
+```
+
+Si quieres forzar un mensaje de commit personalizado o evitar el paso Git, usa:
+
+```powershell
+.\scripts\deploy_railway.ps1 -WebServiceId "<id_web>" -ChatbotServiceId "<id_chatbot> -CommitMessage "Despliegue directo a Railway"
+```
+
+Para saltar Git (si ya estás seguro de que todo está commiteado):
+
+```powershell
+.\scripts\deploy_railway.ps1 -WebServiceId "<id_web>" -ChatbotServiceId "<id_chatbot>" -SkipGit
 ```
 
 Plantillas de variables:
