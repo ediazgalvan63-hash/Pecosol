@@ -42,29 +42,44 @@ class ChatbotWidget {
     }
 
     buildHealthUrl(url) {
-        if (/\/api\/chat\/?$/i.test(url)) {
-            return url.replace(/\/api\/chat\/?$/i, '/health');
+        try {
+            const normalizedUrl = new URL(url, window.location.origin);
+            if (/\/api\/chat\/?$/i.test(normalizedUrl.pathname)) {
+                normalizedUrl.pathname = normalizedUrl.pathname.replace(/\/api\/chat\/?$/i, '/health');
+            } else {
+                normalizedUrl.pathname = normalizedUrl.pathname.replace(/\/+$/g, '') + '/health';
+            }
+            return normalizedUrl.toString();
+        } catch (error) {
+            return `${String(url).replace(/\/+$/g, '')}/health`;
         }
-        return `${url.replace(/\/+$/g, '')}/health`;
     }
 
-    async resolveApiUrl(retries = 5, delayMs = 1500) {
+    getApiCandidates() {
         const candidates = [];
         const isLocalhost = window.location && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-        
+
         if (typeof window !== 'undefined' && window.CHATBOT_API_URL) {
             candidates.push(this.normalizeApiUrl(String(window.CHATBOT_API_URL).trim()));
         }
         if (window.location && window.location.origin) {
             candidates.push(`${window.location.origin}/api/chat`);
         }
-        // Solo intentar URLs locales si realmente estamos en localhost
         if (isLocalhost) {
             candidates.push('http://localhost:8000/api/chat');
             candidates.push('http://127.0.0.1:8000/api/chat');
         }
 
-        const uniqueCandidates = [...new Set(candidates.filter(Boolean))];
+        // Garantizar que el actual this.apiUrl también se pruebe si ya existe.
+        if (this.apiUrl && !candidates.includes(this.apiUrl)) {
+            candidates.unshift(this.apiUrl);
+        }
+
+        return [...new Set(candidates.filter(Boolean))];
+    }
+
+    async resolveApiUrl(retries = 5, delayMs = 1500) {
+        const uniqueCandidates = this.getApiCandidates();
 
         for (let attempt = 1; attempt <= retries; attempt++) {
             for (const url of uniqueCandidates) {
@@ -74,6 +89,7 @@ class ChatbotWidget {
                     const timeout = setTimeout(() => controller.abort(), 1500);
                     const response = await fetch(healthUrl, {
                         method: 'GET',
+                        mode: 'cors',
                         signal: controller.signal,
                     });
                     clearTimeout(timeout);
@@ -81,8 +97,6 @@ class ChatbotWidget {
                         continue;
                     }
                     const json = await response.json().catch(() => null);
-                    // Validar que sea el backend real.
-                    // Aceptar tanto el FastAPI con `database` como el servidor simple con `service`.
                     const hasDatabaseHealth = json && typeof json.database === 'string';
                     const hasServiceHealth = json && typeof json.service === 'string' && json.service !== 'Pecosol Chatbot API Test';
                     const isTestServer = json && json.service === 'Pecosol Chatbot API Test';
@@ -108,6 +122,58 @@ class ChatbotWidget {
         this.apiUrlResolved = false;
         console.warn(`⚠️ No se encontró un endpoint de chatbot activo. Usando: ${this.apiUrl}`);
         return false;
+    }
+
+    async requestChatApi(message) {
+        const requestBody = JSON.stringify({
+            message: message,
+            user_id: typeof window.CHATBOT_USER_ID !== 'undefined' ? window.CHATBOT_USER_ID : null,
+            session_id: this.sessionId
+        });
+
+        const triedUrls = new Set();
+        const candidates = this.getApiCandidates();
+
+        for (const url of candidates) {
+            if (!url || triedUrls.has(url)) {
+                continue;
+            }
+            triedUrls.add(url);
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: requestBody,
+                });
+
+                if (!response.ok) {
+                    const status = response.status;
+                    if (status === 404) {
+                        console.warn(`⚠️ Endpoint ${url} devolvió 404. Intentando siguiente candidato.`);
+                        continue;
+                    }
+                    const text = await response.text().catch(() => '');
+                    throw new Error(`HTTP error ${status}: ${text}`);
+                }
+
+                const data = await response.json();
+                if (data && typeof data.success !== 'undefined') {
+                    this.apiUrl = url;
+                    this.apiUrlResolved = true;
+                    return data;
+                }
+
+                throw new Error('Respuesta inválida del servidor de chatbot');
+            } catch (error) {
+                console.warn(`⚠️ Error conectando con ${url}: ${error.message}`);
+            }
+        }
+
+        throw new Error('No se pudo conectar con ningún endpoint del chatbot');
     }
 
     generateSessionId() {
@@ -258,42 +324,10 @@ class ChatbotWidget {
         // Mostrar indicador de escritura
         this.showTyping();
 
-        if (!this.apiUrlResolved) {
-            await this.resolveApiUrl(10, 2000);
-        }
-
-        if (!this.apiUrlResolved) {
-            this.hideTyping();
-            this.addMessage('⚠️ El servidor de chatbot aún no está disponible. Espera unos segundos e intenta otra vez. Si estás en local, ejecuta python_api/INICIAR_CHATBOT.bat o python_api/start.bat y verifica que CHATBOT_API_URL apunte al servicio correcto.', 'error');
-            return;
-        }
+        await this.resolveApiUrl(10, 2000);
 
         try {
-            // Llamar a la API Python
-            const response = await fetch(this.apiUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    message: message,
-                    user_id: typeof window.CHATBOT_USER_ID !== 'undefined' ? window.CHATBOT_USER_ID : null,
-                    session_id: this.sessionId
-                })
-            });
-
-            if (!response.ok) {
-                const status = response.status;
-                let extra = '';
-                if (status === 404) {
-                    extra = ' El endpoint /api/chat no existe. Asegúrate de iniciar el servidor Python correcto con python_api/start.bat o python_api/iniciar-chatbot-background.bat.';
-                }
-                throw new Error(`HTTP error! status: ${status}.${extra}`);
-            }
-
-            const data = await response.json();
-
-            // Ocultar indicador de escritura
+            const data = await this.requestChatApi(message);
             this.hideTyping();
 
             if (data.success) {
@@ -305,36 +339,37 @@ class ChatbotWidget {
         } catch (error) {
             console.error('Error:', error);
             this.hideTyping();
-            
+
             let errorMessage = '';
-            
-            if (error.message.includes('Failed to fetch')) {
+            const text = String(error.message || 'Error inesperado');
+
+            if (text.includes('Failed to fetch') || text.includes('NetworkError')) {
                 errorMessage = `
                     <strong>⚠️ Servicio de chatbot no disponible</strong><br><br>
-                    El asistente IA requiere que el servidor Python esté ejecutándose.<br><br>
-                    <strong>Para iniciar el servidor:</strong><br>
+                    El asistente IA requiere que el servidor Python esté ejecutándose o que la URL configurada sea correcta.<br><br>
+                    <strong>Para iniciar el servidor local:</strong><br>
                     1. Abre: <code>python_api/INICIAR_CHATBOT.bat</code><br>
                     2. Espera a que el servidor responda en <code>http://127.0.0.1:8000</code><br>
                     3. Vuelve a intentar<br><br>
                     <strong>Endpoint configurado:</strong> <code>${this.apiUrl}</code><br><br>
                     <strong>Si necesitas ayuda:</strong><br>
                     • Lee: <code>python_api/INICIO_RAPIDO.md</code><br>
-                    • URL esperada: <code>http://127.0.0.1:8000</code>
+                    • Revisa: <code>verify_chatbot.php</code>
                 `;
-            } else if (error.message.includes('404')) {
+            } else if (text.includes('404')) {
                 errorMessage = `
                     <strong>❌ Servidor encontrado pero endpoint no disponible</strong><br><br>
-                    El servidor Python está corriendo pero el endpoint /api/chat no se encontró.<br>
-                    Verifica que main.py esté actualizado.
+                    El servidor Python está corriendo, pero el endpoint de chat no se encontró.<br>
+                    Verifica que tu URL termine en <code>/api/chat</code> y que el servicio esté activo.
                 `;
             } else {
                 errorMessage = `
                     <strong>❌ Error inesperado</strong><br><br>
-                    ${error.message}<br><br>
+                    ${text}<br><br>
                     Revisa la consola del navegador (F12) para más detalles.
                 `;
             }
-            
+
             this.addMessage(errorMessage, 'error');
         }
 

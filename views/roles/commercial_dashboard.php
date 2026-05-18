@@ -59,7 +59,7 @@ if (session_status() === PHP_SESSION_NONE) {
     .hero h1 {
       margin: 0;
       font-size: 2.4rem;
-      color: #7de7ff;
+      color: #00fff0;
     }
     .hero p {
       margin: 8px 0 0;
@@ -75,7 +75,7 @@ if (session_status() === PHP_SESSION_NONE) {
     }
     .kpi-card {
       background: rgba(11, 25, 49, 0.9);
-      border: 1px solid rgba(125, 231, 255, 0.16);
+      border: 1px solid rgba(0, 255, 240, 0.16);
       border-radius: 20px;
       padding: 22px 20px;
       box-shadow: 0 18px 32px rgba(0, 0, 0, 0.15);
@@ -107,14 +107,14 @@ if (session_status() === PHP_SESSION_NONE) {
     }
     .panel {
       background: rgba(11, 25, 49, 0.92);
-      border: 1px solid rgba(125, 231, 255, 0.14);
+      border: 1px solid rgba(0, 255, 240, 0.14);
       border-radius: 22px;
       overflow: hidden;
       box-shadow: 0 20px 38px rgba(0, 0, 0, 0.16);
     }
     .panel header {
       padding: 18px 22px;
-      background: rgba(125, 231, 255, 0.08);
+      background: rgba(0, 255, 240, 0.08);
       color: #d7ecff;
       font-weight: 700;
       letter-spacing: 0.02em;
@@ -229,13 +229,17 @@ if (session_status() === PHP_SESSION_NONE) {
           <h4>Registrar nueva venta</h4>
           <p>Agrega ventas con rapidez y conserva el seguimiento comercial al instante.</p>
         </a>
-        <a class="action-box" href="<?php echo BASE_URL; ?>index.php?controller=employee&action=listSalesEmployee">
-          <h4>Mis ventas</h4>
-          <p>Revisa tu historial comercial y enfócate en tu pipeline más reciente.</p>
-        </a>
         <a class="action-box" href="<?php echo BASE_URL; ?>index.php?controller=employee&action=listProductsEmployee">
-          <h4>Catálogo</h4>
-          <p>Consulta productos disponibles y selecciona ofertas que cierren rápido.</p>
+          <h4>Consultar stock</h4>
+          <p>Revisa el stock actual y el catálogo para proponer las mejores ofertas.</p>
+        </a>
+        <a class="action-box" href="<?php echo BASE_URL; ?>index.php?controller=dashboard&action=logisticsInventory">
+          <h4>Ver Kardex</h4>
+          <p>Consulta los movimientos de inventario y la trazabilidad de stock en modo solo lectura.</p>
+        </a>
+        <a class="action-box" href="<?php echo BASE_URL; ?>index.php?controller=admin&action=addWorkOrderForm">
+          <h4>Crear orden</h4>
+          <p>Genera órdenes de trabajo directamente desde el panel comercial.</p>
         </a>
       </div>
     </section>

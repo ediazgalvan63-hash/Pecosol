@@ -1,6 +1,11 @@
 <?php
 // config/config.php
 
+// Iniciar sesión para guardar estado del chatbot (solo si no está iniciada)
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 /**
  * Configuración de zona horaria
  * Por defecto: Perú (UTC-5)
@@ -133,29 +138,43 @@ function startLocalChatbotServer(): void
         return;
     }
 
-    $command = 'cd /d ' . escapeshellarg($pythonApiDir) . ' && start "" /min ' . escapeshellarg($pythonExe) . ' -m uvicorn main:app --host 127.0.0.1 --port 8000 --reload';
+    // ⚡ OPTIMIZACIÓN: Iniciar en background SIN BLOQUEAR
+    // Usar WScript.Shell para iniciar proceso verdaderamente asincrónico
+    $command = 'cd /d ' . escapeshellarg($pythonApiDir) . ' && start "" /min ' . escapeshellarg($pythonExe) . ' -m uvicorn main:app --host 127.0.0.1 --port 8000 --reload 2>nul';
 
-    if (function_exists('popen')) {
-        @pclose(@popen('cmd /c ' . $command, 'r'));
-    } elseif (function_exists('exec')) {
-        @exec('cmd /c ' . $command);
-    }
-
-    for ($i = 0; $i < 15; $i++) {
-        if (isChatbotServerRunning()) {
-            break;
+    try {
+        if (class_exists('COM')) {
+            $shell = new COM('WScript.Shell');
+            // Ejecutar en background sin esperar (Async = true, WindowStyle = 0 = hidden)
+            $shell->Run($command, 0, false);
+        } else {
+            // Fallback si COM no disponible
+            throw new Exception('COM class not available');
         }
-        sleep(1);
+    } catch (Exception $e) {
+        // Fallback a popen o exec si COM no está disponible
+        if (function_exists('popen')) {
+            @pclose(@popen('cmd /c ' . $command, 'r'));
+        } elseif (function_exists('exec')) {
+            @exec($command . ' &');
+        }
     }
 }
 
-// ⚡ OPTIMIZACIÓN: NO iniciar chatbot en cada carga de página
-// El chatbot debe iniciarse manualmente o via script separado
-// if (PHP_OS_FAMILY === 'Windows' && preg_match('#^https?://(127\.0\.0\.1|localhost)(:\d+)?/api/chat#i', CHATBOT_API_URL)) {
-//     if (!isChatbotServerRunning()) {
-//         startLocalChatbotServer();
-//     }
-// }
+// ⚡ OPTIMIZACIÓN MEJORADA: Iniciar chatbot automáticamente SIN BLOQUEAR
+// Solo intenta una vez por sesión (usa $_SESSION para evitar reintentos)
+// La función startLocalChatbotServer() es NOW NON-BLOCKING, no espera a que responda
+if (!isset($_SESSION['chatbot_startup_attempted'])) {
+    $_SESSION['chatbot_startup_attempted'] = true;
+    
+    if (PHP_OS_FAMILY === 'Windows' && preg_match('#^https?://(127\.0\.0\.1|localhost)(:\d+)?/api/chat#i', CHATBOT_API_URL)) {
+        // Check rápido: ¿ya está corriendo?
+        if (!isChatbotServerRunning()) {
+            // Iniciar en background (NO BLOQUEA)
+            startLocalChatbotServer();
+        }
+    }
+}
 
 // Nombre del proyecto
 define('PROJECT_NAME', 'Pecosol');

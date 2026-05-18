@@ -70,7 +70,7 @@
 <body>
 <?php
 $role = $_SESSION['role'] ?? '';
-$useEmployeeHeader = in_array($role, ['comercial', 'logistica', 'finanzas', 'estrategico', 'gerencia'], true);
+$useEmployeeHeader = in_array($role, ['comercial', 'logistica', 'finanzas', 'estrategico', 'gerencia', 'supervisor'], true);
 if ($useEmployeeHeader) {
     include __DIR__ . '/../../employee/partials/header.php';
 } else {
@@ -80,7 +80,7 @@ if ($useEmployeeHeader) {
 <div class="container" style="max-width: 1150px; margin: 32px auto;">
     <div class="toolbar">
         <h1>Órdenes de Trabajo</h1>
-        <?php if (in_array($role, ['admin', 'logistica'])): ?>
+        <?php if (in_array($role, ['admin', 'logistica', 'supervisor'])): ?>
         <a href="index.php?controller=admin&action=addWorkOrderForm" class="btn btn-add-large">
             <span class="btn-icon">+</span>
             Agregar Orden

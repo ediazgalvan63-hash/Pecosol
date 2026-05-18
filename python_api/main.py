@@ -28,6 +28,7 @@ async def add_cors_headers(request: Request, call_next):
     """Middleware para agregar headers CORS a todas las respuestas"""
     if request.method == "OPTIONS":
         return JSONResponse(
+            content={},
             status_code=200,
             headers={
                 "Access-Control-Allow-Origin": "*",

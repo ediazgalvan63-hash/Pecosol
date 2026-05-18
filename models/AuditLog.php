@@ -72,4 +72,62 @@ class AuditLog {
             return [];
         }
     }
+
+    /**
+     * getFiltered
+     * Returns rows and total count applying optional filters and pagination.
+     * Filters supported: user (partial name), action, from (YYYY-MM-DD), to (YYYY-MM-DD)
+     */
+    public function getFiltered(array $filters = [], int $limit = 20, int $offset = 0): array {
+        if (!$this->existsTable()) {
+            return ['rows' => [], 'total' => 0];
+        }
+
+        $where = [];
+        $params = [];
+
+        if (!empty($filters['user'])) {
+            $where[] = 'u.full_name LIKE :user';
+            $params[':user'] = '%' . $filters['user'] . '%';
+        }
+        if (!empty($filters['action'])) {
+            $where[] = 'a.action = :action';
+            $params[':action'] = $filters['action'];
+        }
+        if (!empty($filters['from'])) {
+            $where[] = "DATE(a.created_at) >= :from";
+            $params[':from'] = $filters['from'];
+        }
+        if (!empty($filters['to'])) {
+            $where[] = "DATE(a.created_at) <= :to";
+            $params[':to'] = $filters['to'];
+        }
+
+        $whereSql = '';
+        if (!empty($where)) {
+            $whereSql = 'WHERE ' . implode(' AND ', $where);
+        }
+
+        try {
+            // Total count
+            $countSql = "SELECT COUNT(*) AS cnt FROM {$this->table} a LEFT JOIN users u ON u.id = a.user_id {$whereSql}";
+            $countStmt = $this->conn->prepare($countSql);
+            foreach ($params as $k => $v) { $countStmt->bindValue($k, $v); }
+            $countStmt->execute();
+            $total = (int)$countStmt->fetchColumn(0);
+
+            // Rows
+            $sql = "SELECT a.*, u.full_name AS user_name FROM {$this->table} a LEFT JOIN users u ON u.id = a.user_id {$whereSql} ORDER BY a.created_at DESC, a.id DESC LIMIT :limit OFFSET :offset";
+            $stmt = $this->conn->prepare($sql);
+            foreach ($params as $k => $v) { $stmt->bindValue($k, $v); }
+            $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+            $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+            $stmt->execute();
+            $rows = $stmt->fetchAll(PDO::FETCH_OBJ);
+
+            return ['rows' => $rows, 'total' => $total];
+        } catch (Throwable $e) {
+            return ['rows' => [], 'total' => 0];
+        }
+    }
 }

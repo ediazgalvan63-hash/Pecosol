@@ -1,13 +1,15 @@
 <?php
 $role = $_SESSION['role'] ?? '';
-$useEmployeeHeader = in_array($role, ['comercial', 'logistica', 'finanzas', 'estrategico', 'gerencia'], true);
-if ($useEmployeeHeader) {
-    include __DIR__ . '/../../employee/partials/header.php';
-} else {
-    include __DIR__ . '/../partials/header.php';
-}
+$useEmployeeHeader = in_array($role, ['comercial', 'logistica', 'finanzas', 'estrategico', 'gerencia', 'supervisor'], true);
 ?>
-<style>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nueva orden de trabajo</title>
+  <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/style.css">
+  <style>
       body {
         background-color: #1a1a2e;
         background-image: url('<?php echo BASE_URL; ?>assets/img/overlapping-circles.svg');
@@ -104,7 +106,7 @@ if ($useEmployeeHeader) {
       textarea { resize: vertical; min-height: 92px; }
 
       select:focus, input:focus, textarea:focus {
-        border-color: rgba(0,255,240,0.55);
+        border-color: #00fff0;
         box-shadow: 0 0 0 4px rgba(0,255,240,0.10);
       }
 
@@ -134,6 +136,15 @@ if ($useEmployeeHeader) {
         transition: transform .12s ease, background-color .12s ease;
       }
     </style>
+</head>
+<body>
+<?php
+if ($useEmployeeHeader) {
+    include __DIR__ . '/../../employee/partials/header.php';
+} else {
+    include __DIR__ . '/../partials/header.php';
+}
+?>
 <div class="container">
     <div class="page-head">
       <div>
@@ -207,3 +218,5 @@ if ($useEmployeeHeader) {
       </div>
     </form>
 </div>
+</body>
+</html>

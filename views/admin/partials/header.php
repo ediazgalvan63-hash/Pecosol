@@ -29,7 +29,7 @@ if ($showTzDebug && !empty($_SESSION['role']) && $_SESSION['role'] === 'admin') 
     --danger: #ff6b6b;
   }
 
-  header {
+  header.main-header {
     width: 100%;
     background-color: var(--bg);
     border-bottom: 2px solid var(--accent);
@@ -57,11 +57,11 @@ if ($showTzDebug && !empty($_SESSION['role']) && $_SESSION['role'] === 'admin') 
   }
 
   .brand img {
-    height: 44px;
+    height: 56px;
   }
 
   .brand span {
-    font-size: 1.6rem;
+    font-size: 1.8rem;
     font-weight: bold;
     color: var(--accent);
   }
@@ -190,7 +190,7 @@ if ($showTzDebug && !empty($_SESSION['role']) && $_SESSION['role'] === 'admin') 
 </style>
 
 <!-- ==== HEADER HTML ==== -->
-<header>
+<header class="main-header">
   <?php if ($tzDebug !== ''): ?>
     <div style="padding:6px 48px; background:#0f172a; color:#9ae7ff; font-size:12px; border-bottom:1px solid rgba(0,255,240,0.15);">
       <?php echo htmlspecialchars($tzDebug); ?>

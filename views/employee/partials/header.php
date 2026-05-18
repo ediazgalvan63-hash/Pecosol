@@ -21,11 +21,23 @@ if (in_array($role, ['employee', 'comercial'], true)) {
   $links[] = ['Registrar Venta', BASE_URL . 'index.php?controller=employee&action=addSaleForm'];
   $links[] = ['Mis Ventas', BASE_URL . 'index.php?controller=employee&action=listSalesEmployee'];
   $links[] = ['Productos', BASE_URL . 'index.php?controller=employee&action=listProductsEmployee'];
+  if ($role === 'comercial') {
+    $links[] = ['Órdenes', BASE_URL . 'index.php?controller=dashboard&action=logisticsWorkOrders'];
+  }
 } elseif ($role === 'logistica') {
   $links[] = ['Inventario', BASE_URL . 'index.php?controller=dashboard&action=logisticsInventory'];
   $links[] = ['Reconteo', BASE_URL . 'index.php?controller=dashboard&action=logisticsRecount'];
   $links[] = ['Compras', BASE_URL . 'index.php?controller=dashboard&action=logisticsPurchases'];
   $links[] = ['Órdenes', BASE_URL . 'index.php?controller=dashboard&action=logisticsWorkOrders'];
+} elseif ($role === 'supervisor') {
+  $links[] = ['Ventas', BASE_URL . 'index.php?controller=admin&action=listSalesAdmin'];
+  $links[] = ['Productos', BASE_URL . 'index.php?controller=admin&action=listProducts'];
+  $links[] = ['Alertas', BASE_URL . 'index.php?controller=dashboard&action=supervisorLowStockAlerts'];
+  $links[] = ['Inventario', BASE_URL . 'index.php?controller=dashboard&action=logisticsInventory'];
+  $links[] = ['Compras', BASE_URL . 'index.php?controller=dashboard&action=logisticsPurchases'];
+  $links[] = ['Órdenes', BASE_URL . 'index.php?controller=dashboard&action=logisticsWorkOrders'];
+  $links[] = ['Reconteo', BASE_URL . 'index.php?controller=dashboard&action=logisticsRecount'];
+  $links[] = ['Reportes', BASE_URL . 'index.php?controller=dashboard&action=supervisorReports'];
 } elseif ($role === 'finanzas') {
   $links[] = ['Ventas', BASE_URL . 'index.php?controller=dashboard&action=financeSales'];
   $links[] = ['Reportes', BASE_URL . 'index.php?controller=dashboard&action=financeReports'];
@@ -54,7 +66,7 @@ if (in_array($role, ['employee', 'comercial'], true)) {
     width: 100%;
     background-color: var(--bg);
     border-bottom: 2px solid var(--accent);
-    box-shadow: 0 4px 12px rgba(0,255,240,0.1);
+    box-shadow: 0 4px 12px rgba(0,255,240,0.10);
     position: sticky;
     top: 0;
     z-index: 100;

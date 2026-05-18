@@ -33,7 +33,7 @@ if (session_status() === PHP_SESSION_NONE) {
     .hero h1 {
       margin: 0;
       font-size: 2.5rem;
-      color: #60a5fa;
+      color: #00fff0;
     }
     .hero p {
       margin: 8px 0 0;
@@ -48,8 +48,8 @@ if (session_status() === PHP_SESSION_NONE) {
     }
     .action-box {
       display: block;
-      background: rgba(96, 165, 250, 0.1);
-      border: 1px solid rgba(96, 165, 250, 0.3);
+      background: rgba(0, 255, 240, 0.08);
+      border: 1px solid rgba(0, 255, 240, 0.18);
       border-radius: 12px;
       padding: 20px;
       text-decoration: none;
@@ -57,13 +57,13 @@ if (session_status() === PHP_SESSION_NONE) {
       transition: all 0.3s ease;
     }
     .action-box:hover {
-      background: rgba(96, 165, 250, 0.15);
-      border-color: rgba(96, 165, 250, 0.5);
+      background: rgba(0, 255, 240, 0.12);
+      border-color: rgba(0, 255, 240, 0.3);
       transform: translateY(-2px);
     }
     .action-box h4 {
       margin: 0 0 8px;
-      color: #60a5fa;
+      color: #00fff0;
       font-size: 1.2rem;
     }
     .action-box p {
@@ -80,14 +80,14 @@ if (session_status() === PHP_SESSION_NONE) {
     }
     .kpi-card {
       background: rgba(22, 33, 62, 0.8);
-      border: 1px solid rgba(96, 165, 250, 0.2);
+      border: 1px solid rgba(0, 255, 240, 0.16);
       border-radius: 12px;
       padding: 20px;
       text-align: center;
     }
     .kpi-card h3 {
       margin: 0 0 12px;
-      color: #60a5fa;
+      color: #00fff0;
       font-size: 1rem;
       font-weight: 600;
     }
@@ -109,16 +109,16 @@ if (session_status() === PHP_SESSION_NONE) {
     }
     .panel {
       background: rgba(22, 33, 62, 0.8);
-      border: 1px solid rgba(96, 165, 250, 0.2);
+      border: 1px solid rgba(0, 255, 240, 0.16);
       border-radius: 12px;
       overflow: hidden;
     }
     .panel header {
-      background: rgba(96, 165, 250, 0.1);
-      color: #60a5fa;
+      background: rgba(0, 255, 240, 0.08);
+      color: #00fff0;
       padding: 16px 20px;
       font-weight: 600;
-      border-bottom: 1px solid rgba(96, 165, 250, 0.2);
+      border-bottom: 1px solid rgba(0, 255, 240, 0.16);
     }
     .panel-body {
       padding: 20px;
@@ -128,7 +128,7 @@ if (session_status() === PHP_SESSION_NONE) {
     }
     .section-title {
       margin: 0 0 16px;
-      color: #60a5fa;
+      color: #00fff0;
       font-size: 1.5rem;
     }
     table {
@@ -139,23 +139,23 @@ if (session_status() === PHP_SESSION_NONE) {
       overflow: hidden;
     }
     thead th {
-      background: rgba(96, 165, 250, 0.1);
+      background: rgba(0, 255, 240, 0.08);
       color: #a8c7e0;
       padding: 12px 16px;
       text-align: left;
       font-weight: 600;
-      border-bottom: 1px solid rgba(96, 165, 250, 0.2);
+      border-bottom: 1px solid rgba(0, 255, 240, 0.16);
     }
     tbody td {
       padding: 12px 16px;
-      border-bottom: 1px solid rgba(96, 165, 250, 0.1);
+      border-bottom: 1px solid rgba(0, 255, 240, 0.08);
       color: #e8f4ff;
     }
     tbody tr:hover {
-      background: rgba(96, 165, 250, 0.05);
+      background: rgba(0, 255, 240, 0.05);
     }
     .badge {
-      background: #60a5fa;
+      background: #00fff0;
       color: #0a0f1a;
       padding: 4px 8px;
       border-radius: 12px;
@@ -234,7 +234,7 @@ if (session_status() === PHP_SESSION_NONE) {
                 <th>Producto</th>
                 <th>Proveedor</th>
                 <th>Cantidad</th>
-                <th>Precio Unit.</th>
+                <th>Precio Unitario (S/.)</th>
                 <th>Fecha y Hora</th>
               </tr>
             </thead>
@@ -248,7 +248,7 @@ if (session_status() === PHP_SESSION_NONE) {
                     <td><?php echo htmlspecialchars($purchase->product_name); ?></td>
                     <td><?php echo htmlspecialchars($purchase->supplier); ?></td>
                     <td><?php echo number_format($purchase->quantity); ?></td>
-                    <td><?php echo number_format($purchase->price, 2); ?> Bs</td>
+                    <td>S/. <?php echo number_format($purchase->price, 2, '.', ','); ?></td>
                     <td><?php echo htmlspecialchars(date('d/m/Y H:i', strtotime($purchase->purchase_date))); ?></td>
                   </tr>
                 <?php endforeach; ?>

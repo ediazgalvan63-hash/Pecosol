@@ -14,10 +14,11 @@ class AdminController {
         $allowedActions = [
             'admin' => ['*'],  // Control total del sistema
             'gerencia' => ['reports', 'exportCurrentInventoryCsv', 'exportMovementsCsv', 'exportSalesCsv'],  // Solo reportes ejecutivos
-            'comercial' => ['listSalesAdmin', 'addSaleAdminForm', 'storeSaleAdmin'],  // Gestión de ventas
+            'comercial' => ['listSalesAdmin', 'addSaleAdminForm', 'storeSaleAdmin', 'listProducts', 'listInventoryMovements', 'listWorkOrders', 'addWorkOrderForm', 'storeWorkOrder'],  // Gestión de ventas, consulta de stock/kardex y creación de órdenes
             'logistica' => ['listInventoryMovements', 'inventoryRecountForm', 'processInventoryRecount', 'listWorkOrders', 'addWorkOrderForm', 'storeWorkOrder', 'updateWorkOrderStatus', 'listPurchases', 'addPurchaseForm', 'storePurchase', 'editPurchaseForm', 'updatePurchase', 'deletePurchase'],  // Operación de almacén y compras
             'finanzas' => ['listPurchases', 'listSalesAdmin', 'editSaleAdminForm', 'updateSaleAdmin', 'deleteSaleAdmin', 'reports', 'exportCurrentInventoryCsv', 'exportMovementsCsv', 'exportSalesCsv'],  // Control financiero y CxP/CxC
             'estrategico' => ['listProducts', 'reports', 'exportCurrentInventoryCsv', 'exportMovementsCsv', 'exportSalesCsv'],  // Datos maestros y análisis
+            'supervisor' => ['listProducts', 'addProductForm', 'storeProduct', 'editProductForm', 'updateProduct', 'deleteProduct', 'listInventoryMovements', 'inventoryRecountForm', 'processInventoryRecount', 'lowStockAlerts', 'listWorkOrders', 'addWorkOrderForm', 'storeWorkOrder', 'updateWorkOrderStatus', 'listPurchases', 'addPurchaseForm', 'storePurchase', 'editPurchaseForm', 'updatePurchase', 'deletePurchase', 'listSalesAdmin', 'addSaleAdminForm', 'storeSaleAdmin', 'editSaleAdminForm', 'updateSaleAdmin', 'deleteSaleAdmin', 'downloadSaleInvoicePdf', 'reports', 'exportCurrentInventoryCsv', 'exportMovementsCsv', 'exportSalesCsv'],
         ];
 
         if ($role === 'admin') {
@@ -216,18 +217,7 @@ class AdminController {
     // Validar campos
     if ($username === '' || $password === '' || $fullName === '' || $email === '' || $role === '') {
         $error = 'Todos los campos son obligatorios, incluyendo el rol.';
-    } elseif (!in_array($role, ['admin','gerencia','comercial','logistica','finanzas','estrategico'], true)) {
-        $error = 'Rol no válido.';
-    } else {
-        // Verificar usuario existente
-        $existe = $this->userModel->findByUsername($username);
-        if ($existe) {
-            $error = 'El nombre de usuario ya existe.';
-        }
-    }
-
-    if (!empty($error)) {
-        // Reenviar a la vista con el error y valores ya escritos
+        } elseif (!in_array($role, ['admin','gerencia','comercial','logistica','finanzas','estrategico','supervisor'], true)) {
         require_once __DIR__ . '/../views/admin/employee/add_employee.php';
         return;
     }
@@ -276,7 +266,7 @@ class AdminController {
 
         if ($id <= 0 || $fullName === '' || $email === '' || $role === '') {
             $error = 'ID inválido o campos obligatorios vacíos.';
-        } elseif (!in_array($role, ['admin','gerencia','comercial','logistica','finanzas','estrategico'], true)) {
+        } elseif (!in_array($role, ['admin','gerencia','comercial','logistica','finanzas','estrategico','supervisor'], true)) {
             $error = 'Rol no válido.';
         } else {
             $empleadoExistente = $this->userModel->findById($id);
@@ -366,7 +356,7 @@ class AdminController {
 
     public function addSaleAdminForm() {
         $role = $_SESSION['role'] ?? '';
-        if (!in_array($role, ['admin', 'comercial'], true)) {
+        if (!in_array($role, ['admin', 'comercial', 'supervisor'], true)) {
             header('Location: index.php?controller=dashboard&action=home');
             exit;
         }
@@ -1043,7 +1033,7 @@ class AdminController {
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Ventas');
 
-        $headers = ['ID', 'Fecha', 'Empleado', 'Producto', 'Cantidad', 'Precio Unitario', 'Total', 'Cliente', 'Descripción'];
+        $headers = ['ID', 'Fecha', 'Empleado', 'Producto', 'Cantidad', 'Precio Unitario (S/.)', 'Total (S/.)', 'Cliente', 'Descripción'];
         $sheet->fromArray($headers, null, 'A1');
 
         $row = 2;

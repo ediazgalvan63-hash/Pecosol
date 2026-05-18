@@ -41,7 +41,7 @@
 <body>
 <?php
 $role = $_SESSION['role'] ?? '';
-$useEmployeeHeader = in_array($role, ['comercial', 'logistica', 'finanzas', 'estrategico', 'gerencia'], true);
+$useEmployeeHeader = in_array($role, ['comercial', 'logistica', 'finanzas', 'estrategico', 'gerencia', 'supervisor'], true);
 if ($useEmployeeHeader) {
     include __DIR__ . '/../../employee/partials/header.php';
 } else {

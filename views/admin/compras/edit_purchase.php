@@ -38,7 +38,7 @@
 
       .page-head h1 {
         margin: 0;
-        color: #60a5fa;
+        color: #00fff0;
         font-size: 2rem;
         line-height: 1.15;
       }
@@ -51,7 +51,7 @@
 
       .form-shell {
         background: rgba(22, 33, 62, 0.94);
-        border: 1px solid rgba(96, 165, 250, 0.18);
+        border: 1px solid rgba(0, 255, 240, 0.18);
         border-radius: 16px;
         box-shadow: 0 12px 34px rgba(0,0,0,0.35);
         overflow: hidden;
@@ -82,7 +82,7 @@
       select, input, textarea {
         width: 100%;
         background: #0f172a;
-        border: 1px solid rgba(96, 165, 250, 0.22);
+        border: 1px solid rgba(0, 255, 240, 0.22);
         color: #eaeaea;
         border-radius: 12px;
         padding: 12px 12px;
@@ -94,8 +94,8 @@
       textarea { resize: vertical; min-height: 92px; }
 
       select:focus, input:focus, textarea:focus {
-        border-color: rgba(96, 165, 250, 0.55);
-        box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.10);
+        border-color: rgba(0, 255, 240, 0.55);
+        box-shadow: 0 0 0 4px rgba(0, 255, 240, 0.10);
       }
 
       .hint {
@@ -136,11 +136,11 @@
 <body>
 <?php
 $role = $_SESSION['role'] ?? '';
-$useEmployeeHeader = in_array($role, ['comercial', 'logistica', 'finanzas', 'estrategico', 'gerencia'], true);
+$useEmployeeHeader = in_array($role, ['comercial', 'logistica', 'finanzas', 'estrategico', 'gerencia', 'supervisor'], true);
 if ($useEmployeeHeader) {
-    include __DIR__ . '/../../employee/partials/header.php';
+  include __DIR__ . '/../../employee/partials/header.php';
 } else {
-    include __DIR__ . '/../partials/header.php';
+  include __DIR__ . '/../partials/header.php';
 }
 ?>
 <div class="container">
@@ -178,9 +178,9 @@ if ($useEmployeeHeader) {
                         <div class="hint">Unidades adquiridas.</div>
                     </div>
                     <div>
-                        <label for="price">Precio Unitario</label>
+                        <label for="price">Precio Unitario (S/.)</label>
                         <input type="number" name="price" id="price" value="<?php echo htmlspecialchars($compra->price ?? 0); ?>" min="0" step="0.01">
-                        <div class="hint">Costo por unidad.</div>
+                        <div class="hint">Costo por unidad en soles.</div>
                     </div>
                 </div>
                 <div style="margin-top: 16px;">
@@ -195,7 +195,7 @@ if ($useEmployeeHeader) {
                 </div>
                 <div class="actions">
                     <button type="submit" class="btn btn-primary">Actualizar Compra</button>
-                    <a href="<?php echo BASE_URL; ?>index.php?controller=admin&action=listPurchases" class="btn btn-secondary">Cancelar</a>
+                    <a href="<?php echo BASE_URL; ?>index.php?controller=<?php echo $useEmployeeHeader ? 'dashboard&action=logisticsPurchases' : 'admin&action=listPurchases'; ?>" class="btn btn-secondary">Cancelar</a>
                 </div>
             </div>
         </div>

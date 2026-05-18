@@ -33,7 +33,7 @@ if (session_status() === PHP_SESSION_NONE) {
     .hero h1 {
       margin: 0;
       font-size: 2.5rem;
-      color: #4ade80;
+      color: #00fff0;
     }
     .hero p {
       margin: 8px 0 0;
@@ -49,7 +49,7 @@ if (session_status() === PHP_SESSION_NONE) {
     }
     .kpi-card {
       background: rgba(8, 16, 32, 0.9);
-      border: 1px solid rgba(74, 222, 128, 0.18);
+      border: 1px solid rgba(0, 255, 240, 0.16);
       border-radius: 20px;
       padding: 24px 22px;
       box-shadow: 0 20px 36px rgba(0, 0, 0, 0.15);
@@ -60,7 +60,7 @@ if (session_status() === PHP_SESSION_NONE) {
       font-size: 0.9rem;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: #7cc8a0;
+      color: #00fff0;
     }
     .kpi-card strong {
       display: block;
@@ -81,14 +81,14 @@ if (session_status() === PHP_SESSION_NONE) {
     }
     .panel {
       background: rgba(8, 16, 32, 0.92);
-      border: 1px solid rgba(74, 222, 128, 0.16);
+      border: 1px solid rgba(0, 255, 240, 0.16);
       border-radius: 22px;
       overflow: hidden;
       box-shadow: 0 18px 34px rgba(0, 0, 0, 0.18);
     }
     .panel header {
       padding: 18px 22px;
-      background: rgba(74, 222, 128, 0.08);
+      background: rgba(0, 255, 240, 0.08);
       color: #c8e6d0;
       font-weight: 700;
       letter-spacing: 0.02em;
@@ -120,7 +120,7 @@ if (session_status() === PHP_SESSION_NONE) {
       border-radius: 999px;
       font-size: 0.88rem;
       font-weight: 700;
-      background: rgba(74, 222, 128, 0.14);
+      background: rgba(0, 255, 240, 0.14);
       color: #d4f5d8;
     }
     .section-title {
@@ -163,13 +163,13 @@ if (session_status() === PHP_SESSION_NONE) {
       border-radius: 18px;
       padding: 18px;
       background: rgba(10, 24, 48, 0.9);
-      border: 1px solid rgba(74, 222, 128, 0.12);
+      border: 1px solid rgba(0, 255, 240, 0.12);
       color: #e0f2e8;
       text-decoration: none;
     }
     .action-box h4 {
       margin: 0 0 8px;
-      color: #9fd4a8;
+      color: #00fff0;
       font-size: 0.95rem;
       text-decoration: none;
     }
@@ -346,12 +346,12 @@ if (session_status() === PHP_SESSION_NONE) {
         datasets: [{
           label: 'CxC S/.',
           data: cxcData,
-          borderColor: '#4ade80',
-          backgroundColor: 'rgba(74, 222, 128, 0.18)',
+          borderColor: '#00fff0',
+          backgroundColor: 'rgba(0, 255, 240, 0.18)',
           fill: true,
           tension: 0.32,
           pointRadius: 4,
-          pointBackgroundColor: '#4ade80',
+          pointBackgroundColor: '#00fff0',
           pointBorderColor: '#ffffff',
         }]
       },

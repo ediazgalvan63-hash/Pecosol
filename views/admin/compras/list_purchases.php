@@ -41,8 +41,8 @@
             padding:4px 10px;
             border-radius:999px;
             font-weight:700;
-            color:#0c2f2f;
-            background:#6df7db;
+            color:#0a0f1a;
+            background:#00fff0;
         }
         .muted { color:#a6c6d8; }
         .btn-icon {
@@ -54,7 +54,7 @@
 <body>
 <?php
 $role = $_SESSION['role'] ?? '';
-$useEmployeeHeader = in_array($role, ['comercial', 'logistica', 'finanzas', 'estrategico', 'gerencia'], true);
+$useEmployeeHeader = in_array($role, ['comercial', 'logistica', 'finanzas', 'estrategico', 'gerencia', 'supervisor'], true);
 if ($useEmployeeHeader) {
     include __DIR__ . '/../../employee/partials/header.php';
 } else {
@@ -64,7 +64,7 @@ if ($useEmployeeHeader) {
 <div class="container" style="max-width: 1100px; margin: 32px auto;">
     <div class="toolbar">
         <h1>Compras / Abastecimiento</h1>
-        <?php if (in_array($role, ['admin', 'logistica'])): ?>
+        <?php if (in_array($role, ['admin', 'logistica', 'supervisor'])): ?>
         <a href="index.php?controller=admin&action=addPurchaseForm" class="btn btn-add-large">
             <span class="btn-icon">+</span>
             Agregar Compra
@@ -78,12 +78,12 @@ if ($useEmployeeHeader) {
                     <th>Fecha</th>
                     <th>Producto</th>
                     <th>Cantidad</th>
-                    <th>Precio Unit.</th>
-                    <th>Precio Total</th>
+                    <th>Precio Unitario (S/.)</th>
+                    <th>Precio Total (S/.)</th>
                     <th>Proveedor</th>
                     <th>Registrado por</th>
                     <th>Notas</th>
-                    <?php if (in_array($role, ['admin', 'logistica'])): ?>
+                    <?php if (in_array($role, ['admin', 'logistica', 'supervisor'])): ?>
                     <th>Acciones</th>
                     <?php endif; ?>
                 </tr>
@@ -97,12 +97,12 @@ if ($useEmployeeHeader) {
                             <td><?php echo htmlspecialchars($c->purchase_date); ?></td>
                             <td><?php echo htmlspecialchars($c->product_name); ?></td>
                             <td><span class="qty-badge">+<?php echo (int)$c->quantity; ?></span></td>
-                            <td><?php echo number_format($c->price, 2); ?> Bs</td>
-                            <td><?php echo number_format($totalCompra, 2); ?> Bs</td>
+                            <td>S/. <?php echo number_format($c->price, 2, '.', ','); ?></td>
+                            <td>S/. <?php echo number_format($totalCompra, 2, '.', ','); ?></td>
                             <td><?php echo htmlspecialchars($c->supplier); ?></td>
                             <td><?php echo htmlspecialchars($c->user_name); ?></td>
                             <td class="muted"><?php echo htmlspecialchars($c->notes ?? 'Sin observaciones'); ?></td>
-                            <?php if (in_array($role, ['admin', 'logistica'])): ?>
+                            <?php if (in_array($role, ['admin', 'logistica', 'supervisor'])): ?>
                             <td>
                                 <a href="index.php?controller=admin&action=editPurchaseForm&id=<?php echo $c->id; ?>" class="btn btn-edit">Editar</a>
                                 <a href="index.php?controller=admin&action=deletePurchase&id=<?php echo $c->id; ?>" class="btn btn-delete" onclick="return confirm('¿Eliminar esta compra?')">Eliminar</a>
@@ -112,12 +112,12 @@ if ($useEmployeeHeader) {
                     <?php endforeach; ?>
                     <tr style="background: rgba(0,255,240,0.08); font-weight:700;">
                         <td colspan="4">Total general</td>
-                        <td><?php echo number_format($totalGeneral, 2); ?> Bs</td>
-                        <td colspan="<?php echo in_array($role, ['admin', 'logistica']) ? 4 : 3; ?>"></td>
+                        <td>S/. <?php echo number_format($totalGeneral, 2, '.', ','); ?></td>
+                        <td colspan="<?php echo in_array($role, ['admin', 'logistica', 'supervisor']) ? 4 : 3; ?>"></td>
                     </tr>
                 <?php else: ?>
                     <tr>
-                        <td colspan="<?php echo in_array($role, ['admin', 'logistica']) ? 8 : 7; ?>" class="muted">No hay compras registradas todavía.</td>
+                        <td colspan="<?php echo in_array($role, ['admin', 'logistica', 'supervisor']) ? 8 : 7; ?>" class="muted">No hay compras registradas todavía.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>

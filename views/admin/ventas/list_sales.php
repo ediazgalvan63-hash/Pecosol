@@ -119,7 +119,7 @@
 
 <?php
 $role = $_SESSION['role'] ?? '';
-$useEmployeeHeader = in_array($role, ['comercial', 'logistica', 'finanzas', 'estrategico', 'gerencia'], true);
+$useEmployeeHeader = in_array($role, ['comercial', 'logistica', 'supervisor', 'finanzas', 'estrategico', 'gerencia'], true);
 if ($useEmployeeHeader) {
     include __DIR__ . '/../../employee/partials/header.php';
 } else {
@@ -155,8 +155,8 @@ if ($useEmployeeHeader) {
           <th>Empleado</th>
           <th>Producto</th>
           <th>Cantidad</th>
-          <th>Precio Unitario</th>
-          <th>Total</th>
+          <th>Precio Unitario (S/.)</th>
+          <th>Total (S/.)</th>
           <th>Cliente</th>
           <th>Descripción</th>
           <th>Fecha</th>
@@ -188,8 +188,8 @@ if ($useEmployeeHeader) {
                 <a 
                   href="<?php echo BASE_URL; ?>index.php?controller=admin&action=deleteSaleAdmin&id=<?php echo $v->id; ?>" 
                   class="delete"
-                  title="Eliminar Venta"
-                  onclick="return confirm('¿Seguro deseas eliminar esta venta? Esto devolverá el stock.');"
+                  title="Anular Venta"
+                  onclick="return confirm('¿Seguro deseas anular esta venta? Esto devolverá el stock.');"
                 >🗑️</a>
               </div>
             </td>

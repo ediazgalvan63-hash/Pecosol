@@ -3,6 +3,10 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+$role = $_SESSION['role'] ?? '';
+$headerFile = in_array($role, ['supervisor', 'comercial', 'logistica', 'finanzas', 'estrategico', 'gerencia'], true)
+    ? __DIR__ . '/../../employee/partials/header.php'
+    : __DIR__ . '/../partials/header.php';
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -48,7 +52,7 @@ if (session_status() === PHP_SESSION_NONE) {
     </style>
 </head>
 <body>
-<?php include __DIR__ . '/../partials/header.php'; ?>
+<?php include $headerFile; ?>
 <div class="container">
     <div class="page-header">
         <h1>Alertas de Bajo Stock</h1>

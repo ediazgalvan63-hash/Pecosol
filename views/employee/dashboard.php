@@ -141,8 +141,8 @@ if (session_status() === PHP_SESSION_NONE) {
             <th>ID</th>
             <th>Producto</th>
             <th>Cantidad</th>
-            <th>Precio Unit.</th>
-            <th>Total</th>
+            <th>Precio Unitario (S/.)</th>
+            <th>Total (S/.)</th>
             <th>Fecha</th>
           </tr>
         </thead>

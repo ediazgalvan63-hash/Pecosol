@@ -59,7 +59,7 @@ $movementType = htmlspecialchars($_GET['movement_type'] ?? '');
 <body>
 <?php
 $role = $_SESSION['role'] ?? '';
-$useEmployeeHeader = in_array($role, ['comercial', 'logistica', 'finanzas', 'estrategico', 'gerencia'], true);
+$useEmployeeHeader = in_array($role, ['comercial', 'logistica', 'supervisor', 'finanzas', 'estrategico', 'gerencia'], true);
 if ($useEmployeeHeader) {
     include __DIR__ . '/../../employee/partials/header.php';
 } else {

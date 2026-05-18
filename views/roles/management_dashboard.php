@@ -28,7 +28,7 @@ if (session_status() === PHP_SESSION_NONE) {
     .header-bar h1 {
       margin: 0;
       font-size: 2rem;
-      color: #7fffd4;
+      color: #00fff0;
     }
     .header-bar p {
       margin: 8px 0 0;
@@ -49,7 +49,7 @@ if (session_status() === PHP_SESSION_NONE) {
     }
     .kpi-card {
       background: rgba(7, 16, 38, 0.96);
-      border: 1px solid rgba(127,255,212,0.14);
+      border: 1px solid rgba(0,255,240,0.14);
       border-radius: 20px;
       padding: 22px;
       box-shadow: 0 20px 35px rgba(0,0,0,0.12);
@@ -80,14 +80,14 @@ if (session_status() === PHP_SESSION_NONE) {
     }
     .panel-card {
       background: rgba(7, 16, 38, 0.96);
-      border: 1px solid rgba(127,255,212,0.12);
+      border: 1px solid rgba(0,255,240,0.12);
       border-radius: 22px;
       overflow: hidden;
       box-shadow: 0 18px 34px rgba(0,0,0,0.16);
     }
     .panel-card header {
       padding: 18px 22px;
-      background: rgba(127,255,212,0.06);
+      background: rgba(0,255,240,0.06);
       font-weight: 700;
       color: #cfefff;
       letter-spacing: 0.02em;
@@ -342,12 +342,12 @@ if (session_status() === PHP_SESSION_NONE) {
         datasets: [{
           label: 'Ventas semanales',
           data: data,
-          borderColor: '#7fffd4',
-          backgroundColor: 'rgba(127,255,212,0.16)',
+          borderColor: '#00fff0',
+          backgroundColor: 'rgba(0, 255, 240, 0.16)',
           fill: true,
           tension: 0.3,
           pointRadius: 4,
-          pointBackgroundColor: '#7fffd4',
+          pointBackgroundColor: '#00fff0',
           pointBorderColor: '#ffffff',
           pointHoverRadius: 6,
         }]

@@ -31,200 +31,20 @@
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.4.0/dist/css/bootstrap.min.css"
     rel="stylesheet"
   />
+  <!-- Custom app styles -->
+  <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/style.css" />
 
-  <!-- Estilos generales -->
-  <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/style.css">
-
-
-  <style>
-    body {
-  background-color: #1a1a2e;
-  background-image: url('<?php echo BASE_URL; ?>assets/img/overlapping-circles.svg');
-  background-repeat: repeat;
-  background-size: 60px;
-  background-attachment: fixed;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: #eaeaea;
-  margin: 0;
-  padding: 0;
-}
-
-/* Container general */
-.container {
-  max-width: 1100px;
-  margin: 50px auto;
-  padding: 0 20px;
-}
-
-/* Título */
-h1 {
-  text-align: center;
-  color: #00fff0;
-  margin-bottom: 40px;
-}
-
-/* Tarjetas de resumen */
-    .section-title {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-      gap: 12px;
-    }
-    .section-title h2 {
-      margin: 0;
-      color: #00fff0;
-      font-size: 1.4rem;
-    }
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 20px;
-      margin-bottom: 40px;
-    }
-
-    .card {
-      background-color: #0f3460;
-      border-radius: 16px;
-      padding: 25px;
-      box-shadow: 0 0 20px rgba(0,255,240,0.1);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-      border: 1px solid rgba(0,255,240,0.16);
-    }
-    .card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 10px 28px rgba(0,255,240,0.18);
-    }
-    .card h3 {
-      color: #a0a0a0;
-      font-size: 0.95rem;
-      margin-bottom: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-    .card p {
-      font-size: 32px;
-      font-weight: 700;
-      color: #00fff0;
-      margin: 0;
-    }
-    .card small {
-      display: block;
-      color: #9ae7ff;
-      margin-top: 10px;
-    }
-
-    .kpi-group {
-      margin-bottom: 40px;
-    }
-
-  background-color: #16213e;
-  border-radius: 16px;
-  padding: 25px;
-  margin-bottom: 40px;
-  box-shadow: 0 0 15px rgba(0,255,240,0.08);
-}
-.chart-container h2 {
-  color: #00fff0;
-  margin-bottom: 20px;
-  font-size: 20px;
-}
-
-/* Tabla de ventas */
-.lst-ventas {
-  color: #00fff0;
-  margin-bottom: 15px;
-  font-size: 20px;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  background-color: #16213e;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 0 12px rgba(0,255,240,0.1);
-}
-
-th, td {
-  padding: 14px 12px;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-  text-align: left;
-}
-
-th {
-  background-color: #0f3460;
-  color: #00fff0;
-  font-weight: 600;
-}
-
-tr:last-child td {
-  border-bottom: none;
-}
-
-/* ─── NAVBAR MODERNO ───────────────────────────── */
-.navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #0f172a; 
-  padding: 12px 30px;
-  border-bottom: 2px solid #00fff0;
-  box-shadow: 0 2px 10px rgba(0, 255, 240, 0.05);
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-}
-
-.navbar-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.navbar-left img {
-  height: 28px;
-}
-
-.navbar-left span {
-  font-size: 18px;
-  font-weight: bold;
-  color: #00fff0;
-}
-
-.navbar-right {
-  display: flex;
-  align-items: center;
-  gap: 25px;
-}
-
-.navbar-right a {
-  text-decoration: none;
-  color: #e0e0e0;
-  font-weight: 500;
-  transition: color 0.2s;
-}
-
-.navbar-right a:hover {
-  color: #00fff0;
-}
-
-.navbar-right .logout {
-  color: #ff6b6b;
-  font-weight: bold;
-}
-
-
-  </style>
 </head>
 <body>
 
   <!-- Header -->
   <?php include __DIR__ . '/partials/header.php'; ?>
 
-  <div class="container">
-    <!-- Título principal -->
-    <h1>Panel de Administración</h1>
+  <main class="page-shell">
+    <section class="header-panel">
+      <h1>Panel de Administración</h1>
+      <p>Monitorea la operación comercial y de inventario con una experiencia uniforme y profesional.</p>
+    </section>
 
     <div class="kpi-group">
       <div class="section-title">
@@ -243,7 +63,7 @@ tr:last-child td {
         </div>
         <div class="card">
           <h3>Productos con bajo stock</h3>
-          <p style="color:#ff8b8b;"><?php echo (int)$productosBajoStock; ?></p>
+          <p class="warning-text"><?php echo (int)$productosBajoStock; ?></p>
           <small>Alertas de reabastecimiento activas</small>
         </div>
         <div class="card">
@@ -284,9 +104,9 @@ tr:last-child td {
     </div>
 
     <!-- Últimas Ventas -->
-    <h2 class="lst-ventas">Últimas Ventas</h2>
+    <h2 class="section-title">Últimas Ventas</h2>
     <?php if (!empty($ultimasVentas)): ?>
-      <table>
+      <table class="dashboard-table">
         <thead>
           <tr>
             <th>ID</th>
@@ -294,8 +114,8 @@ tr:last-child td {
             <th>Producto</th>
             <th>Cliente</th>
             <th>Cantidad</th>
-            <th>Precio Unit.</th>
-            <th>Total</th>
+            <th>Precio Unitario (S/.)</th>
+            <th>Total (S/.)</th>
             <th>Fecha</th>
           </tr>
         </thead>
@@ -315,12 +135,12 @@ tr:last-child td {
         </tbody>
       </table>
     <?php else: ?>
-      <p style="color:#a0a0a0;">No hay ventas registradas aún.</p>
+      <p class="empty-state">No hay ventas registradas aún.</p>
     <?php endif; ?>
 
-    <h2 class="lst-ventas" style="margin-top:28px;">Ultimos Movimientos de Inventario</h2>
+    <h2 class="section-title">Ultimos Movimientos de Inventario</h2>
     <?php if (!empty($ultimosMovimientos)): ?>
-      <table>
+      <table class="dashboard-table">
         <thead>
           <tr>
             <th>Fecha</th>
@@ -345,9 +165,11 @@ tr:last-child td {
         </tbody>
       </table>
     <?php else: ?>
-      <p style="color:#a0a0a0;">No hay movimientos registrados aún.</p>
+      <p class="empty-state">No hay movimientos registrados aún.</p>
     <?php endif; ?>
-  </div>
+    
+    <!-- Bitácora de auditoría removida del dashboard de administrador por solicitud -->
+  </main>
 
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.4.0/dist/js/bootstrap.bundle.min.js"></script>
