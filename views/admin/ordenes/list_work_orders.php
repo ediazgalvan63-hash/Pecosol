@@ -80,7 +80,7 @@ if ($useEmployeeHeader) {
 <div class="container" style="max-width: 1150px; margin: 32px auto;">
     <div class="toolbar">
         <h1>Órdenes de Trabajo</h1>
-        <?php if (in_array($role, ['admin', 'logistica', 'supervisor'])): ?>
+        <?php if (in_array($role, ['admin', 'logistica', 'supervisor', 'comercial'])): ?>
         <a href="index.php?controller=admin&action=addWorkOrderForm" class="btn btn-add-large">
             <span class="btn-icon">+</span>
             Agregar Orden

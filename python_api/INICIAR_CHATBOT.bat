@@ -70,7 +70,7 @@ if not defined PYTHON_CMD (
     echo [-] ERROR: Python no esta instalado o no esta en PATH y no se encontro .venv
     echo.
     echo Soluciones:
-    echo 1. Instala Python 3.11, 3.12 o 3.13 desde https://www.python.org
+    echo 1. Instala Python 3.11, 3.12, 3.13 o 3.14 desde https://www.python.org
     echo 2. Asegúrate de marcar "Add Python to PATH" durante la instalación
     echo 3. Reinicia esta ventana despues de instalar Python
     echo.
@@ -85,12 +85,12 @@ for /f "tokens=1-3 delims=." %%A in ("%PY_VERSION%") do (
     set PY_MINOR=%%B
 )
 if "%PY_MAJOR%" NEQ "3" (
-    echo [-] ERROR: Se necesita Python 3.11, 3.12 o 3.13. Se detectó Python %PY_VERSION%.
+    echo [-] ERROR: Se necesita Python 3.11, 3.12, 3.13 o 3.14. Se detectó Python %PY_VERSION%.
     pause
     exit /b 1
 )
-if %PY_MINOR% GEQ 14 (
-    echo [-] ERROR: Python %PY_VERSION% no es compatible. Usa Python 3.11, 3.12 o 3.13.
+if %PY_MINOR% GEQ 15 (
+    echo [-] ERROR: Python %PY_VERSION% no es compatible. Usa Python 3.11, 3.12, 3.13 o 3.14.
     pause
     exit /b 1
 )

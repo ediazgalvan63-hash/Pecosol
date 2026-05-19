@@ -53,10 +53,13 @@ DB_PORT=3306
 ### 3. Iniciar el servidor
 
 ```bash
-# Opción 1: Con el script
+# Opción 1: Con el script normal (muestra la consola)
 start.bat
 
-# Opción 2: Manualmente
+# Opción 2: Iniciar en segundo plano sin ventana
+start_hidden.bat
+
+# Opción 3: Manualmente
 python -m uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 ```
 

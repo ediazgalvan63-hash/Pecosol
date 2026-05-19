@@ -34,7 +34,7 @@ if exist "%~dp0..\.venv\Scripts\python.exe" (
     )
 )
 if not defined PYTHON_CMD (
-    echo [ERROR] Python no encontrado. Instala Python 3.12 o 3.13 y/o crea el entorno .venv.
+    echo [ERROR] Python no encontrado. Instala Python 3.12, 3.13 o 3.14 y/o crea el entorno .venv.
     pause
     exit /b 1
 )
@@ -46,12 +46,12 @@ for /f "tokens=1-3 delims=." %%A in ("%PY_VERSION%") do (
     set PY_MINOR=%%B
 )
 if "%PY_MAJOR%" NEQ "3" (
-    echo [ERROR] Se requiere Python 3.12 o 3.13. Se detectó Python %PY_VERSION%.
+    echo [ERROR] Se requiere Python 3.12, 3.13 o 3.14. Se detectó Python %PY_VERSION%.
     pause
     exit /b 1
 )
-if %PY_MINOR% GEQ 14 (
-    echo [ERROR] Python %PY_VERSION% no es compatible. Usa Python 3.12 o 3.13.
+if %PY_MINOR% GEQ 15 (
+    echo [ERROR] Python %PY_VERSION% no es compatible. Usa Python 3.12, 3.13 o 3.14.
     pause
     exit /b 1
 )

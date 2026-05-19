@@ -200,9 +200,5 @@
       }
     });
   </script>
-
-  <!-- Chatbot Widget -->
-  <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/chatbot-widget.css">
-  <script src="<?php echo BASE_URL; ?>assets/js/chatbot-widget.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>

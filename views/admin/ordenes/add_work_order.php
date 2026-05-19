@@ -214,7 +214,7 @@ if ($useEmployeeHeader) {
 
       <div class="form-actions">
         <a class="btn btn-ghost" href="<?php echo BASE_URL; ?>index.php?controller=<?php echo $useEmployeeHeader ? 'dashboard&action=logisticsWorkOrders' : 'admin&action=listWorkOrders'; ?>">Cancelar</a>
-        <button type="submit" class="btn btn-primary">Registrar orden</button>
+        <button type="submit" class="btn btn-ghost">Registrar orden</button>
       </div>
     </form>
 </div>

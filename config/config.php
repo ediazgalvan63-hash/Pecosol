@@ -115,7 +115,7 @@ function findCompatiblePython(): ?string
             continue;
         }
 
-        if ($version['major'] === 3 && $version['minor'] <= 13) {
+        if ($version['major'] === 3 && $version['minor'] <= 14) {
             return $cmd;
         }
     }
@@ -128,19 +128,21 @@ function startLocalChatbotServer(): void
     $rootDir = dirname(__DIR__);
     $pythonApiDir = $rootDir . DIRECTORY_SEPARATOR . 'python_api';
     $mainScript = $pythonApiDir . DIRECTORY_SEPARATOR . 'main.py';
+    $vbsScript = $pythonApiDir . DIRECTORY_SEPARATOR . 'AutoStart-Chatbot.vbs';
 
     if (!file_exists($mainScript)) {
         return;
     }
 
-    $pythonExe = findCompatiblePython();
-    if (!$pythonExe) {
-        return;
+    if (file_exists($vbsScript)) {
+        $command = 'wscript.exe ' . escapeshellarg($vbsScript);
+    } else {
+        $pythonExe = findCompatiblePython();
+        if (!$pythonExe) {
+            return;
+        }
+        $command = 'cd /d ' . escapeshellarg($pythonApiDir) . ' && start "" /B ' . escapeshellarg($pythonExe) . ' -m uvicorn main:app --host 127.0.0.1 --port 8000 --reload >nul 2>&1';
     }
-
-    // ⚡ OPTIMIZACIÓN: Iniciar en background SIN BLOQUEAR
-    // Usar WScript.Shell para iniciar proceso verdaderamente asincrónico
-    $command = 'cd /d ' . escapeshellarg($pythonApiDir) . ' && start "" /min ' . escapeshellarg($pythonExe) . ' -m uvicorn main:app --host 127.0.0.1 --port 8000 --reload 2>nul';
 
     try {
         if (class_exists('COM')) {
@@ -149,10 +151,14 @@ function startLocalChatbotServer(): void
             $shell->Run($command, 0, false);
         } else {
             // Fallback si COM no disponible
-            throw new Exception('COM class not available');
+            if (function_exists('popen')) {
+                @pclose(@popen('cmd /c ' . $command, 'r'));
+            } elseif (function_exists('exec')) {
+                @exec($command . ' &');
+            }
         }
     } catch (Exception $e) {
-        // Fallback a popen o exec si COM no está disponible
+        // Si COM falla, intentar igualmente con popen/exec
         if (function_exists('popen')) {
             @pclose(@popen('cmd /c ' . $command, 'r'));
         } elseif (function_exists('exec')) {
