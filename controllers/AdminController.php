@@ -15,10 +15,10 @@ class AdminController {
             'admin' => ['*'],  // Control total del sistema
             'gerencia' => ['reports', 'exportCurrentInventoryCsv', 'exportMovementsCsv', 'exportSalesCsv'],  // Solo reportes ejecutivos
             'comercial' => ['listSalesAdmin', 'addSaleAdminForm', 'storeSaleAdmin', 'listProducts', 'listInventoryMovements', 'listWorkOrders', 'addWorkOrderForm', 'storeWorkOrder'],  // Gestión de ventas, consulta de stock/kardex y creación de órdenes
-            'logistica' => ['listInventoryMovements', 'inventoryRecountForm', 'processInventoryRecount', 'listWorkOrders', 'addWorkOrderForm', 'storeWorkOrder', 'updateWorkOrderStatus', 'listPurchases', 'addPurchaseForm', 'storePurchase', 'editPurchaseForm', 'updatePurchase', 'deletePurchase'],  // Operación de almacén y compras
+            'logistica' => ['listInventoryMovements', 'inventoryRecountForm', 'processInventoryRecount', 'processInventoryRecountBatch', 'listWorkOrders', 'addWorkOrderForm', 'storeWorkOrder', 'updateWorkOrderStatus', 'listPurchases', 'addPurchaseForm', 'storePurchase', 'editPurchaseForm', 'updatePurchase', 'deletePurchase'],  // Operación de almacén y compras
             'finanzas' => ['listPurchases', 'listSalesAdmin', 'editSaleAdminForm', 'updateSaleAdmin', 'deleteSaleAdmin', 'reports', 'exportCurrentInventoryCsv', 'exportMovementsCsv', 'exportSalesCsv'],  // Control financiero y CxP/CxC
             'estrategico' => ['listProducts', 'reports', 'exportCurrentInventoryCsv', 'exportMovementsCsv', 'exportSalesCsv'],  // Datos maestros y análisis
-            'supervisor' => ['listProducts', 'addProductForm', 'storeProduct', 'editProductForm', 'updateProduct', 'deleteProduct', 'listInventoryMovements', 'inventoryRecountForm', 'processInventoryRecount', 'lowStockAlerts', 'listWorkOrders', 'addWorkOrderForm', 'storeWorkOrder', 'updateWorkOrderStatus', 'listPurchases', 'addPurchaseForm', 'storePurchase', 'editPurchaseForm', 'updatePurchase', 'deletePurchase', 'listSalesAdmin', 'addSaleAdminForm', 'storeSaleAdmin', 'editSaleAdminForm', 'updateSaleAdmin', 'deleteSaleAdmin', 'downloadSaleInvoicePdf', 'reports', 'exportCurrentInventoryCsv', 'exportMovementsCsv', 'exportSalesCsv'],
+            'supervisor' => ['listProducts', 'addProductForm', 'storeProduct', 'editProductForm', 'updateProduct', 'deleteProduct', 'listInventoryMovements', 'inventoryRecountForm', 'processInventoryRecount', 'processInventoryRecountBatch', 'lowStockAlerts', 'listWorkOrders', 'addWorkOrderForm', 'storeWorkOrder', 'updateWorkOrderStatus', 'listPurchases', 'addPurchaseForm', 'storePurchase', 'editPurchaseForm', 'updatePurchase', 'deletePurchase', 'listSalesAdmin', 'addSaleAdminForm', 'storeSaleAdmin', 'editSaleAdminForm', 'updateSaleAdmin', 'deleteSaleAdmin', 'downloadSaleInvoicePdf', 'reports', 'exportCurrentInventoryCsv', 'exportMovementsCsv', 'exportSalesCsv'],
         ];
 
         if ($role === 'admin') {
@@ -1160,6 +1160,119 @@ class AdminController {
 
         $productos = $this->productModel->getAll();
         require_once __DIR__ . '/../views/admin/inventario/recount.php';
+    }
+
+    public function processInventoryRecountBatch() {
+        $batchMode = isset($_POST['batch_mode']) ? (int)$_POST['batch_mode'] : 0;
+        $userId = (int)$_SESSION['user_id'];
+
+        if ($batchMode !== 1) {
+            header('Location: ' . BASE_URL . 'index.php?controller=admin&action=inventoryRecountForm');
+            exit;
+        }
+
+        if (!isset($_POST['changes']) || !is_array($_POST['changes']) || empty($_POST['changes'])) {
+            header('Location: ' . BASE_URL . 'index.php?controller=admin&action=inventoryRecountForm');
+            exit;
+        }
+
+        $conn = $this->saleModel->getConnection();
+        $successCount = 0;
+        $errorCount = 0;
+        $errors = [];
+
+        try {
+            $conn->beginTransaction();
+
+            foreach ($_POST['changes'] as $change) {
+                $productId = isset($change['product_id']) ? (int)$change['product_id'] : 0;
+                $physicalStock = isset($change['physical_stock']) ? (int)$change['physical_stock'] : -1;
+
+                if ($productId <= 0 || $physicalStock < 0) {
+                    $errorCount++;
+                    $errors[] = "Producto {$productId}: datos inválidos";
+                    continue;
+                }
+
+                $producto = $this->productModel->findById($productId);
+                if (!$producto) {
+                    $errorCount++;
+                    $errors[] = "Producto {$productId}: no encontrado";
+                    continue;
+                }
+
+                $systemStock = (int)$producto->stock;
+                $difference = $physicalStock - $systemStock;
+
+                if ($difference === 0) {
+                    $successCount++;
+                    continue;
+                }
+
+                $movementType = $difference > 0 ? 'ingreso' : 'salida';
+                $quantity = abs($difference);
+                $reason = 'Ajuste por reconteo';
+
+                if ($movementType === 'ingreso') {
+                    $adjusted = $this->productModel->increaseStock($productId, $quantity);
+                } else {
+                    $adjusted = $this->productModel->decreaseStockIfAvailable($productId, $quantity);
+                }
+
+                if (!$adjusted) {
+                    $errorCount++;
+                    $errors[] = "Producto {$productId}: no se pudo ajustar el stock";
+                    continue;
+                }
+
+                $okMovement = $this->inventoryMovementModel->create(
+                    $productId,
+                    $userId,
+                    $quantity,
+                    $movementType,
+                    $reason
+                );
+
+                if (!$okMovement) {
+                    $errorCount++;
+                    $errors[] = "Producto {$productId}: no se pudo registrar el movimiento";
+                    continue;
+                }
+
+                $this->auditLogModel->create(
+                    (int)$_SESSION['user_id'],
+                    'adjust',
+                    'inventory',
+                    $productId,
+                    "Reconteo aplicado. Diferencia: {$difference}"
+                );
+
+                $successCount++;
+            }
+
+            $conn->commit();
+        } catch (Throwable $e) {
+            if ($conn->inTransaction()) {
+                $conn->rollBack();
+            }
+            $_SESSION['recount_error'] = 'Error al procesar reconteo: ' . $e->getMessage();
+            header('Location: ' . BASE_URL . 'index.php?controller=admin&action=inventoryRecountForm');
+            exit;
+        }
+
+        $message = "Reconteo completado: {$successCount} productos ajustados";
+        if ($errorCount > 0) {
+            $message .= ", {$errorCount} con errores";
+            $_SESSION['recount_warning'] = $message;
+            if (!empty($errors)) {
+                $_SESSION['recount_error_details'] = implode('; ', array_slice($errors, 0, 5));
+            }
+        } else {
+            $_SESSION['recount_success'] = $message;
+        }
+
+        header('Location: ' . BASE_URL . 'index.php?controller=admin&action=inventoryRecountForm');
+        exit;
     }
 
     /**************************************************************************

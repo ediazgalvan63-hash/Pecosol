@@ -13,12 +13,12 @@ class Database {
     public static function connect() {
         self::$conn = null;
         try {
-            // Allow overriding credentials with environment variables (useful in XAMPP or CI)
-            $host = getenv('DB_HOST') ?: self::$host;
-            $db   = getenv('DB_DATABASE') ?: self::$db_name;
-            $user = getenv('DB_USERNAME') ?: self::$username;
-            $pass = getenv('DB_PASSWORD') ?: self::$password;
-            $port = getenv('DB_PORT') ?: self::$port;
+            // Allow overriding credentials with environment variables (useful in XAMPP, CI or Railway)
+            $host = getenv('DB_HOST') ?: getenv('MYSQLHOST') ?: self::$host;
+            $db   = getenv('DB_DATABASE') ?: getenv('DB_NAME') ?: getenv('MYSQLDATABASE') ?: self::$db_name;
+            $user = getenv('DB_USERNAME') ?: getenv('DB_USER') ?: getenv('MYSQLUSER') ?: self::$username;
+            $pass = getenv('DB_PASSWORD') ?: getenv('MYSQLPASSWORD') ?: self::$password;
+            $port = getenv('DB_PORT') ?: getenv('MYSQLPORT') ?: self::$port;
 
             self::$conn = new PDO(
                 "mysql:host=" . $host . ";port=" . $port . ";dbname=" . $db,

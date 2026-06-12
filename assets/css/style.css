@@ -562,6 +562,14 @@ input[type="button"]:active {
 .audit-toolbar .btn { height:40px; display:inline-flex; align-items:center; gap:8px; padding:8px 14px; font-weight:700; }
 .audit-toolbar .btn-primary { background: linear-gradient(90deg,#20e0c8,#08b8ff); color:#042026; border:none; box-shadow: 0 6px 18px rgba(3, 186, 170, 0.08); }
 .audit-toolbar .btn { background: transparent; color:#dff7fb; border:1px solid rgba(191,234,255,0.06); }
+
+/* Ensure the primary toolbar button keeps its prominent style (e.g. "Aplicar") */
+.audit-toolbar .btn.btn-primary {
+  background: linear-gradient(90deg,#20e0c8,#08b8ff) !important;
+  color: #042026 !important;
+  border: none !important;
+  box-shadow: 0 6px 18px rgba(3,186,170,0.12) !important;
+}
 .audit-toolbar .btn:hover { color:#012; background: rgba(191,234,255,0.06); }
 .audit-toolbar #clearAuditFilters { background: transparent; color:#bfeaff; border:1px solid rgba(191,234,255,0.06); }
 

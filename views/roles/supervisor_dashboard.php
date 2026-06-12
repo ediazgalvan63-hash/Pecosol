@@ -344,7 +344,7 @@ $auditEntityLabels = [
                 <?php endforeach; ?>
               </select>
               <div style="display:flex;gap:8px;align-items:center;">
-                <button type="submit" class="btn btn-primary">Aplicar</button>
+                <button type="submit" class="btn btn-ghost">Aplicar</button>
                 <button id="clearAuditFilters" type="button" class="btn btn-ghost">Limpiar</button>
               </div>
             </form>
