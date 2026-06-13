@@ -217,7 +217,17 @@ class AdminController {
     // Validar campos
     if ($username === '' || $password === '' || $fullName === '' || $email === '' || $role === '') {
         $error = 'Todos los campos son obligatorios, incluyendo el rol.';
-        } elseif (!in_array($role, ['admin','gerencia','comercial','logistica','finanzas','estrategico','supervisor'], true)) {
+    } elseif (!in_array($role, ['admin','comercial','supervisor'], true)) {
+        $error = 'Rol no válido. Solo se permiten admin, comercial y supervisor.';
+    } else {
+        if ($this->userModel->countAll() >= 3) {
+            $error = 'Solo se permiten 3 usuarios: admin, comercial y supervisor.';
+        } elseif ($this->userModel->roleExists($role)) {
+            $error = 'Ya existe un usuario con el rol ' . $role . '.';
+        }
+    }
+
+    if ($error !== '') {
         require_once __DIR__ . '/../views/admin/employee/add_employee.php';
         return;
     }
@@ -266,7 +276,7 @@ class AdminController {
 
         if ($id <= 0 || $fullName === '' || $email === '' || $role === '') {
             $error = 'ID inválido o campos obligatorios vacíos.';
-        } elseif (!in_array($role, ['admin','gerencia','comercial','logistica','finanzas','estrategico','supervisor'], true)) {
+        } elseif (!in_array($role, ['admin','comercial','supervisor'], true)) {
             $error = 'Rol no válido.';
         } else {
             $empleadoExistente = $this->userModel->findById($id);
@@ -275,6 +285,9 @@ class AdminController {
             }
             if (empty($error) && $changePwd && $newPwd === '') {
                 $error = 'Para cambiar contraseña, ingresa la nueva contraseña.';
+            }
+            if (empty($error) && $this->userModel->roleExists($role, $id)) {
+                $error = 'Ya existe otro usuario con el rol ' . $role . '.';
             }
         }
 

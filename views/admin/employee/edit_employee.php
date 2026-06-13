@@ -209,11 +209,7 @@
         <label for="role">Rol:</label>
         <select id="role" name="role" required>
           <option value="comercial"<?php echo ($empleado->role === 'comercial') ? ' selected' : ''; ?>>Comercial</option>
-          <option value="logistica"<?php echo ($empleado->role === 'logistica') ? ' selected' : ''; ?>>Logística</option>
           <option value="supervisor"<?php echo ($empleado->role === 'supervisor') ? ' selected' : ''; ?>>Supervisor</option>
-          <option value="gerencia"<?php echo ($empleado->role === 'gerencia') ? ' selected' : ''; ?>>Gerencia</option>
-          <option value="finanzas"<?php echo ($empleado->role === 'finanzas') ? ' selected' : ''; ?>>Finanzas</option>
-          <option value="estrategico"<?php echo ($empleado->role === 'estrategico') ? ' selected' : ''; ?>>Estratégico</option>
           <option value="admin"<?php echo ($empleado->role === 'admin') ? ' selected' : ''; ?>>Administrador</option>
         </select>
 

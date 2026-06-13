@@ -49,6 +49,27 @@ class User {
         return $stmt->fetchAll(PDO::FETCH_OBJ);
     }
 
+    public function countAll(): int {
+        $stmt = $this->conn->query("SELECT COUNT(*) AS total FROM {$this->table}");
+        $row = $stmt->fetch(PDO::FETCH_OBJ);
+        return (int)($row->total ?? 0);
+    }
+
+    public function roleExists(string $role, ?int $excludeId = null): bool {
+        $sql = "SELECT COUNT(*) AS total FROM {$this->table} WHERE role = :role";
+        if ($excludeId !== null) {
+            $sql .= ' AND id != :exclude_id';
+        }
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue(':role', $role);
+        if ($excludeId !== null) {
+            $stmt->bindValue(':exclude_id', $excludeId, PDO::PARAM_INT);
+        }
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_OBJ);
+        return ((int)($row->total ?? 0)) > 0;
+    }
+
     /**
      * getAdminAndCommercial()
      * - Devuelve solo usuarios con rol 'admin' o 'comercial', ordenados por ID asc.
@@ -217,9 +238,9 @@ class User {
             ");
 
             $users = [
-                ['admin', 'Administrador Principal', 'admin@pecosol.com', 'admin'],
-                ['empleado1', 'Empleado Uno', 'empleado1@pecosol.com', 'employee'],
-                ['Ale', 'Ale Peres', 'ale@pecosol.com', 'employee'],
+                ['admin', 'Administrador Principal', 'admin@bodeshop.com', 'admin'],
+                ['lucho', 'lucho diaz', 'lucho@gmail.com', 'comercial'],
+                ['pedrito', 'pedro diaz', 'pedrito@gmail.com', 'supervisor'],
             ];
 
             foreach ($users as $user) {
