@@ -1,8 +1,18 @@
 RewriteEngine On
 
-# Si el archivo o carpeta existe, no reescribir
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
+# Si es una carpeta que existe, permitir acceso directo
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^.*$ - [L]
+
+# Si es un archivo que existe, permitir acceso directo
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^.*$ - [L]
+
+# Redireccionar /health a /api/chat.php
+RewriteRule ^health/?$ api/chat.php [QSA,L]
+
+# Redireccionar /api/chat a /api/chat.php
+RewriteRule ^api/chat/?$ api/chat.php [QSA,L]
 
 # Enviar todo lo demás a index.php con la ruta en "url"
 RewriteRule ^(.+)$ index.php?url=$1 [QSA,L]

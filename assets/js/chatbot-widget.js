@@ -8,14 +8,16 @@ class ChatbotWidget {
         const configuredUrl = (typeof window !== 'undefined' && window.CHATBOT_API_URL)
             ? String(window.CHATBOT_API_URL).trim()
             : '';
-        const localDefault = 'http://127.0.0.1:8000/api/chat';
-        if (!configuredUrl) {
+        const isLocalhost = window.location && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+        const localDefault = isLocalhost ? 'http://127.0.0.1:8000/api/chat' : '';
+
+        if (configuredUrl) {
+            this.apiUrl = this.normalizeApiUrl(configuredUrl);
+        } else if (localDefault) {
             this.apiUrl = localDefault;
         } else {
-            this.apiUrl = this.normalizeApiUrl(configuredUrl);
-            if (configuredUrl === localDefault && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-                console.warn('⚠️ CHATBOT_API_URL está usando el valor local por defecto en un dominio remoto. Ajusta CHATBOT_API_URL para la URL correcta del servicio Python.');
-            }
+            this.apiUrl = '';
+            console.warn('⚠️ No se encontró CHATBOT_API_URL. Configura CHATBOT_API_URL en tu entorno de Railway para conectar con el servicio Python.');
         }
         this.isOpen = false;
         this.apiUrlResolved = false;
@@ -28,7 +30,9 @@ class ChatbotWidget {
             return '';
         }
 
-        let normalized = String(url).trim();
+        let normalized = String(url).trim();        if (normalized === '') {
+            return '';
+        }
         if (!/^https?:\/\//i.test(normalized)) {
             normalized = `${window.location.origin}${normalized.startsWith('/') ? '' : '/'}${normalized}`;
         }
@@ -60,10 +64,10 @@ class ChatbotWidget {
         const isLocalhost = window.location && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
         if (typeof window !== 'undefined' && window.CHATBOT_API_URL) {
-            candidates.push(this.normalizeApiUrl(String(window.CHATBOT_API_URL).trim()));
-        }
-        if (window.location && window.location.origin) {
-            candidates.push(`${window.location.origin}/api/chat`);
+            const normalized = this.normalizeApiUrl(String(window.CHATBOT_API_URL).trim());
+            if (normalized) {
+                candidates.push(normalized);
+            }
         }
         if (isLocalhost) {
             candidates.push('http://localhost:8000/api/chat');
@@ -98,7 +102,7 @@ class ChatbotWidget {
                     }
                     const json = await response.json().catch(() => null);
                     const hasDatabaseHealth = json && typeof json.database === 'string';
-                    const hasServiceHealth = json && typeof json.service === 'string' && json.service !== 'Pecosol Chatbot API Test';
+                    const hasServiceHealth = json && typeof json.service === 'string' && json.service !== 'Pecosol Chatbot API Test' && json.service !== 'Pecosol API';
                     const isTestServer = json && json.service === 'Pecosol Chatbot API Test';
                     if ((!hasDatabaseHealth && !hasServiceHealth) || isTestServer) {
                         console.warn(`⚠️ Endpoint no válido o de prueba detectado en ${url}, ignorando.`);
@@ -133,6 +137,10 @@ class ChatbotWidget {
 
         const triedUrls = new Set();
         const candidates = this.getApiCandidates();
+
+        if (!candidates.length) {
+            throw new Error('No chatbot endpoint candidates are available. Configure CHATBOT_API_URL correctamente.');
+        }
 
         for (const url of candidates) {
             if (!url || triedUrls.has(url)) {

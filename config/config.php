@@ -7,6 +7,21 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 /**
+ * Función auxiliar para obtener valores de entorno de forma robusta.
+ */
+function env(string $name, $default = null)
+{
+    $value = getenv($name);
+    if ($value === false && isset($_SERVER[$name])) {
+        $value = $_SERVER[$name];
+    }
+    if ($value === false || $value === null || $value === '') {
+        return $default;
+    }
+    return $value;
+}
+
+/**
  * Configuración de zona horaria
  * Por defecto: Perú (UTC-5)
  * Local: se puede sobrescribir con variable de entorno APP_TIMEZONE
@@ -30,19 +45,111 @@ define('DB_TIMEZONE', $dbTimezone);
  * - Local: usa APP_BASE_URL si existe, si no http://localhost/pecosol/
  * - Railway/producción: define APP_BASE_URL en variables de entorno
  */
-$baseUrl = getenv('APP_BASE_URL') ?: 'http://localhost/pecosol/';
+function getCurrentRequestScheme(): string
+{
+    if (!empty($_SERVER['HTTP_X_FORWARDED_PROTO'])) {
+        $proto = strtolower(trim(explode(',', $_SERVER['HTTP_X_FORWARDED_PROTO'])[0]));
+        if (in_array($proto, ['http', 'https'], true)) {
+            return $proto;
+        }
+    }
+
+    if (!empty($_SERVER['HTTP_X_FORWARDED_SSL']) && strtolower($_SERVER['HTTP_X_FORWARDED_SSL']) === 'on') {
+        return 'https';
+    }
+
+    if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+        return 'https';
+    }
+
+    if (!empty($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] === '443') {
+        return 'https';
+    }
+
+    return 'http';
+}
+
+function getCurrentRequestHost(): string
+{
+    if (!empty($_SERVER['HTTP_X_FORWARDED_HOST'])) {
+        $host = trim(explode(',', $_SERVER['HTTP_X_FORWARDED_HOST'])[0]);
+        if ($host !== '') {
+            return $host;
+        }
+    }
+
+    if (!empty($_SERVER['HTTP_HOST'])) {
+        return $_SERVER['HTTP_HOST'];
+    }
+
+    if (!empty($_SERVER['SERVER_NAME'])) {
+        return $_SERVER['SERVER_NAME'];
+    }
+
+    return 'localhost';
+}
+
+function isLocalRequest(): bool
+{
+    if (isset($_SERVER['HTTP_HOST']) && preg_match('#^(localhost|127\.0\.0\.1)(:\d+)?$#i', $_SERVER['HTTP_HOST'])) {
+        return true;
+    }
+    if (isset($_SERVER['REMOTE_ADDR']) && in_array($_SERVER['REMOTE_ADDR'], ['127.0.0.1', '::1'], true)) {
+        return true;
+    }
+    return false;
+}
+
+/**
+ * BASE_URL - Detección automática de URL base del proyecto
+ * 
+ * Prioridad:
+ * 1. Variable de entorno APP_BASE_URL (si está configurada)
+ * 2. CLI: usa default
+ * 3. HTTP Request: detecta automáticamente
+ */
+
+$appBaseUrl = env('APP_BASE_URL', '');
+$baseUrl = $appBaseUrl;
+
+// Si no hay APP_BASE_URL configurada y no estamos en CLI
+if (empty($baseUrl) && PHP_SAPI !== 'cli' && !empty($_SERVER['REQUEST_URI'])) {
+    $scheme = getCurrentRequestScheme();
+    $host = getCurrentRequestHost();
+    
+    // Detectar el path base del proyecto
+    // En la mayoría de casos será / (local /pecosol o production root)
+    $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+    
+    if (!empty($scriptName) && $scriptName !== '/' && $scriptName !== '/index.php') {
+        // SCRIPT_NAME es algo como /subdir/index.php o /pecosol/index.php
+        $pathBase = rtrim(dirname($scriptName), '/\\');
+    } else {
+        // SCRIPT_NAME es / o /index.php - proyecto en raíz
+        $pathBase = '';
+    }
+    
+    $baseUrl = $scheme . '://' . $host . ($pathBase ? $pathBase : '') . '/';
+}
+
+// Fallback a default
+$baseUrl = $baseUrl ?: 'http://localhost/pecosol/';
+
+// Asegurar trailing slash
 $baseUrl = rtrim($baseUrl, '/') . '/';
 define('BASE_URL', $baseUrl);
+
 
 /**
  * URL del API del chatbot (FastAPI).
  * - Local: http://127.0.0.1:8000/api/chat
  * - Railway: define CHATBOT_API_URL con tu dominio de servicio Python
- * - Si no existe CHATBOT_API_URL, usa APP_BASE_URL + /api/chat
+ * - En producción sin CHATBOT_API_URL no se asume un endpoint remoto
  */
-$chatbotApiUrl = getenv('CHATBOT_API_URL') ?: getenv('RAILWAY_SERVICE_PECOSOL_CHATBOT_URL');
-if ($chatbotApiUrl) {
-    $chatbotApiUrl = trim($chatbotApiUrl);
+$chatbotApiUrl = env('CHATBOT_API_URL', '') ?: env('RAILWAY_SERVICE_PECOSOL_CHATBOT_URL', '');
+$chatbotApiUrl = trim($chatbotApiUrl);
+
+if ($chatbotApiUrl !== '') {
     if (!preg_match('#^https?://#i', $chatbotApiUrl)) {
         $chatbotApiUrl = 'https://' . preg_replace('#^https?://#i', '', $chatbotApiUrl);
     }
@@ -51,11 +158,10 @@ if ($chatbotApiUrl) {
         $chatbotApiUrl .= '/api/chat';
     }
 } else {
-    $appBaseUrl = getenv('APP_BASE_URL');
-    if ($appBaseUrl && !preg_match('#^(https?://)?(localhost|127\.0\.0\.1)#i', $appBaseUrl)) {
-        $chatbotApiUrl = rtrim($appBaseUrl, '/') . '/api/chat';
-    } else {
+    if (isLocalRequest()) {
         $chatbotApiUrl = 'http://127.0.0.1:8000/api/chat';
+    } else {
+        $chatbotApiUrl = rtrim(BASE_URL, '/') . '/api/chat';
     }
 }
 define('CHATBOT_API_URL', $chatbotApiUrl);
