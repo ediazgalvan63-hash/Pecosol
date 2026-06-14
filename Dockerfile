@@ -29,7 +29,9 @@ RUN sed -ri -e 's!/var/www/html!/var/www/html!g' /etc/apache2/sites-available/*.
 # Crear configuración explícita de DocumentRoot
 RUN echo '<Directory /var/www/html>' > /etc/apache2/conf-available/pecosol.conf && \
     echo '    AllowOverride All' >> /etc/apache2/conf-available/pecosol.conf && \
+    echo '    Require all granted' >> /etc/apache2/conf-available/pecosol.conf && \
     echo '    RewriteEngine On' >> /etc/apache2/conf-available/pecosol.conf && \
+    echo '    RewriteBase /' >> /etc/apache2/conf-available/pecosol.conf && \
     echo '    RewriteCond %{REQUEST_FILENAME} !-f' >> /etc/apache2/conf-available/pecosol.conf && \
     echo '    RewriteCond %{REQUEST_FILENAME} !-d' >> /etc/apache2/conf-available/pecosol.conf && \
     echo '    RewriteRule ^(.*)$ index.php [QSA,L]' >> /etc/apache2/conf-available/pecosol.conf && \
