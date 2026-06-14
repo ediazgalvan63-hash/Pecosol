@@ -32,8 +32,8 @@ $isDiagnose = (
     strpos($originalUri, 'diagnose') !== false
 );
 
-// Si es /health o /api/chat, responder directamente como JSON
-if ($isHealth || $isApiChat) {
+// Si es /health, responder directamente como JSON
+if ($isHealth) {
     header('Content-Type: application/json; charset=utf-8');
     http_response_code(200);
     echo json_encode([
@@ -42,6 +42,13 @@ if ($isHealth || $isApiChat) {
         'database' => 'connected',
         'timestamp' => date('Y-m-d H:i:s')
     ]);
+    exit;
+}
+
+// Si es /api/chat, ejecutar el endpoint de chatbot y permitir fallback o proxy
+if ($isApiChat) {
+    require_once __DIR__ . '/config/config.php';
+    require_once __DIR__ . '/api/chat.php';
     exit;
 }
 
