@@ -57,23 +57,24 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // Bypass de servidor: servir directamente assets estáticos si existen
-$requestUri = $_SERVER['REQUEST_URI'] ?? '/';
-$requestPath = parse_url($requestUri, PHP_URL_PATH);
-$requestPath = rtrim($requestPath, '/');
+// Usamos REDIRECT_URL cuando Apache reescribe la ruta a index.php.
+$staticRequestUri = $_SERVER['REDIRECT_URL'] ?? $_SERVER['REQUEST_URI'] ?? '/';
+$staticRequestPath = parse_url($staticRequestUri, PHP_URL_PATH);
+$staticRequestPath = rtrim($staticRequestPath, '/');
 
 // Rutas estáticas que Apache debería servir directamente
 $staticPrefixes = ['/assets/', '/favicon.ico', '/robots.txt', '/sitemap.xml'];
 $isStaticRequest = false;
 
 foreach ($staticPrefixes as $prefix) {
-    if ($requestPath === $prefix || str_starts_with($requestPath, $prefix)) {
+    if ($staticRequestPath === $prefix || str_starts_with($staticRequestPath, $prefix)) {
         $isStaticRequest = true;
         break;
     }
 }
 
 if ($isStaticRequest) {
-    $filePath = realpath(__DIR__ . $requestPath);
+    $filePath = realpath(__DIR__ . $staticRequestPath);
     $rootPath = realpath(__DIR__);
     
     if ($filePath && $rootPath && str_starts_with($filePath, $rootPath) && is_file($filePath)) {
