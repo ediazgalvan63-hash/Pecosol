@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install pdo pdo_mysql zip gd mbstring \
     && a2enmod rewrite \
+    && a2enmod headers \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -20,8 +21,20 @@ COPY . .
 
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-RUN sed -ri -e 's!/var/www/html!/var/www/html!g' /etc/apache2/sites-available/*.conf \
-    && sed -ri -e 's!AllowOverride None!AllowOverride All!g' /etc/apache2/apache2.conf
+# Configurar Apache para permitir .htaccess
+RUN sed -ri -e 's!/var/www/html!/var/www/html!g' /etc/apache2/sites-available/*.conf && \
+    sed -ri -e 's!AllowOverride None!AllowOverride All!g' /etc/apache2/apache2.conf && \
+    sed -ri -e 's!AllowOverride None!AllowOverride All!g' /etc/apache2/sites-available/*.conf
+
+# Crear configuración explícita de DocumentRoot
+RUN echo '<Directory /var/www/html>' > /etc/apache2/conf-available/pecosol.conf && \
+    echo '    AllowOverride All' >> /etc/apache2/conf-available/pecosol.conf && \
+    echo '    RewriteEngine On' >> /etc/apache2/conf-available/pecosol.conf && \
+    echo '    RewriteCond %{REQUEST_FILENAME} !-f' >> /etc/apache2/conf-available/pecosol.conf && \
+    echo '    RewriteCond %{REQUEST_FILENAME} !-d' >> /etc/apache2/conf-available/pecosol.conf && \
+    echo '    RewriteRule ^(.*)$ index.php [QSA,L]' >> /etc/apache2/conf-available/pecosol.conf && \
+    echo '</Directory>' >> /etc/apache2/conf-available/pecosol.conf && \
+    a2enconf pecosol
 
 EXPOSE 80
 
