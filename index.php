@@ -92,7 +92,8 @@ if ($staticRequestPath === '') {
 }
 
 // Si existe un archivo real en el servidor para esta ruta, lo servimos directamente.
-if ($staticRequestPath !== '/') {
+// Importante: no sirve archivos PHP directamente, porque el front controller debe procesarlos.
+if ($staticRequestPath !== '/' && !preg_match('/\.php$/i', $staticRequestPath)) {
     $filePath = realpath(__DIR__ . $staticRequestPath);
     $rootPath = realpath(__DIR__);
     if ($filePath && $rootPath && str_starts_with($filePath, $rootPath) && is_file($filePath)) {
