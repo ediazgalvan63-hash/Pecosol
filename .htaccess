@@ -1,14 +1,10 @@
 RewriteEngine On
+RewriteBase /
 
-# Excluir archivos específicos de debug y admin
-RewriteCond %{REQUEST_URI} ^/(debug_request|diagnose|verify_chatbot)\.php$ [OR]
-RewriteCond %{REQUEST_FILENAME} -f
-RewriteRule ^.*$ - [L]
-
-# IMPORTANTE: Si es una carpeta que existe, permitir acceso directo
+# Permitir directorios reales y archivos reales
+RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
-RewriteRule ^.*$ - [L]
+RewriteRule ^ - [L]
 
-# Solo después de eso, reescribir rutas virtuales a index.php
-# Esto permite que /health y /api/chat lleguen a index.php
+# Reescribir todo lo demás a index.php
 RewriteRule ^(.*)$ index.php [QSA,L]
