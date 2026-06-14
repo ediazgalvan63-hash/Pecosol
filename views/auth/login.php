@@ -159,10 +159,403 @@
   </style>
   <!-- Inline fallback: full stylesheet in case external CSS is blocked -->
   <style>
-<?php
-// Inline from assets/css/style.css fallback
-echo trim(file_get_contents(__DIR__ . '/../../assets/css/style.css'));
-?>
+/* assets/css/style.css */
+
+/* Reset básico */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Fondo de la página */
+body {
+  background-color: #1a1a2e;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #eaeaea;
+  background-image: url('../img/overlapping-circles.svg');
+  background-repeat: repeat;
+  background-size: 60px;
+  background-attachment: fixed;
+}
+
+/* Contenedor centrado */
+.container-login {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+
+/* Tarjeta neón */
+.neon-card {
+  position: relative;
+  background-color: #16213e;
+  border-radius: 20px;
+  padding: 2rem;
+  width: 90%;            /* Ocupa el 90% del contenedor */
+  max-width: 650px;      /* Hasta 500px de ancho */
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+}
+
+
+/* Brillo difuminado externo */
+.neon-card::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  right: -5px;
+  bottom: -5px;
+  border: 1px solid rgba(0, 255, 255, 0.5);
+  border-radius: 14px;
+  filter: blur(8px);
+  z-index: -1;
+}
+
+/* Título neón */
+.neon-card h2 {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  color: #00fff0;
+  text-shadow: 0 0 8px #00fff0;
+}
+
+/* Etiquetas de formulario */
+.form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #a0a0a0;
+}
+
+/* Inputs transparentes con borde neón al focus */
+.form-control {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border: 2px solid #0f3460;
+  border-radius: 8px;
+  color: #eaeaea;
+  font-size: 1rem;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.form-control::placeholder {
+  color: #555;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #00fff0;
+  box-shadow: 0 0 8px #00fff0;
+}
+/* Button neón */
+.btn-neon {
+  --glow-color: #00fff0;
+  --glow-spread-color: rgba(0, 255, 240, 0.4);
+  --btn-color: #0f1113;
+
+  display: block;
+  margin: 1.5rem auto 0;
+  padding: 0.9em 2.5em;
+  max-width: 280px;
+
+  color: var(--glow-color);
+  background-color: var(--btn-color);
+  border: 2px solid var(--glow-color);
+  border-radius: 50px;
+  font-size: 1rem;
+  font-weight: bold;
+  text-align: center;
+  cursor: pointer;
+  text-shadow: 0 0 8px var(--glow-color);
+  box-shadow:
+    0 0 8px var(--glow-color),
+    0 0 20px var(--glow-spread-color),
+    inset 0 0 10px rgba(0, 255, 240, 0.2);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-neon::after {
+  content: "";
+  position: absolute;
+  top: 120%;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  background-color: var(--glow-spread-color);
+  filter: blur(2em);
+  opacity: 0.6;
+  transform: perspective(1.5em) rotateX(35deg) scale(1, 0.6);
+  pointer-events: none;
+}
+
+.btn-neon:hover {
+  background-color: var(--glow-color);
+  color: var(--btn-color);
+  box-shadow:
+    0 0 10px var(--glow-color),
+    0 0 30px var(--glow-spread-color),
+    inset 0 0 14px rgba(0, 255, 240, 0.4);
+}
+
+.btn-neon:active {
+  box-shadow:
+    0 0 6px var(--glow-color),
+    0 0 16px var(--glow-spread-color),
+    inset 0 0 10px rgba(0, 255, 240, 0.4);
+  transform: scale(0.98);
+}
+
+
+/* Mensaje de error */
+.error {
+  text-align: center;
+  color: #ff4d4d;
+  margin-bottom: 1rem;
+}
+
+/* ─── Navbar oscuro ───────────────────────────────────────────────────────── */
+
+/* 1) Fondo del navbar */
+.navbar {
+  background-color: #0f3460 !important;
+}
+
+/* 2) Texto de marca y enlaces */
+.navbar .navbar-brand,
+.navbar .nav-link {
+  color: #eaeaea !important;
+}
+
+/* 3) Hover: acento turquesa */
+.navbar .nav-link:hover {
+  color: #00fff0 !important;
+}
+
+/* 4) Enlace “Cerrar Sesión” en rojo suave */
+.navbar .cerrar-sesion {
+  color: #ff6b6b !important;
+}
+.navbar .cerrar-sesion:hover {
+  color: #ff8787 !important;
+}
+
+/* Boton agregar producto */
+.button {
+  position: relative;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #00fff0;
+  background-color: #0f172a;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  text-decoration: none;
+  z-index: 1;
+  transition: color 0.3s ease, background-color 0.3s ease;
+  overflow: hidden;
+  box-shadow: 0 0 12px rgba(0, 255, 240, 0.3);
+}
+
+.button::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  width: calc(100% + 4px);
+  height: calc(100% + 4px);
+  background: linear-gradient(135deg, #00fff0, #5eead4);
+  border-radius: 12px;
+  z-index: -2;
+  transition: transform 0.6s ease;
+}
+
+.button::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #0f172a;
+  border-radius: 10px;
+  z-index: -1;
+}
+
+.button:hover::before {
+  transform: rotate(180deg);
+}
+
+.button:hover {
+  color: #0f172a;
+  background-color: #00fff0;
+  box-shadow: 0 0 18px rgba(0, 255, 240, 0.6);
+}
+
+.button:active::before {
+  transform: scale(0.9);
+}
+
+/* Botones globales unificados */
+button[type="submit"],
+button[type="reset"],
+button[type="button"],
+input[type="submit"],
+input[type="reset"],
+input[type="button"],
+.btn,
+.button,
+a.button,
+.btn-primary,
+.btn-secondary,
+.btn-ghost,
+.btn-add-large,
+.action-button,
+.btn-edit,
+.btn-delete,
+.btn-submit {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.5rem !important;
+  padding: 14px 28px !important;
+  min-height: 48px !important;
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  line-height: 1.2 !important;
+  color: #00fff0 !important;
+  background-color: #0f172a !important;
+  border: 1px solid rgba(0, 255, 240, 0.4) !important;
+  border-radius: 18px !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  transition: all 0.25s ease !important;
+  overflow: hidden !important;
+  box-shadow: 0 0 22px rgba(0, 255, 240, 0.25) !important;
+}
+
+.btn::before,
+.button::before,
+a.button::before,
+.btn-primary::before,
+.btn-secondary::before,
+.btn-ghost::before,
+.btn-add-large::before,
+.action-button::before,
+.btn-edit::before,
+.btn-delete::before,
+.btn-submit::before {
+  content: '' !important;
+  position: absolute !important;
+  top: -2px !important;
+  left: -2px !important;
+  width: calc(100% + 4px) !important;
+  height: calc(100% + 4px) !important;
+  background: linear-gradient(135deg, rgba(0,255,240,0.35), rgba(94,234,212,0.2)) !important;
+  border-radius: 22px !important;
+  z-index: -2 !important;
+  transition: transform 0.35s ease !important;
+}
+
+.btn::after,
+.button::after,
+a.button::after,
+.btn-primary::after,
+.btn-secondary::after,
+.btn-ghost::after,
+.btn-add-large::after,
+.action-button::after,
+.btn-edit::after,
+.btn-delete::after,
+.btn-submit::after {
+  content: '' !important;
+  position: absolute !important;
+  inset: 0 !important;
+  background-color: inherit !important;
+  border-radius: inherit !important;
+  z-index: -1 !important;
+}
+
+.btn:hover,
+.button:hover,
+a.button:hover,
+.btn-primary:hover,
+.btn-secondary:hover,
+.btn-ghost:hover,
+.btn-add-large:hover,
+.action-button:hover,
+.btn-edit:hover,
+.btn-delete:hover,
+.btn-submit:hover,
+button[type="submit"]:hover,
+button[type="reset"]:hover,
+button[type="button"]:hover,
+input[type="submit"]:hover,
+input[type="reset"]:hover,
+input[type="button"]:hover {
+  color: #0f172a !important;
+  background-color: #00fff0 !important;
+  border-color: rgba(0, 255, 240, 0.55) !important;
+  box-shadow: 0 0 28px rgba(0, 255, 240, 0.55) !important;
+}
+
+.btn:active,
+.button:active,
+a.button:active,
+.btn-primary:active,
+.btn-secondary:active,
+.btn-ghost:active,
+.btn-add-large:active,
+.action-button:active,
+.btn-edit:active,
+.btn-delete:active,
+.btn-submit:active,
+button[type="submit"]:active,
+button[type="reset"]:active,
+button[type="button"]:active,
+input[type="submit"]:active,
+input[type="reset"]:active,
+input[type="button"]:active {
+  transform: translateY(1px) !important;
+}
+
+.btn-primary,
+.button-primary {
+  background: linear-gradient(90deg, #00fff0, #00e6d6) !important;
+  color: #012 !important;
+  border: none !important;
+  box-shadow: 0 0 20px rgba(0, 255, 240, 0.35) !important;
+}
+
+.form-actions .btn-primary {
+  background: linear-gradient(90deg, #00b9d8, #0074d7) !important;
+  color: #f8fbff !important;
+  border: 1px solid rgba(0, 255, 240, 0.6) !important;
+  box-shadow: 0 0 28px rgba(0, 255, 240, 0.45) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.28) !important;
+}
+
+.form-actions .btn-primary:hover {
+  background: linear-gradient(90deg, #00d4f0, #00a2ff) !important;
+  color: #012 !important;
+}
+
+.form-actions .btn-ghost {
+  background: rgba(0, 255, 240, 0.08) !important;
+  color: #dffeff !important;
+  border-color: rgba(0, 255, 240, 0.55) !important;
+  box-shadow: 0 0 18px rgba(0, 255, 240, 0.18) !important;
+}
+
   </style>
 </head>
 <body>
