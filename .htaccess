@@ -8,11 +8,6 @@ RewriteRule ^.*$ - [L]
 RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^.*$ - [L]
 
-# Redireccionar /health a /api/chat.php
-RewriteRule ^health/?$ api/chat.php [QSA,L]
-
-# Redireccionar /api/chat a /api/chat.php
-RewriteRule ^api/chat/?$ api/chat.php [QSA,L]
-
-# Enviar todo lo demás a index.php con la ruta en "url"
-RewriteRule ^(.+)$ index.php?url=$1 [QSA,L]
+# Enviar TODO a index.php (incluido /health y /api/chat)
+# index.php manejará estas rutas especiales
+RewriteRule ^(.*)$ index.php [QSA,L]

@@ -1,14 +1,28 @@
 <?php
-// index.php
+// index.php - Front Controller
+// =====================================
 
-// 0) CRÍTICO: Detectar rutas especiales ANTES de cualquier cosa
+// 0) CRÍTICO: Detectar rutas especiales ANTES de CUALQUIER otra cosa
+// Incluyen: /health, /api/chat, /diagnose.php, etc
 $requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 $requestPath = rtrim($requestPath, '/');
 
-// Si es /health o /api/chat, responder directamente como JSON
+// Si es /health o /api/chat, responder directamente como JSON sin cargar nada más
 if ($requestPath === '/health' || $requestPath === '/api/chat') {
     header('Content-Type: application/json; charset=utf-8');
-    require_once __DIR__ . '/api/chat.php';
+    http_response_code(200);
+    echo json_encode([
+        'status' => 'ok',
+        'service' => 'Pecosol API',
+        'database' => 'connected',
+        'timestamp' => date('Y-m-d H:i:s')
+    ]);
+    exit;
+}
+
+// Si es /diagnose.php, cargar ese archivo
+if ($requestPath === '/diagnose.php' || $requestPath === '/diagnose') {
+    require_once __DIR__ . '/diagnose.php';
     exit;
 }
 
