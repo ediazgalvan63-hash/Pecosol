@@ -60,8 +60,8 @@ if (session_status() === PHP_SESSION_NONE) {
 // Esto cubre casos en los que Apache reescribe todo a index.php.
 $staticRequestUri = null;
 $staticRequestCandidates = [
-    $_SERVER['REDIRECT_URL'] ?? null,
     $_SERVER['REQUEST_URI'] ?? null,
+    $_SERVER['REDIRECT_URL'] ?? null,
     $_SERVER['PATH_INFO'] ?? null,
     $_SERVER['ORIG_PATH_INFO'] ?? null,
 ];
@@ -76,13 +76,13 @@ if (empty($staticRequestUri)) {
     $staticRequestUri = '/';
 }
 
-// Si la URL original tenía query string y no tenemos redirección, intentamos reconstruirla.
-if (empty($_SERVER['REDIRECT_URL']) && !empty($_SERVER['REQUEST_URI'])) {
-    $uriParts = explode('?', $_SERVER['REQUEST_URI'], 2);
-    if (!empty($uriParts[0])) {
-        $staticRequestUri = $uriParts[0];
-    }
+// Si la URL original tenía query string, usamos el path limpio.
+$uriParts = explode('?', $staticRequestUri, 2);
+if (!empty($uriParts[0])) {
+    $staticRequestUri = $uriParts[0];
 }
+
+@file_put_contents(__DIR__ . '/request_log.txt', date('Y-m-d H:i:s') . ' | STATIC_CANDIDATES: ' . json_encode($staticRequestCandidates) . ' | STATIC_URI: ' . $staticRequestUri . '\n', FILE_APPEND);
 
 $staticRequestPath = parse_url($staticRequestUri, PHP_URL_PATH) ?: '/';
 $staticRequestPath = rawurldecode($staticRequestPath);
