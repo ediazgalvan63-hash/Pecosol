@@ -56,27 +56,45 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Bypass de servidor: servir directamente assets estáticos si existen
-// Usamos REDIRECT_URL cuando Apache reescribe la ruta a index.php.
-$staticRequestUri = $_SERVER['REDIRECT_URL'] ?? $_SERVER['REQUEST_URI'] ?? '/';
-$staticRequestPath = parse_url($staticRequestUri, PHP_URL_PATH);
-$staticRequestPath = rtrim($staticRequestPath, '/');
-
-// Rutas estáticas que Apache debería servir directamente
-$staticPrefixes = ['/assets/', '/favicon.ico', '/robots.txt', '/sitemap.xml'];
-$isStaticRequest = false;
-
-foreach ($staticPrefixes as $prefix) {
-    if ($staticRequestPath === $prefix || str_starts_with($staticRequestPath, $prefix)) {
-        $isStaticRequest = true;
+// Bypass de servidor: servir directamente archivos reales si existen.
+// Esto cubre casos en los que Apache reescribe todo a index.php.
+$staticRequestUri = null;
+$staticRequestCandidates = [
+    $_SERVER['REDIRECT_URL'] ?? null,
+    $_SERVER['REQUEST_URI'] ?? null,
+    $_SERVER['PATH_INFO'] ?? null,
+    $_SERVER['ORIG_PATH_INFO'] ?? null,
+];
+foreach ($staticRequestCandidates as $candidate) {
+    if (!empty($candidate) && is_string($candidate)) {
+        $staticRequestUri = $candidate;
         break;
     }
 }
 
-if ($isStaticRequest) {
+if (empty($staticRequestUri)) {
+    $staticRequestUri = '/';
+}
+
+// Si la URL original tenía query string y no tenemos redirección, intentamos reconstruirla.
+if (empty($_SERVER['REDIRECT_URL']) && !empty($_SERVER['REQUEST_URI'])) {
+    $uriParts = explode('?', $_SERVER['REQUEST_URI'], 2);
+    if (!empty($uriParts[0])) {
+        $staticRequestUri = $uriParts[0];
+    }
+}
+
+$staticRequestPath = parse_url($staticRequestUri, PHP_URL_PATH) ?: '/';
+$staticRequestPath = rawurldecode($staticRequestPath);
+$staticRequestPath = rtrim($staticRequestPath, '/');
+if ($staticRequestPath === '') {
+    $staticRequestPath = '/';
+}
+
+// Si existe un archivo real en el servidor para esta ruta, lo servimos directamente.
+if ($staticRequestPath !== '/') {
     $filePath = realpath(__DIR__ . $staticRequestPath);
     $rootPath = realpath(__DIR__);
-    
     if ($filePath && $rootPath && str_starts_with($filePath, $rootPath) && is_file($filePath)) {
         $mimeType = mime_content_type($filePath) ?: 'application/octet-stream';
         header('Content-Type: ' . $mimeType);
