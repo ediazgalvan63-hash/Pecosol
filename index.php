@@ -2,6 +2,9 @@
 // index.php - Front Controller
 // =====================================
 
+// DEBUG: Log REQUEST_URI to accessible location
+@file_put_contents(__DIR__ . '/request_log.txt', date('Y-m-d H:i:s') . ' | REQUEST_URI: ' . ($_SERVER['REQUEST_URI'] ?? 'NOT SET') . ' | GET url: ' . ($_GET['url'] ?? 'NOT SET') . "\n", FILE_APPEND);
+
 // 0) CRÍTICO: Detectar rutas especiales ANTES de CUALQUIER otra cosa
 // REQUEST_URI podría venir como /health O como /index.php?url=health después de reescritura
 $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
