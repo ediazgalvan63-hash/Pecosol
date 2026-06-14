@@ -157,6 +157,13 @@
       filter: brightness(0) saturate(100%) invert(61%) sepia(75%) saturate(300%) hue-rotate(141deg);
     }
   </style>
+  <!-- Inline fallback: full stylesheet in case external CSS is blocked -->
+  <style>
+<?php
+// Inline from assets/css/style.css fallback
+echo trim(file_get_contents(__DIR__ . '/../../assets/css/style.css'));
+?>
+  </style>
 </head>
 <body>
   <div class="container-login">
