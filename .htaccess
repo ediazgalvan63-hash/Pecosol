@@ -1,11 +1,12 @@
 RewriteEngine On
 
-# IMPORTANTE: Si es una carpeta que existe, permitir acceso directo
-RewriteCond %{REQUEST_FILENAME} -d
+# Excluir archivos específicos de debug y admin
+RewriteCond %{REQUEST_URI} ^/(debug_request|diagnose|verify_chatbot)\.php$ [OR]
+RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^.*$ - [L]
 
-# IMPORTANTE: Si es un archivo que existe, permitir acceso directo (incluyendo .php)
-RewriteCond %{REQUEST_FILENAME} -f
+# IMPORTANTE: Si es una carpeta que existe, permitir acceso directo
+RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^.*$ - [L]
 
 # Solo después de eso, reescribir rutas virtuales a index.php
