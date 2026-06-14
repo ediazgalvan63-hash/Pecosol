@@ -1,13 +1,13 @@
 RewriteEngine On
 
-# Si es una carpeta que existe, permitir acceso directo
+# IMPORTANTE: Si es una carpeta que existe, permitir acceso directo
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^.*$ - [L]
 
-# Si es un archivo que existe, permitir acceso directo
+# IMPORTANTE: Si es un archivo que existe, permitir acceso directo (incluyendo .php)
 RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^.*$ - [L]
 
-# Enviar TODO a index.php (incluido /health y /api/chat)
-# index.php manejará estas rutas especiales
+# Solo después de eso, reescribir rutas virtuales a index.php
+# Esto permite que /health y /api/chat lleguen a index.php
 RewriteRule ^(.*)$ index.php [QSA,L]
