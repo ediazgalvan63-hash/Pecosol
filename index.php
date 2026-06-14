@@ -2,32 +2,34 @@
 // index.php - Front Controller
 // =====================================
 
-// DEBUG: Log REQUEST_URI to accessible location
-@file_put_contents(__DIR__ . '/request_log.txt', date('Y-m-d H:i:s') . ' | REQUEST_URI: ' . ($_SERVER['REQUEST_URI'] ?? 'NOT SET') . ' | GET url: ' . ($_GET['url'] ?? 'NOT SET') . "\n", FILE_APPEND);
+// DEBUG: Log REQUEST_URI and REDIRECT_URL
+@file_put_contents(__DIR__ . '/request_log.txt', date('Y-m-d H:i:s') . ' | REDIRECT_URL: ' . ($_SERVER['REDIRECT_URL'] ?? 'NOT SET') . ' | REQUEST_URI: ' . ($_SERVER['REQUEST_URI'] ?? 'NOT SET') . ' | GET: ' . ($_GET['url'] ?? 'EMPTY') . "\n", FILE_APPEND);
 
 // 0) CRÍTICO: Detectar rutas especiales ANTES de CUALQUIER otra cosa
 // REQUEST_URI podría venir como /health O como /index.php?url=health después de reescritura
-$requestUri = $_SERVER['REQUEST_URI'] ?? '/';
+// REDIRECT_URL es preservado por Apache cuando reescribe. REQUEST_URI se modifica a /index.php
+$originalUri = $_SERVER['REDIRECT_URL'] ?? $_SERVER['REQUEST_URI'] ?? '/';
+$requestUri = $originalUri;
 $requestPath = parse_url($requestUri, PHP_URL_PATH);
 $requestPath = rtrim($requestPath, '/');
 
 // Chequear de múltiples formas por si Apache reescribió la ruta
 $isHealth = (
     $requestPath === '/health' ||
-    strpos($requestUri, '/health') !== false ||
+    strpos($originalUri, '/health') !== false ||
     (isset($_GET['url']) && $_GET['url'] === 'health')
 );
 
 $isApiChat = (
     $requestPath === '/api/chat' ||
-    strpos($requestUri, '/api/chat') !== false ||
+    strpos($originalUri, '/api/chat') !== false ||
     (isset($_GET['url']) && $_GET['url'] === 'api/chat')
 );
 
 $isDiagnose = (
     $requestPath === '/diagnose' ||
     $requestPath === '/diagnose.php' ||
-    strpos($requestUri, 'diagnose') !== false
+    strpos($originalUri, 'diagnose') !== false
 );
 
 // Si es /health o /api/chat, responder directamente como JSON
