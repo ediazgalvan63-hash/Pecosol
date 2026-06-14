@@ -139,6 +139,20 @@ $baseUrl = $baseUrl ?: 'http://localhost/pecosol/';
 $baseUrl = rtrim($baseUrl, '/') . '/';
 define('BASE_URL', $baseUrl);
 
+// Heurística: si estamos en Railway y no hay APP_BASE_URL explícita, forzar la URL base
+try {
+    $hostLower = strtolower($_SERVER['HTTP_HOST'] ?? '');
+    if (empty($appBaseUrl) && strpos($hostLower, 'railway.app') !== false) {
+        $scheme = getCurrentRequestScheme();
+        $forced = $scheme . '://' . ($_SERVER['HTTP_HOST'] ?? $hostLower) . '/';
+        // Re-define BASE_URL si detectamos dominio railway
+        define('BASE_URL', $forced);
+        $baseUrl = $forced;
+    }
+} catch (Exception $e) {
+    // noop
+}
+
 
 /**
  * URL del API del chatbot (FastAPI).
