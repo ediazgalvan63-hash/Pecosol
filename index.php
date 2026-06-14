@@ -3,12 +3,32 @@
 // =====================================
 
 // 0) CRÍTICO: Detectar rutas especiales ANTES de CUALQUIER otra cosa
-// Incluyen: /health, /api/chat, /diagnose.php, etc
-$requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+// REQUEST_URI podría venir como /health O como /index.php?url=health después de reescritura
+$requestUri = $_SERVER['REQUEST_URI'] ?? '/';
+$requestPath = parse_url($requestUri, PHP_URL_PATH);
 $requestPath = rtrim($requestPath, '/');
 
-// Si es /health o /api/chat, responder directamente como JSON sin cargar nada más
-if ($requestPath === '/health' || $requestPath === '/api/chat') {
+// Chequear de múltiples formas por si Apache reescribió la ruta
+$isHealth = (
+    $requestPath === '/health' ||
+    strpos($requestUri, '/health') !== false ||
+    (isset($_GET['url']) && $_GET['url'] === 'health')
+);
+
+$isApiChat = (
+    $requestPath === '/api/chat' ||
+    strpos($requestUri, '/api/chat') !== false ||
+    (isset($_GET['url']) && $_GET['url'] === 'api/chat')
+);
+
+$isDiagnose = (
+    $requestPath === '/diagnose' ||
+    $requestPath === '/diagnose.php' ||
+    strpos($requestUri, 'diagnose') !== false
+);
+
+// Si es /health o /api/chat, responder directamente como JSON
+if ($isHealth || $isApiChat) {
     header('Content-Type: application/json; charset=utf-8');
     http_response_code(200);
     echo json_encode([
@@ -20,8 +40,8 @@ if ($requestPath === '/health' || $requestPath === '/api/chat') {
     exit;
 }
 
-// Si es /diagnose.php, cargar ese archivo
-if ($requestPath === '/diagnose.php' || $requestPath === '/diagnose') {
+// Si es /diagnose, cargar ese archivo
+if ($isDiagnose) {
     require_once __DIR__ . '/diagnose.php';
     exit;
 }
