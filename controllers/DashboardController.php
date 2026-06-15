@@ -811,7 +811,7 @@ class DashboardController {
                 $entityLabel = $entityLabels[strtolower($entity)] ?? ucfirst($entity);
                 $entityId = $audit->entity_id ?? '';
                 $details = $audit->details ?? '';
-                $created = date('d/m H:i', strtotime($audit->created_at));
+                $created = function_exists('formatSaleDate') ? formatSaleDate($audit->created_at, 'd/m H:i') : date('d/m H:i', strtotime($audit->created_at));
                 $severity = 'info';
                 $detailsSafe = htmlspecialchars($details);
 
@@ -824,7 +824,7 @@ class DashboardController {
                 $rowsHtml .= '<td class="td-summary">' . (strlen($details) > 80 ? substr($detailsSafe,0,80) . '...' : $detailsSafe) . '</td>';
                 $rowsHtml .= '<td class="td-severity">';
                 $rowsHtml .= '<span class="severity-info">INFO</span>';
-                $rowsHtml .= ' <button class="btn btn-sm btn-modal" data-details="' . $detailsSafe . '" data-user="' . htmlspecialchars($userName) . '" data-action="' . htmlspecialchars($actionLabel) . '" data-created="' . htmlspecialchars($audit->created_at) . '" data-entity="' . htmlspecialchars($entityLabel) . '" data-entityid="' . htmlspecialchars($entityId) . '">Ver</button>';
+                $rowsHtml .= ' <button class="btn btn-sm btn-modal" data-details="' . $detailsSafe . '" data-user="' . htmlspecialchars($userName) . '" data-action="' . htmlspecialchars($actionLabel) . '" data-created="' . htmlspecialchars($created) . '" data-entity="' . htmlspecialchars($entityLabel) . '" data-entityid="' . htmlspecialchars($entityId) . '">Ver</button>';
                 $rowsHtml .= '</td>';
                 $rowsHtml .= '</tr>';
             }

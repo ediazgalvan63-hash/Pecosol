@@ -1,0 +1,32 @@
+[
+    {
+        "id": 1,
+        "username": "admin",
+        "password": "$2y$10$XaO0f2lXAp4yVQ7I.IIZQuAji0.4XKwp.TQi2q6AfIIhHv29.0nsi",
+        "full_name": "Administrador Principal",
+        "email": "admin@bodeshop.com",
+        "role": "admin",
+        "created_at": "2025-06-04 09:19:49",
+        "updated_at": "2026-06-14 23:25:16"
+    },
+    {
+        "id": 9,
+        "username": "lucho",
+        "password": "$2y$10$XaO0f2lXAp4yVQ7I.IIZQuAji0.4XKwp.TQi2q6AfIIhHv29.0nsi",
+        "full_name": "lucho diaz",
+        "email": "lucho@gmail.com",
+        "role": "comercial",
+        "created_at": "2026-05-07 14:44:47",
+        "updated_at": "2026-06-14 23:25:16"
+    },
+    {
+        "id": 14,
+        "username": "pedrito",
+        "password": "$2y$10$XaO0f2lXAp4yVQ7I.IIZQuAji0.4XKwp.TQi2q6AfIIhHv29.0nsi",
+        "full_name": "pedro diaz",
+        "email": "pedrito@gmail.com",
+        "role": "supervisor",
+        "created_at": "2026-05-17 21:57:30",
+        "updated_at": "2026-06-14 23:25:16"
+    }
+]

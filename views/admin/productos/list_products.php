@@ -25,7 +25,7 @@ unset($_SESSION['error_product_delete']);
     <!-- Tu CSS general (incluye definición de .button) -->
     <link
         rel="stylesheet"
-        href="<?php echo BASE_URL; ?>/assets/css/style.css"
+        href="<?php echo BASE_URL; ?>/assets/css/style.css?v=<?php echo time(); ?>"
     />
 
     <style>
@@ -104,6 +104,72 @@ unset($_SESSION['error_product_delete']);
             text-align: left;
             border-bottom: 1px solid rgba(255,255,255,0.1);
         }
+        .d-flex {
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .search-box {
+            flex: 1 1 250px;
+            min-width: 180px;
+            text-align: right;
+        }
+        .search-box input {
+            width: 100%;
+            max-width: 320px;
+        }
+        @media (max-width: 780px) {
+            .d-flex {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .search-box {
+                width: 100%;
+                text-align: left;
+                margin-top: 8px;
+            }
+            .search-box input {
+                max-width: 100%;
+            }
+            .button {
+                width: 100%;
+                justify-content: center;
+            }
+            table {
+                display: block;
+                overflow-x: auto;
+                width: 100%;
+            }
+            thead {
+                display: none;
+            }
+            tbody tr {
+                display: block;
+                margin-bottom: 14px;
+                border: 1px solid rgba(255,255,255,0.08);
+                border-radius: 12px;
+                padding: 12px;
+            }
+            tbody td {
+                display: flex;
+                justify-content: space-between;
+                gap: 12px;
+                padding: 8px 0;
+                border: none;
+            }
+            tbody td::before {
+                content: attr(data-label);
+                flex: 1 1 40%;
+                color: #86f4ff;
+                font-weight: 600;
+                min-width: 120px;
+            }
+            tbody td:last-child {
+                justify-content: flex-start;
+            }
+            .actions {
+                flex-wrap: wrap;
+            }
+        }
         th {
             background-color: #0f3460;
             color: #00fff0;
@@ -133,8 +199,51 @@ unset($_SESSION['error_product_delete']);
             margin-left: 8px;
         }
     </style>
+    <!-- Mobile-specific inline overrides and helper script (highest priority) -->
+    <style>
+        @media (max-width: 820px) {
+            body.admin-panel .page-shell table#productsTable thead { display: none !important; }
+            body.admin-panel .page-shell table#productsTable, body.admin-panel table.dashboard-table { display:block !important; width:100% !important; overflow:visible !important; }
+            body.admin-panel .page-shell table#productsTable tbody tr { display:block !important; margin-bottom:12px !important; padding:12px !important; border-radius:10px !important; background: rgba(255,255,255,0.02) !important; }
+            body.admin-panel .page-shell table#productsTable tbody td { display:flex !important; justify-content:space-between !important; gap:10px !important; padding:8px 0 !important; border:none !important; }
+            body.admin-panel .page-shell table#productsTable tbody td::before { content: attr(data-label) !important; color:#86f4ff !important; font-weight:700 !important; min-width:110px !important; flex:0 0 40% !important; }
+            .module { padding:10px !important; }
+        }
+    </style>
+    <script>
+        (function(){
+            function setMobileState(){
+                try{
+                    if(window.innerWidth <= 820){
+                        document.body.classList.add('mobile-ready');
+                        document.body.classList.add('nav-collapsed');
+                        var adminNav = document.getElementById('mainNavLinks');
+                        if(adminNav && !adminNav.classList.contains('collapsed')) adminNav.classList.add('collapsed');
+                        var empLinks = document.querySelector('.emp-links');
+                        var empNav = document.querySelector('.emp-nav');
+                        if(empLinks && empNav && !empNav.classList.contains('open')) empNav.classList.remove('open');
+                    } else {
+                        document.body.classList.remove('mobile-ready');
+                        document.body.classList.remove('nav-collapsed');
+                    }
+                }catch(e){console.warn('mobile adapt error',e)}
+            }
+            setMobileState();
+            window.addEventListener('resize', setMobileState);
+            // Also collapse on initial user-agent mobile detection (safeguard)
+            if(/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) setMobileState();
+            // If device supports touch, also force mobile nav collapse
+            if(('ontouchstart' in window) || (navigator.maxTouchPoints && navigator.maxTouchPoints>0)) {
+                try{ document.body.classList.add('nav-collapsed');
+                    var mn = document.getElementById('mainNavLinks'); if(mn) mn.classList.add('collapsed');
+                    var en = document.querySelector('.emp-nav'); if(en) en.classList.remove('open');
+                }catch(e){}
+            }
+        })();
+    </script>
 </head>
-<body>
+<?php $role = $_SESSION['role'] ?? 'admin'; ?>
+<body class="<?php echo htmlspecialchars($role); ?>-panel">
 
     <!-- Encabezado común -->
     <?php
@@ -147,8 +256,12 @@ unset($_SESSION['error_product_delete']);
     }
     ?>
 
-    <div class="container">
-        <h1>Listado de Productos</h1>
+        <main class="page-shell">
+            <section class="module">
+                <div class="container">
+                        <div class="module-header">
+                            <h1>Listado de Productos</h1>
+                        </div>
         <p style="color:#ffcccb; margin-top:-10px; margin-bottom:15px;">
             Productos con bajo stock: <?php echo (int)($lowStockCount ?? 0); ?>
         </p>
@@ -177,7 +290,7 @@ unset($_SESSION['error_product_delete']);
 
         <!-- Tabla de productos -->
         <?php if (!empty($productos)): ?>
-            <table id="productsTable">
+            <table id="productsTable" class="dashboard-table">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -194,14 +307,14 @@ unset($_SESSION['error_product_delete']);
                 <tbody>
                     <?php foreach ($productos as $prod): ?>
                         <tr>
-                            <td><?php echo $prod->id; ?></td>
-                            <td class="prod-name"><?php echo htmlspecialchars($prod->name); ?></td>
-                            <td class="prod-desc"><?php echo htmlspecialchars($prod->description); ?></td>
-                            <td><?php echo number_format($prod->price, 2, '.', ','); ?></td>
-                            <td><?php echo (int)$prod->stock; ?></td>
-                            <td><?php echo (int)($prod->stock_minimum ?? 0); ?></td>
-                            <td><?php echo (isset($prod->created_at) && $prod->created_at) ? date('d/m/Y H:i', strtotime($prod->created_at)) : '-'; ?></td>
-                            <td>
+                            <td data-label="ID"><?php echo $prod->id; ?></td>
+                            <td class="prod-name" data-label="Nombre"><?php echo htmlspecialchars($prod->name); ?></td>
+                            <td class="prod-desc" data-label="Descripción"><?php echo htmlspecialchars($prod->description); ?></td>
+                            <td data-label="Precio (S/.)"><?php echo number_format($prod->price, 2, '.', ','); ?></td>
+                            <td data-label="Stock"><?php echo (int)$prod->stock; ?></td>
+                            <td data-label="Stock minimo"><?php echo (int)($prod->stock_minimum ?? 0); ?></td>
+                            <td data-label="Fecha y Hora"><?php echo (isset($prod->created_at) && $prod->created_at) ? formatSaleDate($prod->created_at, 'd/m/Y H:i') : '-'; ?></td>
+                            <td data-label="Estado">
                                 <?php if ((int)$prod->stock <= (int)($prod->stock_minimum ?? 0)): ?>
                                     <span class="badge-alert">Bajo stock</span>
                                 <?php else: ?>
@@ -228,7 +341,9 @@ unset($_SESSION['error_product_delete']);
         <?php else: ?>
             <p style="color:#a0a0a0;">No hay productos registrados aún.</p>
         <?php endif; ?>
-    </div>
+        </div>
+      </section>
+    </main>
 
     <!-- Script de búsqueda -->
     <script>

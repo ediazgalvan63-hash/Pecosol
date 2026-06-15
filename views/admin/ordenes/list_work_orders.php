@@ -115,7 +115,7 @@ if ($useEmployeeHeader) {
                 <?php if (!empty($ordenes)): ?>
                     <?php foreach ($ordenes as $o): ?>
                         <tr>
-                            <td><?php echo htmlspecialchars($o->created_at); ?></td>
+                            <td><?php echo htmlspecialchars(function_exists('formatSaleDate') ? formatSaleDate($o->created_at, 'd/m/Y H:i') : date('d/m/Y H:i', strtotime($o->created_at))); ?></td>
                             <td><?php echo htmlspecialchars($o->client_name); ?></td>
                             <td><?php echo htmlspecialchars($o->service_type); ?></td>
                             <td><?php echo htmlspecialchars($o->technician_name); ?></td>

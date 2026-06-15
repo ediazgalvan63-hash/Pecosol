@@ -1,0 +1,241 @@
+﻿{
+    "id":  "cfefaeea-7097-4b7d-81f4-86c3a66522df",
+    "name":  "Pecosol",
+    "deletedAt":  null,
+    "workspace":  {
+                      "name":  "erickdiaz147\u0027s Projects"
+                  },
+    "buckets":  {
+                    "edges":  [
+
+                              ]
+                },
+    "environments":  {
+                         "edges":  [
+                                       {
+                                           "node":  {
+                                                        "id":  "ea8e729a-b6af-4bbc-b033-c37fc84e7ca6",
+                                                        "name":  "production",
+                                                        "canAccess":  true,
+                                                        "deletedAt":  null,
+                                                        "unmergedChangesCount":  null,
+                                                        "serviceInstances":  {
+                                                                                 "edges":  [
+                                                                                               {
+                                                                                                   "node":  {
+                                                                                                                "id":  "7dfef50e-9d01-4ee1-a03d-fa35dbe4c587",
+                                                                                                                "serviceId":  "7a6511bb-f39c-4755-9b88-869926ee4a0a",
+                                                                                                                "serviceName":  "pecosol-chatbot",
+                                                                                                                "environmentId":  "ea8e729a-b6af-4bbc-b033-c37fc84e7ca6",
+                                                                                                                "numReplicas":  null,
+                                                                                                                "latestDeployment":  {
+                                                                                                                                         "canRedeploy":  true,
+                                                                                                                                         "id":  "00471976-605e-4179-8589-65095b2ab80f",
+                                                                                                                                         "meta":  {
+                                                                                                                                                      "buildOnly":  false,
+                                                                                                                                                      "cliMessage":  "Fix chatbot service build from python_api",
+                                                                                                                                                      "fileServiceManifest":  "",
+                                                                                                                                                      "ignoreWatchPatterns":  true,
+                                                                                                                                                      "imageDigest":  "sha256:6cad033e28d420b7bf05d67b2c8b24b68a8224c8a3783a25ef40ca8f85f1dec4",
+                                                                                                                                                      "logsV2":  true,
+                                                                                                                                                      "nixpacksProviders":  "",
+                                                                                                                                                      "propertyFileMapping":  "",
+                                                                                                                                                      "reason":  "redeploy",
+                                                                                                                                                      "rootDirectory":  null,
+                                                                                                                                                      "runtime":  "V2",
+                                                                                                                                                      "serviceManifest":  "@{build=; deploy=}",
+                                                                                                                                                      "volumeMounts":  ""
+                                                                                                                                                  },
+                                                                                                                                         "status":  "SUCCESS",
+                                                                                                                                         "createdAt":  "2026-06-12T20:35:14.084Z",
+                                                                                                                                         "deploymentStopped":  false,
+                                                                                                                                         "instances":  [
+                                                                                                                                                           "@{id=c75e7be0-a4a7-466a-99a2-5fd1aabcfde6; status=RUNNING}"
+                                                                                                                                                       ]
+                                                                                                                                     },
+                                                                                                                "activeDeployments":  [
+                                                                                                                                          {
+                                                                                                                                              "id":  "00471976-605e-4179-8589-65095b2ab80f",
+                                                                                                                                              "status":  "SUCCESS",
+                                                                                                                                              "createdAt":  "2026-06-12T20:35:14.084Z",
+                                                                                                                                              "meta":  "@{buildOnly=False; cliMessage=Fix chatbot service build from python_api; fileServiceManifest=; ignoreWatchPatterns=True; imageDigest=sha256:6cad033e28d420b7bf05d67b2c8b24b68a8224c8a3783a25ef40ca8f85f1dec4; logsV2=True; nixpacksProviders=System.Object[]; propertyFileMapping=; reason=redeploy; rootDirectory=; runtime=V2; serviceManifest=; volumeMounts=System.Object[]}",
+                                                                                                                                              "deploymentStopped":  false,
+                                                                                                                                              "instances":  ""
+                                                                                                                                          }
+                                                                                                                                      ],
+                                                                                                                "source":  {
+                                                                                                                               "repo":  null,
+                                                                                                                               "image":  null
+                                                                                                                           },
+                                                                                                                "domains":  {
+                                                                                                                                "serviceDomains":  [
+                                                                                                                                                       "@{id=ea222855-82f8-4984-b3ff-574329011a4d; domain=pecosol-chatbot-production.up.railway.app; targetPort=}"
+                                                                                                                                                   ],
+                                                                                                                                "customDomains":  [
+
+                                                                                                                                                  ]
+                                                                                                                            },
+                                                                                                                "cronSchedule":  null,
+                                                                                                                "nextCronRunAt":  null,
+                                                                                                                "startCommand":  null
+                                                                                                            }
+                                                                                               },
+                                                                                               {
+                                                                                                   "node":  {
+                                                                                                                "id":  "8779c2db-8c41-4f56-b732-916efb631d57",
+                                                                                                                "serviceId":  "822c1a1c-65e6-4375-ac63-0201f7f6ef4f",
+                                                                                                                "serviceName":  "virtuous-energy",
+                                                                                                                "environmentId":  "ea8e729a-b6af-4bbc-b033-c37fc84e7ca6",
+                                                                                                                "numReplicas":  null,
+                                                                                                                "latestDeployment":  {
+                                                                                                                                         "canRedeploy":  true,
+                                                                                                                                         "id":  "56d8a766-552c-4f76-9dd7-825129e32289",
+                                                                                                                                         "meta":  {
+                                                                                                                                                      "buildOnly":  false,
+                                                                                                                                                      "fileServiceManifest":  "",
+                                                                                                                                                      "ignoreWatchPatterns":  true,
+                                                                                                                                                      "imageDigest":  "sha256:73526e7141c9671e363ef4ed91951807c4d2df6dbd3582bfa977393cb25e7b90",
+                                                                                                                                                      "logsV2":  true,
+                                                                                                                                                      "nixpacksProviders":  "",
+                                                                                                                                                      "propertyFileMapping":  "",
+                                                                                                                                                      "reason":  "redeploy",
+                                                                                                                                                      "rootDirectory":  null,
+                                                                                                                                                      "runtime":  "V2",
+                                                                                                                                                      "serviceManifest":  "@{build=; deploy=}",
+                                                                                                                                                      "skipBuildCache":  true,
+                                                                                                                                                      "volumeMounts":  ""
+                                                                                                                                                  },
+                                                                                                                                         "status":  "SUCCESS",
+                                                                                                                                         "createdAt":  "2026-06-13T19:21:39.993Z",
+                                                                                                                                         "deploymentStopped":  false,
+                                                                                                                                         "instances":  [
+                                                                                                                                                           "@{id=62075beb-103b-41ec-9b39-47115027bb21; status=RUNNING}"
+                                                                                                                                                       ]
+                                                                                                                                     },
+                                                                                                                "activeDeployments":  [
+                                                                                                                                          {
+                                                                                                                                              "id":  "56d8a766-552c-4f76-9dd7-825129e32289",
+                                                                                                                                              "status":  "SUCCESS",
+                                                                                                                                              "createdAt":  "2026-06-13T19:21:39.993Z",
+                                                                                                                                              "meta":  "@{buildOnly=False; fileServiceManifest=; ignoreWatchPatterns=True; imageDigest=sha256:73526e7141c9671e363ef4ed91951807c4d2df6dbd3582bfa977393cb25e7b90; logsV2=True; nixpacksProviders=System.Object[]; propertyFileMapping=; reason=redeploy; rootDirectory=; runtime=V2; serviceManifest=; skipBuildCache=True; volumeMounts=System.Object[]}",
+                                                                                                                                              "deploymentStopped":  false,
+                                                                                                                                              "instances":  ""
+                                                                                                                                          }
+                                                                                                                                      ],
+                                                                                                                "source":  null,
+                                                                                                                "domains":  {
+                                                                                                                                "serviceDomains":  [
+                                                                                                                                                       "@{id=c72a4f29-7695-4bff-ab9d-3ffbb5c142a2; domain=virtuous-energy-production-d0c4.up.railway.app; targetPort=}"
+                                                                                                                                                   ],
+                                                                                                                                "customDomains":  [
+
+                                                                                                                                                  ]
+                                                                                                                            },
+                                                                                                                "cronSchedule":  null,
+                                                                                                                "nextCronRunAt":  null,
+                                                                                                                "startCommand":  null
+                                                                                                            }
+                                                                                               },
+                                                                                               {
+                                                                                                   "node":  {
+                                                                                                                "id":  "9215c0b0-f9bc-441d-a465-6ee3bc2fa010",
+                                                                                                                "serviceId":  "d3ea3f90-e362-4dcd-ada8-9f8f015b71bf",
+                                                                                                                "serviceName":  "MySQL",
+                                                                                                                "environmentId":  "ea8e729a-b6af-4bbc-b033-c37fc84e7ca6",
+                                                                                                                "numReplicas":  null,
+                                                                                                                "latestDeployment":  {
+                                                                                                                                         "canRedeploy":  true,
+                                                                                                                                         "id":  "4fa73204-932c-4c5c-9e95-690570bf2531",
+                                                                                                                                         "meta":  {
+                                                                                                                                                      "ignoreWatchPatterns":  true,
+                                                                                                                                                      "image":  "mysql:9.4",
+                                                                                                                                                      "imageDigest":  "sha256:135bc87cce147c3d28cecb9ad270b814cb52805af7ddeea83bfcaf157d05a6b2",
+                                                                                                                                                      "logsV2":  true,
+                                                                                                                                                      "patchId":  "ec3712e0-2cdd-455e-a7a2-ff29bb6535be",
+                                                                                                                                                      "reason":  "redeploy",
+                                                                                                                                                      "runtime":  "V2",
+                                                                                                                                                      "serviceManifest":  "@{build=; deploy=}",
+                                                                                                                                                      "skipBuildCache":  true,
+                                                                                                                                                      "volumeMounts":  "/var/lib/mysql"
+                                                                                                                                                  },
+                                                                                                                                         "status":  "SUCCESS",
+                                                                                                                                         "createdAt":  "2026-06-12T21:04:17.957Z",
+                                                                                                                                         "deploymentStopped":  false,
+                                                                                                                                         "instances":  [
+                                                                                                                                                           "@{id=597e13e2-0b92-4552-92a0-9ac2eaa0376a; status=RUNNING}"
+                                                                                                                                                       ]
+                                                                                                                                     },
+                                                                                                                "activeDeployments":  [
+                                                                                                                                          {
+                                                                                                                                              "id":  "4fa73204-932c-4c5c-9e95-690570bf2531",
+                                                                                                                                              "status":  "SUCCESS",
+                                                                                                                                              "createdAt":  "2026-06-12T21:04:17.957Z",
+                                                                                                                                              "meta":  "@{ignoreWatchPatterns=True; image=mysql:9.4; imageDigest=sha256:135bc87cce147c3d28cecb9ad270b814cb52805af7ddeea83bfcaf157d05a6b2; logsV2=True; patchId=ec3712e0-2cdd-455e-a7a2-ff29bb6535be; reason=redeploy; runtime=V2; serviceManifest=; skipBuildCache=True; volumeMounts=System.Object[]}",
+                                                                                                                                              "deploymentStopped":  false,
+                                                                                                                                              "instances":  ""
+                                                                                                                                          }
+                                                                                                                                      ],
+                                                                                                                "source":  {
+                                                                                                                               "repo":  null,
+                                                                                                                               "image":  "mysql:9.4"
+                                                                                                                           },
+                                                                                                                "domains":  {
+                                                                                                                                "serviceDomains":  [
+
+                                                                                                                                                   ],
+                                                                                                                                "customDomains":  [
+
+                                                                                                                                                  ]
+                                                                                                                            },
+                                                                                                                "cronSchedule":  null,
+                                                                                                                "nextCronRunAt":  null,
+                                                                                                                "startCommand":  "docker-entrypoint.sh mysqld --innodb-use-native-aio=0 --disable-log-bin --performance_schema=0 --innodb-buffer-pool-size=1G"
+                                                                                                            }
+                                                                                               }
+                                                                                           ]
+                                                                             },
+                                                        "volumeInstances":  {
+                                                                                "edges":  [
+                                                                                              {
+                                                                                                  "node":  {
+                                                                                                               "serviceId":  "d3ea3f90-e362-4dcd-ada8-9f8f015b71bf",
+                                                                                                               "mountPath":  "/var/lib/mysql",
+                                                                                                               "environmentId":  "ea8e729a-b6af-4bbc-b033-c37fc84e7ca6",
+                                                                                                               "currentSizeMB":  164.94592,
+                                                                                                               "sizeMB":  500,
+                                                                                                               "state":  "READY",
+                                                                                                               "volume":  {
+                                                                                                                              "name":  "mysql-volume",
+                                                                                                                              "id":  "36a1ee80-163b-4348-a849-44cb77f4a3dc"
+                                                                                                                          }
+                                                                                                           }
+                                                                                              }
+                                                                                          ]
+                                                                            }
+                                                    }
+                                       }
+                                   ]
+                     },
+    "services":  {
+                     "edges":  [
+                                   {
+                                       "node":  {
+                                                    "id":  "7a6511bb-f39c-4755-9b88-869926ee4a0a",
+                                                    "name":  "pecosol-chatbot"
+                                                }
+                                   },
+                                   {
+                                       "node":  {
+                                                    "id":  "822c1a1c-65e6-4375-ac63-0201f7f6ef4f",
+                                                    "name":  "virtuous-energy"
+                                                }
+                                   },
+                                   {
+                                       "node":  {
+                                                    "id":  "d3ea3f90-e362-4dcd-ada8-9f8f015b71bf",
+                                                    "name":  "MySQL"
+                                                }
+                                   }
+                               ]
+                 }
+}

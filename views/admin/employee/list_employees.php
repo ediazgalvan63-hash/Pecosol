@@ -13,7 +13,7 @@ if (session_status() === PHP_SESSION_NONE) {
 <head>
     <meta charset="UTF-8" />
     <title>Listado de Empleados | Admin</title>
-    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/assets/css/style.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/assets/css/style.css?v=<?php echo time(); ?>">
 
     <link
     rel="icon"
@@ -119,7 +119,9 @@ if (session_status() === PHP_SESSION_NONE) {
   <!-- Header Admin -->
   <?php include __DIR__ . '/../partials/header.php'; ?>
 
-  <div class="container">
+  <main class="page-shell">
+    <section class="module">
+      <div class="container">
     <h1>Listado de Empleados</h1>
 
     <!-- Botón Agregar Empleado -->
@@ -167,12 +169,12 @@ if (session_status() === PHP_SESSION_NONE) {
         <tbody>
           <?php foreach ($empleados as $emp): ?>
             <tr>
-              <td class="emp-id"><?php echo $emp->id; ?></td>
-              <td class="emp-username"><?php echo htmlspecialchars($emp->username); ?></td>
-              <td class="emp-fullname"><?php echo htmlspecialchars($emp->full_name); ?></td>
-              <td class="emp-email"><?php echo htmlspecialchars($emp->email); ?></td>
-              <td><?php echo htmlspecialchars(ucfirst($emp->role)); ?></td>
-              <td><?php echo (isset($emp->created_at) && $emp->created_at) ? date('d/m/Y H:i', strtotime($emp->created_at)) : '-'; ?></td>
+              <td class="emp-id" data-label="ID"><?php echo $emp->id; ?></td>
+              <td class="emp-username" data-label="Usuario"><?php echo htmlspecialchars($emp->username); ?></td>
+              <td class="emp-fullname" data-label="Nombre Completo"><?php echo htmlspecialchars($emp->full_name); ?></td>
+              <td class="emp-email" data-label="Email"><?php echo htmlspecialchars($emp->email); ?></td>
+              <td data-label="Rol"><?php echo htmlspecialchars(ucfirst($emp->role)); ?></td>
+              <td data-label="Fecha y Hora Creación"><?php echo (isset($emp->created_at) && $emp->created_at) ? (function_exists('formatSaleDate') ? formatSaleDate($emp->created_at, 'd/m/Y H:i') : date('d/m/Y H:i', strtotime($emp->created_at))) : '-'; ?></td>
               <td class="actions">
                 <a 
                   href="index.php?controller=admin&action=editEmployeeForm&id=<?php echo $emp->id; ?>" 
@@ -193,7 +195,9 @@ if (session_status() === PHP_SESSION_NONE) {
     <?php else: ?>
       <p>No hay empleados registrados aún.</p>
     <?php endif; ?>
-  </div>
+      </div>
+    </section>
+  </main>
 
   <script>
     // Array de usernames para sugerencias

@@ -102,6 +102,10 @@ if ($showTzDebug && !empty($_SESSION['role']) && $_SESSION['role'] === 'admin') 
     margin-top: 4px;
   }
 
+  .nav-links.collapsed {
+    display: none !important;
+  }
+
   .nav-links a:hover::after {
     width: 100%;
     background-color: var(--accent);
@@ -161,30 +165,81 @@ if ($showTzDebug && !empty($_SESSION['role']) && $_SESSION['role'] === 'admin') 
       flex-direction: column;
       padding: 16px 24px;
       align-items: flex-start;
+      position: relative;
     }
 
     .nav-links {
-      flex-direction: column;
+      flex-direction: row;
+      flex-wrap: nowrap;
+      overflow-x: auto;
       width: 100%;
       margin: 12px 0;
-      gap: 16px;
+      gap: 12px;
+      padding-bottom: 8px;
+      transition: max-height 0.25s ease;
+      justify-content: flex-start;
+      max-height: 999px;
+    }
+
+    .nav-links:not(.collapsed) {
+      display: flex !important;
+    }
+
+    .nav-links a {
+      white-space: nowrap;
+      font-size: 0.95rem;
+      padding: 8px 8px;
+    }
+
+    .nav-links.collapsed {
+      display: none !important;
+      max-height: 0;
     }
 
     .user {
-      justify-content: flex-start;
+      justify-content: space-between;
       width: 100%;
-      margin-bottom: 12px;
+      margin-bottom: 0;
+      margin-top: 10px;
+      flex-wrap: wrap;
+      gap: 10px;
     }
 
     .menu-toggle {
       display: block;
       position: absolute;
-      top: 16px;
-      right: 24px;
+      top: 18px;
+      right: 20px;
+      z-index: 10;
+    }
+  }
+
+  @media(max-width: 600px) {
+    .nav-links {
+      flex-direction: column;
+      gap: 10px;
     }
 
-    .nav-links.collapsed {
-      display: none;
+    .nav-links a {
+      width: 100%;
+      padding: 10px 12px;
+      justify-content: flex-start;
+    }
+
+    .user {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .logout {
+      width: 100%;
+      text-align: center;
+      padding: 10px 0;
+    }
+
+    .brand span {
+      font-size: 1.5rem;
     }
   }
 </style>
@@ -207,8 +262,8 @@ if ($showTzDebug && !empty($_SESSION['role']) && $_SESSION['role'] === 'admin') 
     <!-- Menú hamburguesa -->
     <button class="menu-toggle" onclick="document.getElementById('mainNavLinks').classList.toggle('collapsed')">☰</button>
 
-    <!-- Enlaces navegación -->
-    <div class="nav-links" id="mainNavLinks">
+    <!-- Enlaces navegación (colapsados por defecto en móvil) -->
+    <div class="nav-links collapsed" id="mainNavLinks">
       <a href="<?php echo BASE_URL; ?>?controller=admin&action=listInventoryMovements"
          class="<?php echo ($currentController === 'admin' && in_array($currentAction, ['listInventoryMovements', 'addInventoryMovementForm'], true)) ? 'active' : ''; ?>">
         Inventario
@@ -266,3 +321,37 @@ if ($showTzDebug && !empty($_SESSION['role']) && $_SESSION['role'] === 'admin') 
 </script>
 <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/chatbot-widget.css" />
 <script src="<?php echo BASE_URL; ?>assets/js/chatbot-widget.js"></script>
+<script>
+  (function(){
+    const links = document.getElementById('mainNavLinks');
+    if (!links) return;
+    function update() {
+      if (window.innerWidth <= 900) links.classList.add('collapsed');
+      else links.classList.remove('collapsed');
+    }
+    update();
+    window.addEventListener('resize', update);
+  })();
+</script>
+<script>
+  // Assign data-labels to table cells from their thead headers on small screens
+  (function(){
+    function applyDataLabels() {
+      try{
+        var tables = document.querySelectorAll('.page-shell table, table.dashboard-table, table#productsTable');
+        tables.forEach(function(tbl){
+          var ths = Array.from(tbl.querySelectorAll('thead th')).map(th=>th.textContent.trim());
+          if(ths.length===0) return;
+          tbl.querySelectorAll('tbody tr').forEach(function(tr){
+            Array.from(tr.children).forEach(function(td, i){
+              if(!td.getAttribute('data-label')) td.setAttribute('data-label', ths[i] || '');
+            });
+          });
+        });
+      }catch(e){console.warn('applyDataLabels error', e);}
+    }
+    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', applyDataLabels);
+    else applyDataLabels();
+    window.addEventListener('resize', applyDataLabels);
+  })();
+</script>

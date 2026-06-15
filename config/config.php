@@ -1,10 +1,8 @@
 <?php
 // config/config.php
 
-// Iniciar sesión para guardar estado del chatbot (solo si no está iniciada)
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+// Session is already started in index.php before including this file
+// No need to start session again here
 
 /**
  * Función auxiliar para obtener valores de entorno de forma robusta.
@@ -36,7 +34,12 @@ define('APP_TIMEZONE', $appTimezone);
  * - En local suele guardarse en hora local.
  * Se puede forzar con variable de entorno DB_TIMEZONE.
  */
-$isRailway = (bool) (getenv('RAILWAY_ENVIRONMENT') ?: getenv('RAILWAY_PROJECT_ID') ?: getenv('RAILWAY_SERVICE_ID'));
+$isRailway = (bool) (
+    getenv('RAILWAY_ENVIRONMENT') ?: getenv('RAILWAY_PROJECT_ID') ?: getenv('RAILWAY_SERVICE_ID') ?:
+    (isset($_SERVER['HTTP_HOST']) && stripos($_SERVER['HTTP_HOST'], 'railway.app') !== false ? '1' : '')
+);
+
+// Si no se proporcionó DB_TIMEZONE, por seguridad asumimos UTC en Railway
 $dbTimezone = getenv('DB_TIMEZONE') ?: ($isRailway ? 'UTC' : APP_TIMEZONE);
 define('DB_TIMEZONE', $dbTimezone);
 

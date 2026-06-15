@@ -210,7 +210,7 @@ $auditEntityLabels = [
     }
   </style>
 </head>
-<body>
+<body class="supervisor-panel">
   <?php include __DIR__ . '/../employee/partials/header.php'; ?>
   <main class="page-shell">
     <section class="header-panel">
@@ -380,11 +380,11 @@ $auditEntityLabels = [
                         $entity = $audit->entity ?? '';
                         $entityId = $audit->entity_id ?? '';
                         $details = $audit->details ?? '';
-                        $created = date('d/m H:i', strtotime($audit->created_at));
+                        $created = function_exists('formatSaleDate') ? formatSaleDate($audit->created_at, 'd/m H:i') : date('d/m H:i', strtotime($audit->created_at));
                         $severity = in_array($rawAction, ['delete','adjust']) ? 'critical' : 'info';
                         $detailsSafe = htmlspecialchars($details);
                       ?>
-                      <tr class="audit-row" data-user="<?php echo htmlspecialchars(strtolower($userName)); ?>" data-action="<?php echo htmlspecialchars($rawAction); ?>" data-created="<?php echo htmlspecialchars(date('Y-m-d', strtotime($audit->created_at))); ?>">
+                      <tr class="audit-row" data-user="<?php echo htmlspecialchars(strtolower($userName)); ?>" data-action="<?php echo htmlspecialchars($rawAction); ?>" data-created="<?php echo htmlspecialchars(function_exists('formatSaleDate') ? formatSaleDate($audit->created_at, 'Y-m-d') : date('Y-m-d', strtotime($audit->created_at))); ?>">
                         <td class="td-date"><?php echo $created; ?></td>
                         <td class="td-user"><?php echo htmlspecialchars($userName); ?></td>
                         <td class="td-action"><?php echo htmlspecialchars($actionLabel); ?></td>

@@ -7,6 +7,82 @@
   box-sizing: border-box;
 }
 
+/* Strong mobile overrides to ensure tables stack neatly on small screens */
+@media (max-width: 820px) {
+  .page-shell table.dashboard-table,
+  .page-shell table#productsTable,
+  table.dashboard-table,
+  table#productsTable {
+    display: block !important;
+    width: 100% !important;
+    overflow: visible !important;
+  }
+
+  table.dashboard-table thead,
+  table#productsTable thead {
+    display: none !important;
+  }
+
+  table.dashboard-table tbody tr,
+  table#productsTable tbody tr {
+    display: block !important;
+    margin-bottom: 12px !important;
+    padding: 10px !important;
+    border-radius: 10px !important;
+    background: rgba(255,255,255,0.02) !important;
+  }
+
+  table.dashboard-table tbody td,
+  table#productsTable tbody td {
+    display: flex !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    padding: 8px 0 !important;
+    border: none !important;
+    align-items: center !important;
+  }
+
+  table.dashboard-table tbody td::before,
+  table#productsTable tbody td::before {
+    content: attr(data-label) !important;
+    color: #86f4ff !important;
+    font-weight: 700 !important;
+    min-width: 110px !important;
+    flex: 0 0 40% !important;
+    text-align: left !important;
+  }
+
+  .module { padding: 10px !important; border-radius: 10px !important; }
+  .module-header { gap:8px !important; }
+}
+
+/* Additional universal mobile helpers */
+@media (max-width: 820px) {
+  /* Target any cell that uses data-label for stacked layout */
+  td[data-label] { display:flex !important; justify-content:space-between !important; gap:10px !important; padding:8px 0 !important; }
+  td[data-label]::before { content: attr(data-label) !important; color:#86f4ff !important; font-weight:700 !important; min-width:110px !important; flex:0 0 40% !important; }
+
+  /* Collapsed nav helper: when script adds this class, hide large navs */
+  body.nav-collapsed .emp-links { display:none !important; }
+  body.nav-collapsed #mainNavLinks { display:none !important; }
+  body.nav-collapsed .user { width:100% !important; }
+}
+
+/* When nav is collapsed, ensure toggles are visible and usable */
+body.nav-collapsed .menu-toggle,
+body.nav-collapsed .emp-toggle {
+  display: block !important;
+  position: absolute !important;
+  right: 18px !important;
+  top: 14px !important;
+  z-index: 2000 !important;
+}
+
+/* Make sure collapsed nav lists are accessible when expanded via toggle.
+  Do not force column layout globally — only let component media queries decide direction. */
+.nav-links:not(.collapsed), .emp-nav.open .emp-links { display:flex !important; width:100% !important; }
+
+
 /* Fondo de la página */
 body {
   background-color: #1a1a2e;
@@ -586,6 +662,183 @@ input[type="button"]:active {
   .export-group .btn { flex: 1 1 160px; min-width: 140px; }
 }
 
+/* Mejoras responsivas para móviles pequeños */
+@media (max-width: 600px) {
+  /* Ajustar el contenedor para aprovechar toda la pantalla */
+  .page-shell,
+  .container {
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 12px 12px 28px;
+  }
+
+  /* Reducir tamaño del header y centrar menos espacio */
+  .header-panel {
+    padding: 12px;
+    border-radius: 12px;
+  }
+  .header-panel h1 {
+    font-size: 1.4rem;
+    line-height: 1.15;
+    margin-bottom: 6px;
+  }
+  .header-panel p {
+    font-size: 0.95rem;
+    max-width: 100%;
+  }
+
+  /* Forzar columnas a una sola columna y reducir gaps */
+  .kpi-grid,
+  .cards,
+  .quick-actions,
+  .action-grid,
+  .hero {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* Hacer las tarjetas más compactas */
+  .kpi-card,
+  .card,
+  .action-card,
+  .action-box,
+  .panel,
+  .panel-card {
+    padding: 12px !important;
+    border-radius: 12px !important;
+    min-height: auto;
+  }
+
+  .cards .card p {
+    font-size: 1.4rem !important;
+    line-height: 1.05;
+    margin: 6px 0 10px;
+  }
+
+  /* Reducir padding global de botones en móvil */
+  button[type="submit"],
+  button[type="button"],
+  .btn,
+  .button {
+    padding: 10px 16px !important;
+    font-size: 0.95rem !important;
+    border-radius: 12px !important;
+    min-height: 40px !important;
+  }
+
+  /* Ajustes de la navbar para que ocupe menos espacio */
+  .navbar {
+    padding: 6px 10px !important;
+  }
+  .navbar .nav-link {
+    padding: 6px 6px !important;
+    font-size: 0.9rem !important;
+  }
+
+  /* Navbar brand and menu compact */
+  .navbar .navbar-brand { font-size: 1rem !important; }
+  .navbar .navbar-toggler { padding: 6px 8px !important; }
+
+  /* Evitar que el widget de chat cubra contenido importante */
+  .chatbot-fab {
+    bottom: 12px !important;
+    right: 12px !important;
+    width: 52px !important;
+    height: 52px !important;
+  }
+  .chatbot-widget {
+    bottom: 80px !important;
+    right: 12px !important;
+    width: calc(100vw - 24px) !important;
+    height: calc(60vh) !important;
+    max-height: calc(100vh - 120px) !important;
+  }
+
+  /* Inputs y textos más compactos */
+  .form-control,
+  .audit-toolbar .form-control {
+    padding: 8px 10px !important;
+    font-size: 0.95rem !important;
+  }
+
+  /* Tablas: hacer scroll horizontal si es necesario y tamaño reducido */
+  .audit-table-wrap { max-height: 360px; }
+  .audit-table thead th, .audit-table tbody td { padding: 10px 8px; font-size: 0.9rem; }
+
+  /* Ajuste final para evitar márgenes excesivos en tarjetas grandes */
+  .modal-content { width: calc(100% - 24px); padding: 12px; }
+
+  /* Panel-specific mobile tweaks */
+  /* Admin panel: compact KPI cards, collapse tables into stacks */
+  .admin-panel .kpi-card, .admin-panel .card {
+    padding: 10px !important;
+    font-size: 0.95rem !important;
+  }
+  .admin-panel table {
+    display: block !important;
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  .admin-panel .table-row, .admin-panel tbody tr { display: block; width: 100%; border-bottom: 1px solid rgba(255,255,255,0.04); padding: 10px 0; }
+
+  /* Commercial panel: prioritize actions and form fields, make form controls full width */
+  .commercial-panel .action-box, .commercial-panel .action-card {
+    padding: 12px !important;
+  }
+  .commercial-panel form .form-control, .commercial-panel .form-group { width: 100% !important; display: block !important; }
+  .commercial-panel .quick-actions { justify-content: space-between; gap:10px; }
+
+  /* Supervisor panel: collapse audit filters into a vertical stack and increase tap targets */
+  .supervisor-panel .audit-filters { flex-direction: column !important; gap: 10px !important; }
+  .supervisor-panel .audit-table thead { display: none !important; }
+  .supervisor-panel .audit-table tbody td { display: block !important; width: 100% !important; padding: 10px 8px !important; }
+  .supervisor-panel .audit-table tbody tr { margin-bottom: 12px !important; display: block !important; border-radius: 10px; background: rgba(255,255,255,0.02); padding: 8px; }
+  .supervisor-panel .btn { min-height: 48px !important; }
+}
+
+/* Header and nav overrides for very small screens to keep layout compact */
+@media (max-width: 600px) {
+  header.employee .emp-nav {
+    padding: 8px 12px !important;
+    gap: 8px;
+  }
+  header.employee .emp-brand img { height: 34px !important; }
+  header.employee .emp-brand { font-size: 1.05rem !important; gap: 8px; }
+  header.employee .emp-links {
+    gap: 10px !important;
+    width: 100%;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 6px !important;
+    margin-top: 6px !important;
+  }
+  header.employee .emp-links a {
+    font-size: 0.9rem !important;
+    padding: 6px 6px !important;
+    max-width: 90px !important;
+    display: inline-block !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  header.employee .user {
+    width: 100%;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-top: 8px !important;
+    gap: 8px;
+  }
+  header.employee .emp-user { font-size: 0.92rem !important; color: #cfeeff !important; }
+  header.employee .emp-logout { padding: 6px 10px !important; font-size: 0.85rem !important; border-radius: 12px !important; }
+
+  /* Reduce header-panel bottom margin to pull hero closer */
+  .header-panel { margin-bottom: 12px !important; padding: 10px 12px !important; }
+  .header-panel h1 { font-size: 1.45rem !important; }
+  .page-shell { padding-top: 8px !important; }
+}
+
 /* Fix for input contrast when dropdown opens on some browsers */
 .audit-toolbar select:focus, .audit-toolbar input:focus { background-color: rgba(255,255,255,0.02); }
 
@@ -665,6 +918,188 @@ input[type="button"]:active {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 18px;
+}
+
+/* Unified module styles to make all modules look ordered */
+.module {
+  background: rgba(9,18,41,0.94);
+  border: 1px solid rgba(0,255,240,0.06);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 18px 32px rgba(0,0,0,0.18);
+  margin-bottom: 18px;
+}
+
+/* Apply module look to common page-shell children so templates don't need editing */
+.page-shell > section,
+.page-shell > .kpi-group,
+.page-shell .panel-card,
+.page-shell .cards,
+.page-shell .chart-container,
+.page-shell .grid-two,
+.page-shell .hero {
+  background: rgba(9,18,41,0.96);
+  border: 1px solid rgba(0,255,240,0.06);
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 18px 32px rgba(0,0,0,0.14);
+  margin-bottom: 18px;
+}
+
+.page-shell h1, .page-shell h2 { color: #7df4ff; }
+
+.page-shell .header-panel {
+  background: rgba(9,18,41,0.96);
+  border: 1px solid rgba(0,255,240,0.06);
+  border-radius: 16px;
+  padding: 18px 20px;
+  margin-bottom: 18px;
+}
+.page-shell .header-panel h1 {
+  font-size: 2rem;
+  margin-bottom: 10px;
+  color: #7df4ff;
+}
+.page-shell .header-panel p {
+  color: #d8f8ff;
+  line-height: 1.7;
+}
+
+/* Make dashboard tables use module-table style */
+.page-shell table.dashboard-table,
+.page-shell table.sales-table,
+.page-shell table#productsTable {
+  width:100%;
+  border-collapse:collapse;
+}
+.page-shell table.dashboard-table thead th,
+.page-shell table#productsTable thead th { background: rgba(15,52,96,0.95); color:#bfeaff; padding:10px 12px; }
+
+.page-shell table#productsTable {
+  overflow-x: auto;
+}
+.page-shell table#productsTable th,
+.page-shell table#productsTable td {
+  padding: 12px 14px;
+}
+
+@media (max-width: 780px) {
+  .page-shell table#productsTable {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+  }
+  .page-shell table#productsTable thead {
+    display: none;
+  }
+  .page-shell table#productsTable tbody tr {
+    display: block;
+    margin-bottom: 14px;
+    background: rgba(255,255,255,0.02);
+    border-radius: 12px;
+    padding: 14px;
+  }
+  .page-shell table#productsTable tbody td {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 0;
+    border: none;
+  }
+  .page-shell table#productsTable tbody td::before {
+    content: attr(data-label);
+    flex: 0 0 40%;
+    color: #86f4ff;
+    font-weight: 600;
+    min-width: 120px;
+  }
+}
+
+.module-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  margin-bottom: 12px;
+}
+.module-header h2 { margin:0; color:#7df4ff; font-size:1.15rem; }
+
+/* Standard KPI card */
+.kpi-card { padding: 18px !important; border-radius: 12px !important; min-height:120px !important; }
+
+/* Tables: consistent, compact and readable */
+.module-table, table.module-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: transparent;
+  color: #dbeeff;
+}
+.module-table thead th {
+  background: rgba(15,52,96,0.95);
+  color: #bfeaff;
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 2px solid rgba(0,255,240,0.04);
+}
+.module-table tbody td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  vertical-align: middle;
+}
+.module-table tbody tr:hover { background: rgba(0,255,240,0.02); }
+
+/* Action buttons group on table rows */
+.row-actions { display:flex; gap:8px; align-items:center; }
+.row-actions .btn { padding:8px 12px; min-height:40px; }
+
+/* Make primary action prominent */
+.action-primary { background: linear-gradient(90deg,#00f7e8,#00cfc0); color:#012 !important; border:none !important; }
+
+@media (max-width: 760px) {
+  .module { padding: 12px; }
+  .module-header { flex-direction:column; align-items:flex-start; gap:6px; }
+  .kpi-grid { grid-template-columns: 1fr !important; }
+  .module-table thead { display:none; }
+  .module-table tbody td { display:block; width:100%; box-sizing:border-box; }
+  .module-table tbody tr { margin-bottom:12px; display:block; background: rgba(255,255,255,0.01); border-radius:8px; padding:8px; }
+
+  .page-shell table.dashboard-table,
+  .page-shell table#productsTable {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+  }
+  .page-shell table.dashboard-table thead,
+  .page-shell table#productsTable thead {
+    display: none;
+  }
+  .page-shell table.dashboard-table tbody tr,
+  .page-shell table#productsTable tbody tr {
+    display: block;
+    width: 100%;
+    margin-bottom: 14px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.02);
+    padding: 12px;
+  }
+  .page-shell table.dashboard-table tbody td,
+  .page-shell table#productsTable tbody td {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 0;
+    border: none;
+  }
+  .page-shell table.dashboard-table tbody td::before,
+  .page-shell table#productsTable tbody td::before {
+    content: attr(data-label);
+    flex: 0 0 42%;
+    color: #86f4ff;
+    font-weight: 600;
+    min-width: 110px;
+  }
 }
 
 .kpi-group {

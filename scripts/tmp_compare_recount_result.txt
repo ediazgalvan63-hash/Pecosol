@@ -1,0 +1,6 @@
+local_products=10
+remote_products=10
+local_stock=196
+remote_stock=196
+local_reconteos=6
+remote_reconteos=6

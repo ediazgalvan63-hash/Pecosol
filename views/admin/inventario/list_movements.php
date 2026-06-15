@@ -126,7 +126,7 @@ if ($useEmployeeHeader) {
                 <?php foreach ($movimientos as $mov): ?>
                     <tr>
                         <td><?php echo (int)$mov->id; ?></td>
-                        <td><?php echo date('Y-m-d H:i', strtotime($mov->movement_date)); ?></td>
+                        <td><?php echo function_exists('formatSaleDate') ? formatSaleDate($mov->movement_date, 'Y-m-d H:i') : date('Y-m-d H:i', strtotime($mov->movement_date)); ?></td>
                         <td><span class="status-chip <?php echo $mov->movement_type === 'ingreso' ? 'ingreso' : 'salida'; ?>"><?php echo strtoupper($mov->movement_type); ?></span></td>
                         <td><?php echo htmlspecialchars($mov->product_name); ?></td>
                         <td><?php echo abs((int)$mov->quantity_change); ?></td>

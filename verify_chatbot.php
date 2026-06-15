@@ -95,6 +95,10 @@ function checkApiReachable()
         try {
             $json = json_decode($response, true);
             $details['response'] = $json;
+            if (is_array($json) && isset($json['service']) && $json['service'] === 'Pecosol API') {
+                $status = 'fail';
+                $details['message'] = 'El endpoint /health pertenece a la aplicación web, no al servicio de chatbot.';
+            }
         } catch (Exception $e) {
             $details['response_raw'] = substr($response, 0, 200);
         }
@@ -106,7 +110,7 @@ function checkApiReachable()
         'details' => $details,
         'message' => match ($status) {
             'pass' => '✅ Chatbot API is reachable and healthy',
-            'fail' => "❌ Cannot reach chatbot API (HTTP $httpCode): " . ($error ?: 'Connection failed'),
+            'fail' => "❌ Cannot reach chatbot API (HTTP $httpCode): " . ($error ?: ($details['message'] ?? 'Connection failed')),
         }
     ];
 }

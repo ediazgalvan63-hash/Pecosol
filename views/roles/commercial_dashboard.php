@@ -216,7 +216,7 @@ if (session_status() === PHP_SESSION_NONE) {
     }
   </style>
 </head>
-<body>
+<body class="commercial-panel">
   <?php include __DIR__ . '/../employee/partials/header.php'; ?>
   <main class="page-shell">
     <section class="hero">
@@ -333,7 +333,7 @@ if (session_status() === PHP_SESSION_NONE) {
                     <td><?php echo htmlspecialchars($sale->client_name); ?></td>
                     <td><?php echo htmlspecialchars($sale->product_name); ?></td>
                     <td>S/. <?php echo number_format($sale->total_price, 2, '.', ','); ?></td>
-                    <td><?php echo htmlspecialchars(date('d/m/Y H:i', strtotime($sale->sale_date))); ?></td>
+                    <td><?php echo htmlspecialchars(function_exists('formatSaleDate') ? formatSaleDate($sale->sale_date, 'd/m/Y H:i') : date('d/m/Y H:i', strtotime($sale->sale_date))); ?></td>
                   </tr>
                 <?php endforeach; ?>
               <?php endif; ?>

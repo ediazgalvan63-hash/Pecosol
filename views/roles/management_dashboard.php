@@ -258,7 +258,7 @@ if (session_status() === PHP_SESSION_NONE) {
                     <td><?php echo htmlspecialchars($sale->user_name); ?></td>
                     <td><?php echo htmlspecialchars($sale->client_name); ?></td>
                     <td>S/. <?php echo number_format($sale->total_price, 2, '.', ','); ?></td>
-                    <td><?php echo htmlspecialchars(date('d/m/Y', strtotime($sale->sale_date))); ?></td>
+                    <td><?php echo htmlspecialchars(function_exists('formatSaleDate') ? formatSaleDate($sale->sale_date, 'd/m/Y') : date('d/m/Y', strtotime($sale->sale_date))); ?></td>
                   </tr>
                 <?php endforeach; ?>
               <?php endif; ?>
@@ -317,7 +317,7 @@ if (session_status() === PHP_SESSION_NONE) {
               <?php else: ?>
                 <?php foreach ($recentAudits as $log): ?>
                   <tr>
-                    <td><?php echo htmlspecialchars(date('d/m/Y H:i', strtotime($log->created_at ?? $log->log_date ?? ''))); ?></td>
+                    <td><?php echo htmlspecialchars(function_exists('formatSaleDate') ? formatSaleDate($log->created_at ?? $log->log_date ?? '', 'd/m/Y H:i') : date('d/m/Y H:i', strtotime($log->created_at ?? $log->log_date ?? ''))); ?></td>
                     <td><?php echo htmlspecialchars($log->user_name ?? 'Sistema'); ?></td>
                     <td><?php echo htmlspecialchars(traducirAccion($log->action)); ?></td>
                     <td><?php echo htmlspecialchars(traducirEntidad($log->entity)); ?></td>

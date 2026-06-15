@@ -249,7 +249,7 @@ if (session_status() === PHP_SESSION_NONE) {
                     <td><?php echo htmlspecialchars($purchase->supplier); ?></td>
                     <td><?php echo number_format($purchase->quantity); ?></td>
                     <td>S/. <?php echo number_format($purchase->price, 2, '.', ','); ?></td>
-                    <td><?php echo htmlspecialchars(date('d/m/Y H:i', strtotime($purchase->purchase_date))); ?></td>
+                    <td><?php echo htmlspecialchars(function_exists('formatSaleDate') ? formatSaleDate($purchase->purchase_date, 'd/m/Y H:i') : date('d/m/Y H:i', strtotime($purchase->purchase_date))); ?></td>
                   </tr>
                 <?php endforeach; ?>
               <?php endif; ?>

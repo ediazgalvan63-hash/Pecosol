@@ -197,8 +197,8 @@ if (session_status() === PHP_SESSION_NONE) {
         <select id="role" name="role" required>
           <option value="">-- Selecciona un rol --</option>
           <option value="comercial"<?php if(($_POST['role'] ?? '')==='comercial') echo ' selected'; ?>>Comercial</option>
-          <option value="supervisor"<?php if(($_POST['role'] ?? '')==='supervisor') echo ' selected'; ?>>Supervisor</option>
           <option value="admin"<?php if(($_POST['role'] ?? '')==='admin') echo ' selected'; ?>>Administrador</option>
+          <option value="supervisor"<?php if(($_POST['role'] ?? '')==='supervisor') echo ' selected'; ?>>Supervisor</option>
         </select>
 
         <button type="submit">Guardar Usuario</button>

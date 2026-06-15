@@ -2,6 +2,11 @@
 // index.php - Front Controller
 // =====================================
 
+// CRITICAL: Start session FIRST, before any output
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 // DEBUG: Log REQUEST_URI and REDIRECT_URL
 @file_put_contents(__DIR__ . '/request_log.txt', date('Y-m-d H:i:s') . ' | REDIRECT_URL: ' . ($_SERVER['REDIRECT_URL'] ?? 'NOT SET') . ' | REQUEST_URI: ' . ($_SERVER['REQUEST_URI'] ?? 'NOT SET') . ' | GET: ' . ($_GET['url'] ?? 'EMPTY') . "\n", FILE_APPEND);
 
@@ -10,7 +15,7 @@
 // REDIRECT_URL es preservado por Apache cuando reescribe. REQUEST_URI se modifica a /index.php
 $originalUri = $_SERVER['REDIRECT_URL'] ?? $_SERVER['REQUEST_URI'] ?? '/';
 $requestUri = $originalUri;
-$requestPath = parse_url($requestUri, PHP_URL_PATH);
+$requestPath = parse_url($requestUri, PHP_URL_PATH) ?? '/';
 $requestPath = rtrim($requestPath, '/');
 
 // Chequear de múltiples formas por si Apache reescribió la ruta
@@ -56,11 +61,6 @@ if ($isApiChat) {
 if ($isDiagnose) {
     require_once __DIR__ . '/diagnose.php';
     exit;
-}
-
-// 1) Iniciar sesión (después de las rutas especiales)
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
 }
 
 // Bypass de servidor: servir directamente archivos reales si existen.

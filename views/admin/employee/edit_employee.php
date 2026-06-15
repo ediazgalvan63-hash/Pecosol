@@ -209,8 +209,8 @@
         <label for="role">Rol:</label>
         <select id="role" name="role" required>
           <option value="comercial"<?php echo ($empleado->role === 'comercial') ? ' selected' : ''; ?>>Comercial</option>
-          <option value="supervisor"<?php echo ($empleado->role === 'supervisor') ? ' selected' : ''; ?>>Supervisor</option>
           <option value="admin"<?php echo ($empleado->role === 'admin') ? ' selected' : ''; ?>>Administrador</option>
+          <option value="supervisor"<?php echo ($empleado->role === 'supervisor') ? ' selected' : ''; ?>>Supervisor</option>
         </select>
 
         <div class="checkbox-container">

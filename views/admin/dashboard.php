@@ -34,8 +34,9 @@
   <!-- Custom app styles -->
   <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/style.css" />
 
+
 </head>
-<body>
+<body class="admin-panel">
 
   <!-- Header -->
   <?php include __DIR__ . '/partials/header.php'; ?>
@@ -46,7 +47,7 @@
       <p>Monitorea la operación comercial y de inventario con una experiencia uniforme y profesional.</p>
     </section>
 
-    <div class="kpi-group">
+    <div class="kpi-group module">
       <div class="section-title">
         <h2>Inventario</h2>
       </div>
@@ -74,7 +75,7 @@
       </div>
     </div>
 
-    <div class="kpi-group">
+    <div class="kpi-group module">
       <div class="section-title">
         <h2>Ventas</h2>
       </div>
@@ -98,15 +99,15 @@
     </div>
 
     <!-- Gráfica de barras -->
-    <div class="chart-container">
+    <div class="chart-container module">
       <h2>Ventas Últimos 7 Días</h2>
       <canvas id="ventasChart" width="800" height="300"></canvas>
     </div>
-
     <!-- Últimas Ventas -->
-    <h2 class="section-title">Últimas Ventas</h2>
-    <?php if (!empty($ultimasVentas)): ?>
-      <table class="dashboard-table">
+    <section class="module">
+      <h2 class="section-title">Últimas Ventas</h2>
+      <?php if (!empty($ultimasVentas)): ?>
+        <table class="dashboard-table">
         <thead>
           <tr>
             <th>ID</th>
@@ -133,14 +134,16 @@
             </tr>
           <?php endforeach; ?>
         </tbody>
-      </table>
-    <?php else: ?>
-      <p class="empty-state">No hay ventas registradas aún.</p>
-    <?php endif; ?>
+        </table>
+      <?php else: ?>
+        <p class="empty-state">No hay ventas registradas aún.</p>
+      <?php endif; ?>
+    </section>
 
-    <h2 class="section-title">Ultimos Movimientos de Inventario</h2>
-    <?php if (!empty($ultimosMovimientos)): ?>
-      <table class="dashboard-table">
+    <section class="module">
+      <h2 class="section-title">Ultimos Movimientos de Inventario</h2>
+      <?php if (!empty($ultimosMovimientos)): ?>
+        <table class="dashboard-table">
         <thead>
           <tr>
             <th>Fecha</th>
@@ -154,7 +157,7 @@
         <tbody>
           <?php foreach ($ultimosMovimientos as $mov): ?>
             <tr>
-              <td><?php echo date('d-m-Y H:i', strtotime($mov->movement_date)); ?></td>
+              <td><?php echo function_exists('formatSaleDate') ? formatSaleDate($mov->movement_date, 'd-m-Y H:i') : date('d-m-Y H:i', strtotime($mov->movement_date)); ?></td>
               <td><?php echo strtoupper($mov->movement_type); ?></td>
               <td><?php echo htmlspecialchars($mov->product_name); ?></td>
               <td><?php echo abs((int)$mov->quantity_change); ?></td>
@@ -163,10 +166,11 @@
             </tr>
           <?php endforeach; ?>
         </tbody>
-      </table>
-    <?php else: ?>
-      <p class="empty-state">No hay movimientos registrados aún.</p>
-    <?php endif; ?>
+        </table>
+      <?php else: ?>
+        <p class="empty-state">No hay movimientos registrados aún.</p>
+      <?php endif; ?>
+    </section>
     
     <!-- Bitácora de auditoría removida del dashboard de administrador por solicitud -->
   </main>
