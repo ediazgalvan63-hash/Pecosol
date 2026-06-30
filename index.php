@@ -2,10 +2,8 @@
 // index.php - Front Controller
 // =====================================
 
-// CRITICAL: Start session FIRST, before any output
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+// NOTE: Session will be started inside config.php after cookie params are configured
+// to ensure correct cookie settings on hosted environments (Railway, proxies, etc.).
 
 // DEBUG: Log REQUEST_URI and REDIRECT_URL
 @file_put_contents(__DIR__ . '/request_log.txt', date('Y-m-d H:i:s') . ' | REDIRECT_URL: ' . ($_SERVER['REDIRECT_URL'] ?? 'NOT SET') . ' | REQUEST_URI: ' . ($_SERVER['REQUEST_URI'] ?? 'NOT SET') . ' | GET: ' . ($_GET['url'] ?? 'EMPTY') . "\n", FILE_APPEND);

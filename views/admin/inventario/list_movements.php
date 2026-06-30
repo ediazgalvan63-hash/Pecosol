@@ -101,10 +101,18 @@ if ($useEmployeeHeader) {
             </div>
         </div>
         <div class="filter-actions">
-            <form id="filterForm" method="get" action="<?php echo BASE_URL; ?>index.php?controller=dashboard&action=logisticsInventory" style="display:inline-flex; width: 100%;">
+            <?php
+            // Enviar el formulario al mismo controller/action que mostró la página
+            $currentController = htmlspecialchars($_GET['controller'] ?? 'admin');
+            $currentAction = htmlspecialchars($_GET['action'] ?? ($currentController === 'dashboard' ? 'logisticsInventory' : 'listInventoryMovements'));
+            $formAction = BASE_URL . 'index.php?controller=' . $currentController . '&action=' . $currentAction;
+            ?>
+            <form id="filterForm" method="get" action="<?php echo $formAction; ?>" style="display:inline-flex; width: 100%;">
+                <input type="hidden" name="controller" value="<?php echo $currentController; ?>">
+                <input type="hidden" name="action" value="<?php echo $currentAction; ?>">
                 <button type="submit" class="button">Aplicar filtros</button>
             </form>
-            <a class="button" href="<?php echo BASE_URL; ?>index.php?controller=dashboard&action=logisticsInventory">Restablecer filtros</a>
+            <a class="button" href="<?php echo $formAction; ?>">Restablecer filtros</a>
         </div>
     </div>
 

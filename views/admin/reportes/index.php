@@ -13,7 +13,10 @@
         .field-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; margin-bottom: 16px; }
         .field-row label { display: block; font-size: 0.95rem; color: #e3f7ff; margin-bottom: 6px; }
         .field-row input,
-        .field-row select { width: 220px; padding: 10px 12px; border-radius: 10px; border: 1px solid #0f3460; background: rgba(0,255,240,0.06); color: #eaeaea; }
+        .field-row select { width: 220px; padding: 10px 12px; border-radius: 10px; border: 1px solid #0f3460; background: rgba(0,255,240,0.08); color: #eaeaea; }
+        .field-row select { appearance: none; -webkit-appearance: none; -moz-appearance: none; }
+        .field-row select option { background: #071226; color: #eaeaea; }
+        .field-row select::-ms-expand { display: none; }
         .field-row input[type="date"] { max-width: 220px; }
         .help-text { color: #a0cfe8; margin-bottom: 18px; }
         .form-actions { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 16px; }

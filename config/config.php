@@ -104,6 +104,51 @@ function isLocalRequest(): bool
 }
 
 /**
+ * Session configuration
+ * - Use a local writable folder for session storage when possible (tmp/sessions)
+ * - Configure cookie params (secure, domain, samesite) based on request
+ * - Start the session here so settings apply before any session data is used
+ */
+
+// Directorio local para sesiones (intentar usar en hosting como Railway)
+$sessionDir = __DIR__ . '/../tmp/sessions';
+if (!is_dir($sessionDir)) {
+    @mkdir($sessionDir, 0777, true);
+}
+// Si el directorio es escribible, forzamos session.save_path
+if (is_dir($sessionDir) && is_writable($sessionDir)) {
+    @ini_set('session.save_path', $sessionDir);
+    @ini_set('session.gc_maxlifetime', '86400'); // 1 día
+}
+
+// Configurar parámetros de la cookie de sesión
+$secure = (getCurrentRequestScheme() === 'https');
+$cookieDomain = getCurrentRequestHost();
+// Ajuste: si el host contiene puerto, removerlo en domain
+if (strpos($cookieDomain, ':') !== false) {
+    $cookieDomain = explode(':', $cookieDomain)[0];
+}
+
+session_name('PecosolSession');
+if (session_status() === PHP_SESSION_NONE) {
+    $cookieParams = [
+        'lifetime' => 0,
+        'path' => '/',
+        'domain' => $cookieDomain,
+        'secure' => $secure,
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ];
+    if (PHP_VERSION_ID >= 70300) {
+        session_set_cookie_params($cookieParams);
+    } else {
+        session_set_cookie_params($cookieParams['lifetime'], $cookieParams['path'], $cookieParams['domain'], $cookieParams['secure'], $cookieParams['httponly']);
+    }
+    session_start();
+}
+
+
+/**
  * BASE_URL - Detección automática de URL base del proyecto
  * 
  * Prioridad:
