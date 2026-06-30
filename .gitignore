@@ -7,6 +7,7 @@ desktop-app/dist-new/
 python_api/.venv/
 python_api/__pycache__/
 python_api/.env
+tmp/sessions/
 *.log
 composer.phar
 python_api/python_installer.exe
